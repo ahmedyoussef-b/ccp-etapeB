@@ -1,0 +1,7 @@
+{
+  "libelle": "EVACUATION ENERGIE ALTR TG 2",
+  "code": "TEV",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}
