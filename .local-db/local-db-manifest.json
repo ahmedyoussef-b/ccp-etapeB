@@ -1,0 +1,16 @@
+{
+  "files": [],
+  "lastSync": "2026-07-29T00:42:41.690Z",
+  "version": "1.2.0",
+  "chromaStatus": {
+    "status": "healthy",
+    "lastCheck": "1970-01-01T00:00:00.000Z",
+    "failureCount": 0
+  },
+  "seededFromRegistry": true,
+  "registryLastIndexedAt": "2026-07-10T12:26:24.400Z",
+  "migrations": [
+    "1.1.0",
+    "1.2.0"
+  ]
+}
