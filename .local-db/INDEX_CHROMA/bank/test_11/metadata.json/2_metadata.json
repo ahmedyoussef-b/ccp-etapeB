@@ -1,0 +1,14 @@
+{
+  "description": "test 11",
+  "tags": [
+    "test 11"
+  ],
+  "author": "admin-root-001",
+  "source": "VisioNode Bank",
+  "name": "test_11",
+  "type": "image",
+  "mime": "image/jpeg",
+  "path": "bank/test_11/test_11.jpg",
+  "size": 14431,
+  "created_at": "2026-07-18T15:11:52.998Z"
+}
