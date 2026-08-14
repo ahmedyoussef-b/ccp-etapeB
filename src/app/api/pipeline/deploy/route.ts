@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import crypto from 'crypto';
 
 export async function POST() {
   try {
@@ -25,7 +25,6 @@ export async function POST() {
     // PHASE 1: TEST - Vérification
     // ============================================
     console.log('🔍 PHASE 1: Test de verification...');
-    console.log('  ✅ Token valide');
 
     try {
       await octokit.rest.repos.get({ owner, repo });
@@ -45,43 +44,13 @@ export async function POST() {
     console.log('');
 
     // ============================================
-    // PHASE 1.5: COMMIT LOCAL - Sauvegarder les changements locaux
-    // ============================================
-    console.log('📝 PHASE 1.5: Sauvegarde des changements locaux...');
-    try {
-      // Vérifier s'il y a des changements
-      const status = execSync('git status --porcelain', { encoding: 'utf8' });
-      
-      if (status.trim()) {
-        console.log('  📝 ' + status.split('\n').filter(Boolean).length + ' fichiers modifies trouves');
-        
-        // Ajouter tous les fichiers
-        execSync('git add .', { stdio: 'ignore' });
-        console.log('  ✅ Fichiers ajoutes au staging');
-        
-        // Créer un commit
-        const commitMessage = 'Auto-commit: Synchronisation pipeline ' + new Date().toISOString();
-        execSync('git commit -m "' + commitMessage + '"', { stdio: 'ignore' });
-        console.log('  ✅ Commit local cree: ' + commitMessage);
-        
-        // Pousser les changements
-        execSync('git push origin ' + branch, { stdio: 'ignore' });
-        console.log('  ✅ Changements pousses vers GitHub');
-      } else {
-        console.log('  ℹ️ Aucun changement local a sauvegarder');
-      }
-    } catch (err) {
-      console.log('  ⚠️ Erreur lors du commit local: ' + err.message);
-    }
-    console.log('');
-
-    // ============================================
     // PHASE 2: ANALYSE - Récupération des fichiers
     // ============================================
     console.log('📂 PHASE 2: Analyse des fichiers...');
 
-    let existingFiles = [];
+    // Récupérer les fichiers existants sur GitHub avec leur SHA
     let existingFilesMap = {};
+    let existingFiles = [];
     try {
       const { data: refData } = await octokit.rest.git.getRef({
         owner,
@@ -110,10 +79,12 @@ export async function POST() {
       console.log('  ℹ️ Aucun fichier existant (depot vide)');
     }
 
-    // Scanner TOUS les fichiers locaux
+    // Scanner les fichiers locaux
     const appDir = process.cwd();
     const localFiles = [];
-    const ignoreDirs = ['node_modules', '.next', 'dist', 'build'];
+    
+    const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git'];
+    const ignoreFiles = ['.env.local', '.env.development', '.env.production', '.env'];
     
     function walkDir(dir, relativePath = '') {
       try {
@@ -129,12 +100,28 @@ export async function POST() {
             if (stats.isDirectory()) {
               walkDir(fullPath, relPath);
             } else {
+              if (ignoreFiles.includes(item)) {
+                console.log('  ⏭️ Ignore: ' + relPath + ' (fichier sensible)');
+                continue;
+              }
+              if (relPath.startsWith('.git')) continue;
+              
               const content = fs.readFileSync(fullPath);
+              
+              // Calculer le SHA Git (format blob)
+              // Format: "blob " + taille + "\0" + contenu
+              const blobHeader = 'blob ' + content.length + '\0';
+              const blobData = Buffer.concat([Buffer.from(blobHeader), content]);
+              const hash = crypto.createHash('sha1');
+              hash.update(blobData);
+              const localSha = hash.digest('hex');
+              
               localFiles.push({
                 localPath: fullPath,
                 githubPath: relPath.replace(/\\/g, '/'),
                 size: stats.size,
-                content: content
+                content: content,
+                sha: localSha
               });
             }
           } catch (err) {
@@ -149,21 +136,65 @@ export async function POST() {
     walkDir(appDir);
     console.log('  📁 ' + localFiles.length + ' fichiers locaux trouves');
 
+    // Identifier les fichiers modifiés
+    const toUpload = [];
+    const toDelete = [];
+    const unchanged = [];
+
     const localPaths = new Set(localFiles.map(f => f.githubPath));
     const remotePaths = new Set(Object.keys(existingFilesMap));
 
-    const toUpdate = localFiles.filter(f => 
-      !existingFilesMap[f.githubPath] || 
-      existingFilesMap[f.githubPath]
-    );
+    for (const file of localFiles) {
+      const remoteSha = existingFilesMap[file.githubPath];
+      if (!remoteSha) {
+        toUpload.push({ ...file, action: 'nouveau' });
+      } else if (remoteSha !== file.sha) {
+        toUpload.push({ ...file, action: 'modifie' });
+      } else {
+        unchanged.push(file.githubPath);
+      }
+    }
 
-    const toDelete = [...remotePaths].filter(p => !localPaths.has(p));
+    for (const remotePath of remotePaths) {
+      if (!localPaths.has(remotePath)) {
+        toDelete.push(remotePath);
+      }
+    }
 
     console.log('');
     console.log('📊 Resume des changements:');
-    console.log('  ✅ A ajouter/mettre a jour: ' + toUpdate.length + ' fichiers');
-    console.log('  🗑️ A supprimer: ' + toDelete.length + ' fichiers');
+    console.log('  ✅ Nouveaux fichiers: ' + toUpload.filter(f => f.action === 'nouveau').length);
+    console.log('  📝 Fichiers modifies: ' + toUpload.filter(f => f.action === 'modifie').length);
+    console.log('  ⏭️ Fichiers inchanges: ' + unchanged.length);
+    console.log('  🗑️ A supprimer: ' + toDelete.length);
     console.log('');
+
+    // Afficher les fichiers modifiés
+    if (toUpload.length > 0) {
+      console.log('📤 Fichiers a uploader:');
+      const displayFiles = toUpload.slice(0, 10);
+      displayFiles.forEach(f => {
+        console.log('  ' + (f.action === 'nouveau' ? '➕' : '📝') + ' ' + f.githubPath);
+      });
+      if (toUpload.length > 10) {
+        console.log('  ... et ' + (toUpload.length - 10) + ' autres');
+      }
+      console.log('');
+    }
+
+    if (toUpload.length === 0 && toDelete.length === 0) {
+      console.log('✅ Aucun changement detecte!');
+      return NextResponse.json({ 
+        success: true,
+        message: 'Aucun changement detecte',
+        stats: {
+          total: localFiles.length,
+          uploaded: 0,
+          deleted: 0,
+          unchanged: unchanged.length
+        }
+      });
+    }
 
     // ============================================
     // PHASE 3: EXECUTION - Déploiement
@@ -197,10 +228,11 @@ export async function POST() {
       console.log('');
     }
 
-    // 2. Uploader les fichiers
-    if (toUpdate.length > 0) {
-      console.log('📤 Upload des fichiers...');
-      for (const file of toUpdate) {
+    // 2. Uploader les fichiers modifiés ou nouveaux
+    if (toUpload.length > 0) {
+      console.log('📤 Upload des fichiers modifies/nouveaux...');
+      let uploadedCount = 0;
+      for (const file of toUpload) {
         try {
           const contentBase64 = file.content.toString('base64');
           const sha = existingFilesMap[file.githubPath] || undefined;
@@ -214,38 +246,19 @@ export async function POST() {
             branch,
             sha: sha
           });
-          uploaded++;
-          console.log('  ✅ Upload: ' + file.githubPath + (sha ? ' (mis a jour)' : ' (nouveau)'));
+          uploadedCount++;
+          const action = file.action === 'nouveau' ? 'nouveau' : 'mis a jour';
+          console.log('  ✅ Upload: ' + file.githubPath + ' (' + action + ')');
         } catch (err) {
           errors++;
           console.log('  ❌ Erreur pour ' + file.githubPath + ': ' + err.message);
         }
       }
+      uploaded = uploadedCount;
     }
 
     // ============================================
-    // PHASE 4: NETTOYAGE - Commit final
-    // ============================================
-    console.log('');
-    console.log('🧹 PHASE 4: Nettoyage final...');
-    try {
-      const status = execSync('git status --porcelain', { encoding: 'utf8' });
-      
-      if (status.trim()) {
-        console.log('  📝 ' + status.split('\n').filter(Boolean).length + ' fichiers restants');
-        execSync('git add .', { stdio: 'ignore' });
-        execSync('git commit -m "Cleanup: Nettoyage post-deploiement"', { stdio: 'ignore' });
-        execSync('git push origin ' + branch, { stdio: 'ignore' });
-        console.log('  ✅ Nettoyage termine, aucun fichier en attente');
-      } else {
-        console.log('  ✅ Aucun fichier en attente');
-      }
-    } catch (err) {
-      console.log('  ⚠️ Erreur lors du nettoyage: ' + err.message);
-    }
-
-    // ============================================
-    // PHASE 5: RAPPORT FINAL
+    // PHASE 4: RAPPORT FINAL
     // ============================================
     console.log('');
     console.log('========================================');
@@ -254,8 +267,8 @@ export async function POST() {
     console.log('  ✅ Tests: PASSES');
     console.log('  📤 Uploades: ' + uploaded + ' fichiers');
     console.log('  🗑️ Supprimes: ' + deleted + ' fichiers');
-    console.log('  ❌ Erreurs: ' + errors + ' fichiers');
-    console.log('  🧹 Nettoyage: TERMINE');
+    console.log('  ⏭️ Inchanges: ' + unchanged.length + ' fichiers');
+    console.log('  ❌ Erreurs: ' + errors);
     console.log('========================================');
 
     if (errors === 0) {
@@ -272,7 +285,9 @@ export async function POST() {
         uploaded: uploaded,
         deleted: deleted,
         errors: errors,
-        toDelete: toDelete.length
+        unchanged: unchanged.length,
+        new: toUpload.filter(f => f.action === 'nouveau').length,
+        modified: toUpload.filter(f => f.action === 'modifie').length
       }
     });
 
