@@ -1,0 +1,109 @@
+{
+  "type": "qa",
+  "title": "alarmes-et-seuils-de-declenchement-de-la-turbine-a-gaz-TG",
+  "description": "",
+  "pairs": [
+    {
+      "question": "Quel thermostat surveille la surchauffe de l'air d'atomisation ?",
+      "answer": "repere: 26AA-1\ndesignation: Température haute air d'atomisation\nseuil: 135°C\naction: Génère une alarme et un arrêt normal de la TG pour protéger le compresseur d'atomisation."
+    },
+    {
+      "question": "Quelle alarme indique une pression différentielle insuffisante sur le compresseur d'atomisation ?",
+      "answer": "repere: 63AD-1\ndesignation: Pression différentielle basse air d'atomisation\nseuil: 1,03 Bar\naction: Alarme signalant un risque de mauvaise pulvérisation du combustible liquide."
+    },
+    {
+      "question": "Quelle alarme signale la perte du signal de pression au refoulement du compresseur ?",
+      "answer": "repere: L3TFLT\ndesignation: Perte de signal pression refoulement compresseur (CPD)\nseuil: 4,83 Bar (valeur de détection de défaut)\naction: Alarme de régulation."
+    },
+    {
+      "question": "Que signifie le message 'COMBUSTION TROUBLE' ?",
+      "answer": "repere: L30SPA\ndesignation: Écart de température d'échappement excessif (Spread)\nseuil: TTXSP1 > TTXSPL*1 ou TTXSP3 > TTXSPL*0,8 pendant 3s\naction: Alarme ; indique une anomalie sur les injecteurs ou les pièces de transition."
+    },
+    {
+      "question": "Quelle condition provoque un déclenchement 'EXHAUST TEMP SPREAD TRIP' ?",
+      "answer": "repere: L30SPT\ndesignation: Déclenchement par écart thermique important\nseuil: Écarts 1 et 2 présents avec thermocouples les plus froids adjacents (tempo 9s)\naction: Arrêt d'urgence (Trip) de la turbine."
+    },
+    {
+      "question": "Comment est détecté un thermocouple d'échappement défectueux ?",
+      "answer": "repere: L30SPTA\ndesignation: Défaut thermocouple d'échappement\nseuil: Écart 1 > TTXSPLN*5 (tempo 4s) ou valeur = -2048°F\naction: Alarme signalant un capteur ouvert ou aberrant."
+    },
+    {
+      "question": "Quels sont les seuils de température moyenne d'échappement (TTXM) ?",
+      "answer": "repere: L30TXA / L86TXT\ndesignation: Température d'échappement élevée / Trop élevée\nseuil_alarme: TTXM > TTRXB + 13,9°C (Réduction de charge automatique)\nseuil_trip: TTXM > TTRXB + 22,2°C ou TTXM > 615°C (Déclenchement)\nseuil_bas: TTXM < 121°C alors que la vitesse est > 50% (Déclenchement)"
+    },
+    {
+      "question": "Quelles alarmes surveillent les écarts thermiques internes (Inter-Roues) ?",
+      "answer": "repere: TT-WS\ndesignation: Températures inter-roues turbine\nseuils: 1ère roue > 427/482°C ; 2ème roue > 510°C ; 3ème roue > 510/454°C\naction: Alarme de protection thermique."
+    },
+    {
+      "question": "Quels sont les seuils de niveau de la cuve à huile ?",
+      "answer": "reperes: 71QH-1 / 71QL-1 / 71QT\nniveau_haut: 25,4 cm (Alarme 71QH-1)\nniveau_bas: 42,2 cm à 45,1 cm (Alarme 71QL-1)\nniveau_tres_bas: 49,5 cm (Déclenchement 71QT)"
+    },
+    {
+      "question": "Quelle alarme interdit le démarrage si l'huile est trop froide ?",
+      "answer": "repere: 26QN-1\ndesignation: Température basse cuve à huile\nseuil: 18°C\naction: Blocage du lancement (Permissif démarrage)."
+    },
+    {
+      "question": "Quelles alarmes surveillent la température du collecteur d'huile ?",
+      "answer": "repere: 26QA / 26QT-1A,B\ndesignation: Température haute collecteur huile graissage\nseuil_alarme: 74°C (26QA)\nseuil_trip: 80°C (Logique 2/3 avec 26QT-1A/B)\naction: Protection contre la dégradation du film d'huile."
+    },
+    {
+      "question": "Quels pressostats assurent le secours en huile de graissage ?",
+      "answer": "reperes: 63QA-1 / 63QL\nalarme_secours: Démarrage pompe auxiliaire (63QA-1) puis pompe de secours (63QL) sur baisse de pression."
+    },
+    {
+      "question": "Quelles sont les pressions de soulèvement (Jacking Oil) requises ?",
+      "answer": "reperes: 63QB / 96QB\nseuils_alarme: Alternateur : 90 Bar (63QB) ; Palier 4 : 60 Bar (96QB-4) ; Palier 5 : 70 Bar (96QB-5)\naction: Alarme + Arrêt du virage."
+    },
+    {
+      "question": "Quels sont les seuils d'encrassement des filtres à huile ?",
+      "answer": "seuils: Filtre graissage : 1,03 Bar (63QQ-1) ; Filtre convertisseur : 1,6 Bar (63QQ-8) ; Éliminateur buée : 80 mbar (63QV)"
+    },
+    {
+      "question": "Quel est le seuil de déclenchement sur basse pression d'huile de sécurité (OLT) ?",
+      "answer": "reperes: 63HG / 63HL\nseuil: 1,38 Bar (Logique 2/3)\naction: Déclenchement immédiat (gaz ou liquide)."
+    },
+    {
+      "question": "Quelle alarme signale un défaut sur le système Noria ?",
+      "answer": "reperes: 63WC / 26WC-1\npression: Pression < 3,8 Bar (63WC)\ntemperature: Température > 45°C (26WC-1)\naction: Alarme et basculement sur pompe de secours."
+    },
+    {
+      "question": "Comment est surveillée la ventilation des compartiments ?",
+      "answer": "repere: 26BT / 26VG-1\nturbine: 149°C / 150°C (Alarme 26BT)\npuissance: 204°C (TG1) / 220°C (TG2). Déclenchement à 250°C."
+    },
+    {
+      "question": "Quelle alarme surveille la pression d'huile hydraulique HP ?",
+      "answer": "repere: 63HQ-1\ndesignation: Pression basse huile hydraulique HP\nseuil: 93,11 Bar\naction: Alarme et démarrage de la pompe auxiliaire 88HQ."
+    },
+    {
+      "question": "Quelle protection surveille le refroidissement du corps turbine ?",
+      "answer": "repere: 63TK1/TK2\nseuil: 368 Mbar\naction: Alarme. Si les deux ventilateurs (L90TK) échouent : Alarme + Arrêt normal TG."
+    },
+    {
+      "question": "Quels sont les seuils d'alarme de vibration ?",
+      "answer": "designation: High vibration alarm / transducer fault\naction: Alarme si amplitude > consigne. Arrêt d'urgence si tous les capteurs d'une section sont en défaut."
+    },
+    {
+      "question": "Quelles sont les limites de température de l'alternateur ?",
+      "answer": "enroulements: 140°C (Alarme TE011-033) ; 150°C (Déclenchement TE023)\nair_refrigerant: Sortie : 80°C (TE101/103) ; Entrée : 100°C (TE201/203)"
+    },
+    {
+      "question": "Quelles alarmes concernent la détection de gaz combustible ?",
+      "answer": "reperes: L45IIAL / L45HTRP\nseuil_1: Premier seuil : Alarme\nseuil_2: Deuxième seuil : Déclenchement turbine"
+    },
+    {
+      "question": "Quelle alarme signale un défaut sur le système de combustible gaz ?",
+      "answer": "repere: 63FG-3\ndesignation: Basse pression alimentation gaz\naction: Alarme et transfert automatique vers le fioul liquide."
+    },
+    {
+      "question": "Quelle est la limite de température pour le métal des coussinets ?",
+      "answer": "reperes: BT-TA1, BT-TI1, BT-J1/2/3, BT-GJ4/5\nseuil: 129°C\naction: Alarme température haute métal palier (Turbine et Alternateur)."
+    },
+    {
+      "question": "Quel est le seuil d'alarme pour le retour d'huile des paliers ?",
+      "answer": "reperes: LT-B1D à B3D / LT-G1D-G2D\nseuil_turbine: 100°C\nseuil_alternateur: 87°C\naction: Alarme température haute retour d'huile."
+    }
+  ],
+  "createdAt": "2026-07-19T16:02:41.556Z",
+  "registryPath": "items/alarmes-et-seuils-de-declenchement-de-la-turbine-a-gaz-TG.json"
+}
