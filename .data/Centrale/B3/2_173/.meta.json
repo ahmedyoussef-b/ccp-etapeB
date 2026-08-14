@@ -1,0 +1,7 @@
+{
+  "libelle": "BOUCLE DE POSITION BP",
+  "code": "2_173",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
