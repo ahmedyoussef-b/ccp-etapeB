@@ -1,0 +1,7 @@
+{
+  "libelle": "CONSIGNE CHARGE HP",
+  "code": "2_133",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
