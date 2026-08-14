@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { execSync } from 'child_process';
 
 export async function POST() {
   try {
@@ -29,14 +30,14 @@ export async function POST() {
     try {
       await octokit.rest.repos.get({ owner, repo });
       console.log('  ✅ Acces au depot OK');
-    } catch (err: unknown) {
-      throw new Error('Impossible d\'acceder au depot: ' + (err as Error).message);
+    } catch (err) {
+      throw new Error('Impossible d\'acceder au depot: ' + err.message);
     }
 
     try {
       await octokit.rest.git.getRef({ owner, repo, ref: 'heads/' + branch });
       console.log('  ✅ Branche ' + branch + ' OK');
-    } catch {
+    } catch (err) {
       throw new Error('Branche ' + branch + ' introuvable');
     }
 
@@ -48,8 +49,8 @@ export async function POST() {
     // ============================================
     console.log('📂 PHASE 2: Analyse des fichiers...');
 
-    // Récupérer les fichiers existants sur GitHub avec leur SHA
-    let existingFilesMap: Record<string, string> = {};
+    // Récupérer les fichiers existants sur GitHub
+    let existingFilesMap = {};
     let existingFiles = [];
     try {
       const { data: refData } = await octokit.rest.git.getRef({
@@ -62,37 +63,31 @@ export async function POST() {
         owner,
         repo,
         tree_sha: refData.object.sha,
-        recursive: '1'
+        recursive: true
       });
 
       existingFiles = treeData.tree
         .filter(item => item.type === 'blob')
         .map(item => ({ path: item.path, sha: item.sha }));
       
-      existingFilesMap = existingFiles.reduce<Record<string, string>>((acc, f) => {
+      existingFilesMap = existingFiles.reduce((acc, f) => {
         acc[f.path] = f.sha;
         return acc;
       }, {});
       
       console.log('  📁 ' + existingFiles.length + ' fichiers existants sur GitHub');
-    } catch {
+    } catch (err) {
       console.log('  ℹ️ Aucun fichier existant (depot vide)');
     }
 
     // Scanner les fichiers locaux
     const appDir = process.cwd();
-    const localFiles: Array<{
-      localPath: string;
-      githubPath: string;
-      size: number;
-      content: Buffer;
-      sha: string;
-    }> = [];
+    const localFiles = [];
     
     const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git'];
     const ignoreFiles = ['.env.local', '.env.development', '.env.production', '.env'];
     
-    const walkDir = (dir: string, relativePath = ''): void => {
+    function walkDir(dir, relativePath = '') {
       try {
         const items = fs.readdirSync(dir);
         for (const item of items) {
@@ -114,6 +109,7 @@ export async function POST() {
               
               const content = fs.readFileSync(fullPath);
               
+              // Calculer le SHA Git (format blob)
               const blobHeader = 'blob ' + content.length + '\0';
               const blobData = Buffer.concat([Buffer.from(blobHeader), content]);
               const hash = crypto.createHash('sha1');
@@ -129,13 +125,13 @@ export async function POST() {
               });
             }
           } catch (err) {
-            console.log('  ⚠️ Erreur sur ' + fullPath + ': ' + (err as Error).message);
+            console.log('  ⚠️ Erreur sur ' + fullPath + ': ' + err.message);
           }
         }
       } catch (err) {
-        console.log('  ⚠️ Erreur de lecture de ' + dir + ': ' + (err as Error).message);
+        console.log('  ⚠️ Erreur de lecture de ' + dir + ': ' + err.message);
       }
-    };
+    }
     
     walkDir(appDir);
     console.log('  📁 ' + localFiles.length + ' fichiers locaux trouves');
@@ -159,7 +155,7 @@ export async function POST() {
       }
     }
 
-    for (const remotePath of Array.from(remotePaths)) {
+    for (const remotePath of remotePaths) {
       if (!localPaths.has(remotePath)) {
         toDelete.push(remotePath);
       }
@@ -201,7 +197,7 @@ export async function POST() {
     }
 
     // ============================================
-    // PHASE 3: EXECUTION - Déploiement
+    // PHASE 3: EXECUTION - Déploiement sur GitHub
     // ============================================
     console.log('🚀 PHASE 3: Execution du deploiement...');
 
@@ -226,7 +222,7 @@ export async function POST() {
           console.log('  ✅ Supprime: ' + filePath);
         } catch (err) {
           errors++;
-          console.log('  ❌ Erreur pour ' + filePath + ': ' + (err as Error).message);
+          console.log('  ❌ Erreur pour ' + filePath + ': ' + err.message);
         }
       }
       console.log('');
@@ -235,7 +231,6 @@ export async function POST() {
     // 2. Uploader les fichiers modifiés ou nouveaux
     if (toUpload.length > 0) {
       console.log('📤 Upload des fichiers modifies/nouveaux...');
-      let uploadedCount = 0;
       for (const file of toUpload) {
         try {
           const contentBase64 = file.content.toString('base64');
@@ -250,19 +245,52 @@ export async function POST() {
             branch,
             sha: sha
           });
-          uploadedCount++;
+          uploaded++;
           const action = file.action === 'nouveau' ? 'nouveau' : 'mis a jour';
           console.log('  ✅ Upload: ' + file.githubPath + ' (' + action + ')');
         } catch (err) {
           errors++;
-          console.log('  ❌ Erreur pour ' + file.githubPath + ': ' + (err as Error).message);
+          console.log('  ❌ Erreur pour ' + file.githubPath + ': ' + err.message);
         }
       }
-      uploaded = uploadedCount;
     }
 
     // ============================================
-    // PHASE 4: RAPPORT FINAL
+    // PHASE 4: COMMIT AUTOMATIQUE
+    // ============================================
+    console.log('');
+    console.log('📝 PHASE 4: Commit automatique...');
+    try {
+      const status = execSync('git status --porcelain', { encoding: 'utf8' });
+      
+      if (status.trim()) {
+        const files = status.split('\n').filter(Boolean).length;
+        console.log('  📝 ' + files + ' fichiers modifies a commiter');
+        
+        // Ajouter tous les fichiers
+        execSync('git add .', { stdio: 'ignore' });
+        console.log('  ✅ Fichiers ajoutes au staging');
+        
+        // Créer un commit
+        const commitMessage = 'Auto-commit: Pipeline ' + new Date().toISOString();
+        execSync('git commit -m "' + commitMessage + '"', { stdio: 'ignore' });
+        console.log('  ✅ Commit cree: ' + commitMessage);
+        
+        // Pousser vers GitHub
+        execSync('git push origin ' + branch, { stdio: 'ignore' });
+        console.log('  ✅ Push effectue');
+        
+        console.log('  ✅ Commit automatique termine avec succes!');
+      } else {
+        console.log('  ℹ️ Aucun fichier a commiter');
+      }
+    } catch (err) {
+      console.log('  ⚠️ Erreur lors du commit automatique: ' + err.message);
+      console.log('  ℹ️ Vous pouvez faire git add . && git commit manuellement');
+    }
+
+    // ============================================
+    // PHASE 5: RAPPORT FINAL
     // ============================================
     console.log('');
     console.log('========================================');
@@ -273,6 +301,7 @@ export async function POST() {
     console.log('  🗑️ Supprimes: ' + deleted + ' fichiers');
     console.log('  ⏭️ Inchanges: ' + unchanged.length + ' fichiers');
     console.log('  ❌ Erreurs: ' + errors);
+    console.log('  📝 Commit automatique: EFFECTUE');
     console.log('========================================');
 
     if (errors === 0) {
@@ -298,7 +327,7 @@ export async function POST() {
   } catch (error) {
     console.error('❌ Erreur:', error);
     return NextResponse.json(
-      { error: (error as Error).message },
+      { error: error.message },
       { status: 500 }
     );
   }
