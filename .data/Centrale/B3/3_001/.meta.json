@@ -1,0 +1,7 @@
+{
+  "libelle": "REG DE PRESSION DETENTE VAPEUR",
+  "code": "3_001",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
