@@ -6,11 +6,11 @@ export function DeployPipeline() {
   const [isDeploying, setIsDeploying] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState<string[]>([]);
   const [status, setStatus] = useState('idle');
   const [lastAction, setLastAction] = useState('');
 
-  const addLog = (message, type = 'info') => {
+  const addLog = (message: string, type: 'info' | 'success' | 'error' | 'warning' | 'upload' | 'download' = 'info') => {
     const timestamp = new Date().toLocaleTimeString();
     const icons = {
       info: 'ℹ️',
@@ -70,7 +70,7 @@ export function DeployPipeline() {
       }
 
     } catch (error) {
-      addLog('❌ Erreur de connexion: ' + error.message, 'error');
+      addLog('❌ Erreur de connexion: ' + (error as Error).message, 'error');
       setStatus('error');
     } finally {
       setIsDeploying(false);
@@ -123,7 +123,7 @@ export function DeployPipeline() {
       }
 
     } catch (error) {
-      addLog('❌ Erreur de connexion: ' + error.message, 'error');
+      addLog('❌ Erreur de connexion: ' + (error as Error).message, 'error');
       setStatus('error');
     } finally {
       setIsPulling(false);
@@ -212,7 +212,7 @@ export function DeployPipeline() {
       <div>
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-            <span>📋 Journal d'exécution</span>
+             <span>📋 Journal d&apos;exécution</span>
           </h3>
           <span className="text-xs text-gray-500 dark:text-gray-400">
             {logs.length} lignes
@@ -221,7 +221,7 @@ export function DeployPipeline() {
         <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 h-48 overflow-y-auto font-mono text-xs">
           {logs.length === 0 ? (
             <p className="text-gray-400 dark:text-gray-500 text-center py-4 flex items-center justify-center gap-2">
-              🔄 En attente d'action...
+               🔄 En attente d&apos;action...
             </p>
           ) : (
             logs.map((log, index) => (
