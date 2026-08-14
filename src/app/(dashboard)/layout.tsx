@@ -16,7 +16,7 @@ function getStoredRole(): Role {
 }
 
 function deriveRoleFromPath(pathname: string): Role {
-  if (pathname.startsWith("/admin")) return "admin";
+  if (pathname.startsWith("/admin") || pathname.startsWith("/pipeline")) return "admin";
   if (pathname.startsWith("/chef-de-quart")) return "chef-de-quart";
   if (pathname.startsWith("/chef-de-bloc")) return "chef-de-bloc";
   if (pathname.startsWith("/rondier")) return "rondier";
@@ -35,7 +35,8 @@ export default function DashboardLayout({
   const [hydrated, setHydrated] = useState(false);
 
   useLayoutEffect(() => {
-    const next = pathname.startsWith("/admin") || pathname.startsWith("/chef-de-quart") || pathname.startsWith("/chef-de-bloc") || pathname.startsWith("/rondier")
+    const hasRolePrefix = pathname.startsWith("/admin") || pathname.startsWith("/pipeline") || pathname.startsWith("/chef-de-quart") || pathname.startsWith("/chef-de-bloc") || pathname.startsWith("/rondier");
+    const next = hasRolePrefix
       ? deriveRoleFromPath(pathname)
       : stored;
     setRole(next);
@@ -44,7 +45,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!hydrated) return;
-    const hasRolePrefix = pathname.startsWith("/admin") || pathname.startsWith("/chef-de-quart") || pathname.startsWith("/chef-de-bloc") || pathname.startsWith("/rondier");
+    const hasRolePrefix = pathname.startsWith("/admin") || pathname.startsWith("/pipeline") || pathname.startsWith("/chef-de-quart") || pathname.startsWith("/chef-de-bloc") || pathname.startsWith("/rondier");
     if (hasRolePrefix) {
       try {
         window.sessionStorage.setItem("dashboardRole", deriveRoleFromPath(pathname));
