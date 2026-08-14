@@ -1,0 +1,7 @@
+{
+  "libelle": "POSTE EXTERIEUR",
+  "code": "LJP",
+  "type": "sous_centrale",
+  "parentId": "B0",
+  "syncState": "local-only"
+}
