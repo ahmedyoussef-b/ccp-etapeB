@@ -1,0 +1,7 @@
+{
+  "libelle": "TEMPERATURE INTER-ROUES TG 1",
+  "code": "B1TG32",
+  "type": "groupe",
+  "parentId": "TURBINE GAZ 1",
+  "syncState": "local-only"
+}
