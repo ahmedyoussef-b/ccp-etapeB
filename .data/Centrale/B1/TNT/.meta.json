@@ -1,0 +1,7 @@
+{
+  "libelle": "NETTOYAGE / LAVAGE TG 1",
+  "code": "TNT",
+  "type": "sous_centrale",
+  "parentId": "B1",
+  "syncState": "local-only"
+}
