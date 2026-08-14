@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 
 export async function POST() {
   try {
@@ -21,14 +22,11 @@ export async function POST() {
     console.log('🚀 Deploiement sur ' + owner + '/' + repo + ' (branche: ' + branch + ')');
 
     // ============================================
-    // PHASE 1: TEST - Vérification avant déploiement
+    // PHASE 1: TEST - Vérification
     // ============================================
     console.log('🔍 PHASE 1: Test de verification...');
-
-    // 1. Vérifier le token
     console.log('  ✅ Token valide');
 
-    // 2. Vérifier l'accès au dépôt
     try {
       await octokit.rest.repos.get({ owner, repo });
       console.log('  ✅ Acces au depot OK');
@@ -36,7 +34,6 @@ export async function POST() {
       throw new Error('Impossible d\'acceder au depot: ' + err.message);
     }
 
-    // 3. Vérifier la branche
     try {
       await octokit.rest.git.getRef({ owner, repo, ref: 'heads/' + branch });
       console.log('  ✅ Branche ' + branch + ' OK');
@@ -48,11 +45,41 @@ export async function POST() {
     console.log('');
 
     // ============================================
+    // PHASE 1.5: COMMIT LOCAL - Sauvegarder les changements locaux
+    // ============================================
+    console.log('📝 PHASE 1.5: Sauvegarde des changements locaux...');
+    try {
+      // Vérifier s'il y a des changements
+      const status = execSync('git status --porcelain', { encoding: 'utf8' });
+      
+      if (status.trim()) {
+        console.log('  📝 ' + status.split('\n').filter(Boolean).length + ' fichiers modifies trouves');
+        
+        // Ajouter tous les fichiers
+        execSync('git add .', { stdio: 'ignore' });
+        console.log('  ✅ Fichiers ajoutes au staging');
+        
+        // Créer un commit
+        const commitMessage = 'Auto-commit: Synchronisation pipeline ' + new Date().toISOString();
+        execSync('git commit -m "' + commitMessage + '"', { stdio: 'ignore' });
+        console.log('  ✅ Commit local cree: ' + commitMessage);
+        
+        // Pousser les changements
+        execSync('git push origin ' + branch, { stdio: 'ignore' });
+        console.log('  ✅ Changements pousses vers GitHub');
+      } else {
+        console.log('  ℹ️ Aucun changement local a sauvegarder');
+      }
+    } catch (err) {
+      console.log('  ⚠️ Erreur lors du commit local: ' + err.message);
+    }
+    console.log('');
+
+    // ============================================
     // PHASE 2: ANALYSE - Récupération des fichiers
     // ============================================
     console.log('📂 PHASE 2: Analyse des fichiers...');
 
-    // Récupérer les fichiers existants sur GitHub
     let existingFiles = [];
     let existingFilesMap = {};
     try {
@@ -73,7 +100,6 @@ export async function POST() {
         .filter(item => item.type === 'blob')
         .map(item => ({ path: item.path, sha: item.sha }));
       
-      // Créer un map pour accès rapide
       existingFilesMap = existingFiles.reduce((acc, f) => {
         acc[f.path] = f.sha;
         return acc;
@@ -84,17 +110,16 @@ export async function POST() {
       console.log('  ℹ️ Aucun fichier existant (depot vide)');
     }
 
-    // Scanner les fichiers locaux
+    // Scanner TOUS les fichiers locaux
     const appDir = process.cwd();
     const localFiles = [];
-    const ignoreDirs = ['node_modules', '.git', '.next', 'dist', 'build', '.local-db', '.registry'];
+    const ignoreDirs = ['node_modules', '.next', 'dist', 'build'];
     
     function walkDir(dir, relativePath = '') {
       try {
         const items = fs.readdirSync(dir);
         for (const item of items) {
           if (ignoreDirs.includes(item)) continue;
-          if (item.startsWith('.')) continue;
           
           const fullPath = path.join(dir, item);
           const relPath = relativePath ? path.join(relativePath, item) : item;
@@ -124,17 +149,14 @@ export async function POST() {
     walkDir(appDir);
     console.log('  📁 ' + localFiles.length + ' fichiers locaux trouves');
 
-    // Identifier les changements
     const localPaths = new Set(localFiles.map(f => f.githubPath));
     const remotePaths = new Set(Object.keys(existingFilesMap));
 
-    // Fichiers à ajouter/mettre à jour
     const toUpdate = localFiles.filter(f => 
       !existingFilesMap[f.githubPath] || 
       existingFilesMap[f.githubPath]
     );
 
-    // Fichiers à supprimer (présents sur GitHub mais pas en local)
     const toDelete = [...remotePaths].filter(p => !localPaths.has(p));
 
     console.log('');
@@ -142,15 +164,6 @@ export async function POST() {
     console.log('  ✅ A ajouter/mettre a jour: ' + toUpdate.length + ' fichiers');
     console.log('  🗑️ A supprimer: ' + toDelete.length + ' fichiers');
     console.log('');
-
-    if (toDelete.length > 0) {
-      console.log('🗑️ Fichiers a supprimer:');
-      toDelete.slice(0, 10).forEach(p => console.log('  - ' + p));
-      if (toDelete.length > 10) {
-        console.log('  ... et ' + (toDelete.length - 10) + ' autres');
-      }
-      console.log('');
-    }
 
     // ============================================
     // PHASE 3: EXECUTION - Déploiement
@@ -211,7 +224,28 @@ export async function POST() {
     }
 
     // ============================================
-    // PHASE 4: RAPPORT FINAL
+    // PHASE 4: NETTOYAGE - Commit final
+    // ============================================
+    console.log('');
+    console.log('🧹 PHASE 4: Nettoyage final...');
+    try {
+      const status = execSync('git status --porcelain', { encoding: 'utf8' });
+      
+      if (status.trim()) {
+        console.log('  📝 ' + status.split('\n').filter(Boolean).length + ' fichiers restants');
+        execSync('git add .', { stdio: 'ignore' });
+        execSync('git commit -m "Cleanup: Nettoyage post-deploiement"', { stdio: 'ignore' });
+        execSync('git push origin ' + branch, { stdio: 'ignore' });
+        console.log('  ✅ Nettoyage termine, aucun fichier en attente');
+      } else {
+        console.log('  ✅ Aucun fichier en attente');
+      }
+    } catch (err) {
+      console.log('  ⚠️ Erreur lors du nettoyage: ' + err.message);
+    }
+
+    // ============================================
+    // PHASE 5: RAPPORT FINAL
     // ============================================
     console.log('');
     console.log('========================================');
@@ -221,6 +255,7 @@ export async function POST() {
     console.log('  📤 Uploades: ' + uploaded + ' fichiers');
     console.log('  🗑️ Supprimes: ' + deleted + ' fichiers');
     console.log('  ❌ Erreurs: ' + errors + ' fichiers');
+    console.log('  🧹 Nettoyage: TERMINE');
     console.log('========================================');
 
     if (errors === 0) {
