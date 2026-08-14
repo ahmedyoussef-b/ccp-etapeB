@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, HelpCircle, FileText, MessageSquare, BookOpen, Image, Database, Video, BarChart3, Users, ClipboardList, Bot, Sun, Moon } from "lucide-react";
+import { LayoutDashboard, HelpCircle, FileText, MessageSquare, BookOpen, Image, Database, Video, BarChart3, Users, ClipboardList, Bot, Sun, Moon, GitBranch } from "lucide-react";
 import { NexaFlowLogo } from "@/components/brand/nexaflow-logo";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ const navItems = [
   { href: "/chef-de-quart", label: "Mon espace", icon: LayoutDashboard, roles: ["chef-de-quart"] },
   { href: "/chef-de-bloc", label: "Mon espace", icon: LayoutDashboard, roles: ["chef-de-bloc"] },
   { href: "/rondier", label: "Mon espace", icon: LayoutDashboard, roles: ["rondier"] },
+  { href: "/pipeline", label: "Pipeline", icon: GitBranch, roles: ["admin"] },
   { href: "/q-r", label: "Q/R", icon: HelpCircle, roles: ["admin"] },
   { href: "/actions-ia", label: "Actions IA", icon: Bot, roles: ["admin"] },
   { href: "/creer-procedure", label: "Créer une procédure", icon: FileText, roles: ["admin", "chef-de-quart"] },

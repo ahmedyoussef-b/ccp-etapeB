@@ -1,4 +1,4 @@
-﻿import { DeployPipeline } from '@/components/pipeline/DeployPipeline';
+import { DeployPipeline } from '@/components/pipeline/DeployPipeline';
 
 export default function PipelinePage() {
   return (

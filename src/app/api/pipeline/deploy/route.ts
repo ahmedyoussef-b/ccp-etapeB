@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { execSync } from 'child_process';
 
 export async function POST() {
   try {
@@ -48,7 +49,7 @@ export async function POST() {
     // ============================================
     console.log('📂 PHASE 2: Analyse des fichiers...');
 
-    // Récupérer les fichiers existants sur GitHub avec leur SHA
+    // Récupérer les fichiers existants sur GitHub
     let existingFilesMap = {};
     let existingFiles = [];
     try {
@@ -109,7 +110,6 @@ export async function POST() {
               const content = fs.readFileSync(fullPath);
               
               // Calculer le SHA Git (format blob)
-              // Format: "blob " + taille + "\0" + contenu
               const blobHeader = 'blob ' + content.length + '\0';
               const blobData = Buffer.concat([Buffer.from(blobHeader), content]);
               const hash = crypto.createHash('sha1');
@@ -197,7 +197,7 @@ export async function POST() {
     }
 
     // ============================================
-    // PHASE 3: EXECUTION - Déploiement
+    // PHASE 3: EXECUTION - Déploiement sur GitHub
     // ============================================
     console.log('🚀 PHASE 3: Execution du deploiement...');
 
@@ -231,7 +231,6 @@ export async function POST() {
     // 2. Uploader les fichiers modifiés ou nouveaux
     if (toUpload.length > 0) {
       console.log('📤 Upload des fichiers modifies/nouveaux...');
-      let uploadedCount = 0;
       for (const file of toUpload) {
         try {
           const contentBase64 = file.content.toString('base64');
@@ -246,7 +245,7 @@ export async function POST() {
             branch,
             sha: sha
           });
-          uploadedCount++;
+          uploaded++;
           const action = file.action === 'nouveau' ? 'nouveau' : 'mis a jour';
           console.log('  ✅ Upload: ' + file.githubPath + ' (' + action + ')');
         } catch (err) {
@@ -254,11 +253,44 @@ export async function POST() {
           console.log('  ❌ Erreur pour ' + file.githubPath + ': ' + err.message);
         }
       }
-      uploaded = uploadedCount;
     }
 
     // ============================================
-    // PHASE 4: RAPPORT FINAL
+    // PHASE 4: COMMIT AUTOMATIQUE
+    // ============================================
+    console.log('');
+    console.log('📝 PHASE 4: Commit automatique...');
+    try {
+      const status = execSync('git status --porcelain', { encoding: 'utf8' });
+      
+      if (status.trim()) {
+        const files = status.split('\n').filter(Boolean).length;
+        console.log('  📝 ' + files + ' fichiers modifies a commiter');
+        
+        // Ajouter tous les fichiers
+        execSync('git add .', { stdio: 'ignore' });
+        console.log('  ✅ Fichiers ajoutes au staging');
+        
+        // Créer un commit
+        const commitMessage = 'Auto-commit: Pipeline ' + new Date().toISOString();
+        execSync('git commit -m "' + commitMessage + '"', { stdio: 'ignore' });
+        console.log('  ✅ Commit cree: ' + commitMessage);
+        
+        // Pousser vers GitHub
+        execSync('git push origin ' + branch, { stdio: 'ignore' });
+        console.log('  ✅ Push effectue');
+        
+        console.log('  ✅ Commit automatique termine avec succes!');
+      } else {
+        console.log('  ℹ️ Aucun fichier a commiter');
+      }
+    } catch (err) {
+      console.log('  ⚠️ Erreur lors du commit automatique: ' + err.message);
+      console.log('  ℹ️ Vous pouvez faire git add . && git commit manuellement');
+    }
+
+    // ============================================
+    // PHASE 5: RAPPORT FINAL
     // ============================================
     console.log('');
     console.log('========================================');
@@ -269,6 +301,7 @@ export async function POST() {
     console.log('  🗑️ Supprimes: ' + deleted + ' fichiers');
     console.log('  ⏭️ Inchanges: ' + unchanged.length + ' fichiers');
     console.log('  ❌ Erreurs: ' + errors);
+    console.log('  📝 Commit automatique: EFFECTUE');
     console.log('========================================');
 
     if (errors === 0) {
