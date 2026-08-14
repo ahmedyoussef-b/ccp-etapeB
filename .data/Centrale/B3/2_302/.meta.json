@@ -1,0 +1,7 @@
+{
+  "libelle": "LIMITEUR DE CONTRAINTE",
+  "code": "2_302",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
