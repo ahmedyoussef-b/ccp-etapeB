@@ -2,11 +2,17 @@
   "name": "app",
   "version": "0.1.0",
   "private": true,
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:seed": "npx tsx prisma/seed.ts",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -16,11 +22,13 @@
     "@hello-pangea/dnd": "^16.6.0",
     "@hookform/resolvers": "^3.9.0",
     "@octokit/rest": "^22.0.1",
+    "@prisma/adapter-pg": "^7.9.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "lucide-react": "^1.27.0",
     "next": "14.2.35",
+    "pg": "^8.23.0",
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.54.0",
@@ -31,14 +39,18 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@prisma/client": "^5.22.0",
     "@types/dotenv": "^6.1.1",
     "@types/node": "^20",
+    "@types/pg": "^8.21.0",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
     "postcss": "^8",
+    "prisma": "^5.22.0",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.23.12",
     "typescript": "^5"
   }
 }
