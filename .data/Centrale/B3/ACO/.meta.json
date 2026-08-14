@@ -1,0 +1,7 @@
+{
+  "libelle": "RECUP DES PURGES ET CONDENSATS",
+  "code": "ACO",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
