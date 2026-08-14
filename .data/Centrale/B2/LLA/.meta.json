@@ -1,0 +1,7 @@
+{
+  "libelle": "DISTRIBUTION BT SECOURS TG 2",
+  "code": "LLA",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}
