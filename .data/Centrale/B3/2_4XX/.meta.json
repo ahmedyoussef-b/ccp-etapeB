@@ -1,0 +1,7 @@
+{
+  "libelle": "TEST VANNES",
+  "code": "2_4XX",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
