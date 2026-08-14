@@ -1,0 +1,7 @@
+{
+  "libelle": "SYSTEME VAPEUR BP CR 1",
+  "code": "B1CR22",
+  "type": "groupe",
+  "parentId": "CHAUDIERE DE RECUPERATION 1",
+  "syncState": "local-only"
+}
