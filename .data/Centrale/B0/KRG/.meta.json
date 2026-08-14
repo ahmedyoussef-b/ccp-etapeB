@@ -1,0 +1,7 @@
+{
+  "libelle": "REGULATION DE CHARGE DU BLOC",
+  "code": "KRG",
+  "type": "sous_centrale",
+  "parentId": "B0",
+  "syncState": "local-only"
+}
