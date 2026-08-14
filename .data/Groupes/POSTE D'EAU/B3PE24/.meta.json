@@ -1,0 +1,7 @@
+{
+  "libelle": "SYSTEME EAU DE CIRCULATION",
+  "code": "B3PE24",
+  "type": "groupe",
+  "parentId": "POSTE D'EAU",
+  "syncState": "local-only"
+}
