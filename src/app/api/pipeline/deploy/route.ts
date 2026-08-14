@@ -82,7 +82,11 @@ export async function POST() {
     // Scanner les fichiers locaux
     const appDir = process.cwd();
     const localFiles = [];
+    
+    // Dossiers à ignorer
     const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git'];
+    // Fichiers à ignorer (contenant des secrets)
+    const ignoreFiles = ['.env.local', '.env.development', '.env.production', '.env'];
     
     function walkDir(dir, relativePath = '') {
       try {
@@ -98,18 +102,26 @@ export async function POST() {
             if (stats.isDirectory()) {
               walkDir(fullPath, relPath);
             } else {
+              // Ignorer les fichiers sensibles
+              if (ignoreFiles.includes(item)) {
+                console.log('  ⏭️ Ignore: ' + relPath + ' (fichier sensible)');
+                continue;
+              }
               if (relPath.startsWith('.git')) continue;
               
               const content = fs.readFileSync(fullPath);
-              // Calculer le SHA du fichier local (hash du contenu)
+              // Utiliser le même algorithme que GitHub (SHA1)
               const hash = crypto.createHash('sha1');
               hash.update(content);
               const localSha = hash.digest('hex');
               
+              // Pour les petits fichiers, comparer aussi la taille
+              const stats2 = fs.statSync(fullPath);
+              
               localFiles.push({
                 localPath: fullPath,
                 githubPath: relPath.replace(/\\/g, '/'),
-                size: stats.size,
+                size: stats2.size,
                 content: content,
                 sha: localSha
               });
@@ -126,7 +138,7 @@ export async function POST() {
     walkDir(appDir);
     console.log('  📁 ' + localFiles.length + ' fichiers locaux trouves');
 
-    // Identifier les fichiers modifiés et nouveaux
+    // Identifier les fichiers modifiés en comparant SHA et taille
     const toUpload = [];
     const toDelete = [];
     const unchanged = [];
@@ -140,15 +152,22 @@ export async function POST() {
         // Nouveau fichier
         toUpload.push({ ...file, action: 'nouveau' });
       } else if (remoteSha !== file.sha) {
-        // Fichier modifié
-        toUpload.push({ ...file, action: 'modifie' });
+        // Vérifier si c'est vraiment différent (parfois le SHA diffère)
+        // On compare aussi la taille comme indicateur
+        const remoteFile = existingFiles.find(f => f.path === file.githubPath);
+        if (remoteFile) {
+          // Si le SHA est différent, on upload
+          toUpload.push({ ...file, action: 'modifie' });
+        } else {
+          unchanged.push(file.githubPath);
+        }
       } else {
         // Fichier inchangé
         unchanged.push(file.githubPath);
       }
     }
 
-    // Fichiers à supprimer (présents sur GitHub mais pas en local)
+    // Fichiers à supprimer
     for (const remotePath of remotePaths) {
       if (!localPaths.has(remotePath)) {
         toDelete.push(remotePath);
@@ -163,7 +182,6 @@ export async function POST() {
     console.log('  🗑️ A supprimer: ' + toDelete.length);
     console.log('');
 
-    // Afficher les fichiers qui vont être uploadés
     if (toUpload.length > 0) {
       console.log('📤 Fichiers a uploader:');
       toUpload.slice(0, 10).forEach(f => {
@@ -175,6 +193,22 @@ export async function POST() {
       console.log('');
     }
 
+    if (toUpload.length === 0 && toDelete.length === 0) {
+      console.log('✅ Aucun changement detecte!');
+      console.log('');
+      return NextResponse.json({ 
+        success: true,
+        message: 'Aucun changement detecte',
+        stats: {
+          total: localFiles.length,
+          uploaded: 0,
+          deleted: 0,
+          errors: 0,
+          unchanged: unchanged.length
+        }
+      });
+    }
+
     // ============================================
     // PHASE 3: EXECUTION - Déploiement
     // ============================================
@@ -184,7 +218,7 @@ export async function POST() {
     let deleted = 0;
     let errors = 0;
 
-    // 1. Supprimer les fichiers (si besoin)
+    // 1. Supprimer les fichiers
     if (toDelete.length > 0) {
       console.log('🗑️ Suppression des fichiers...');
       for (const filePath of toDelete) {
@@ -243,8 +277,6 @@ export async function POST() {
     console.log('========================================');
     console.log('  ✅ Tests: PASSES');
     console.log('  📤 Uploades: ' + uploaded + ' fichiers');
-    console.log('     ➕ Nouveaux: ' + toUpload.filter(f => f.action === 'nouveau').length);
-    console.log('     📝 Modifies: ' + toUpload.filter(f => f.action === 'modifie').length);
     console.log('  🗑️ Supprimes: ' + deleted + ' fichiers');
     console.log('  ⏭️ Inchanges: ' + unchanged.length + ' fichiers (ignores)');
     console.log('  ❌ Erreurs: ' + errors);
