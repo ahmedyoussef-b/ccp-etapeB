@@ -1,0 +1,7 @@
+{
+  "libelle": "ASPIRATION D'AIR TG 2",
+  "code": "TCA",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}
