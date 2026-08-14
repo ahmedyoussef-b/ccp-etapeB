@@ -23,7 +23,12 @@ export async function GET() {
     const roots: TreeNodeWithChildren[] = [];
 
     for (const node of nodes) {
-      nodeMap.set(node.id, { ...node, children: [] });
+      nodeMap.set(node.id, {
+        ...node,
+        children: [],
+        createdAt: node.createdAt.toISOString(),
+        updatedAt: node.updatedAt.toISOString(),
+      });
     }
 
     for (const node of nodes) {
@@ -40,7 +45,27 @@ export async function GET() {
     return NextResponse.json({ roots: apiRoots });
   } catch (error) {
     console.error("Failed to fetch tree:", error);
-    return NextResponse.json({ error: "Failed to load tree" }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const isDbUnavailable =
+      message.toLowerCase().includes("can't reach database server") ||
+      message.toLowerCase().includes("connection") ||
+      message.toLowerCase().includes("timeout");
+
+    if (isDbUnavailable) {
+      return NextResponse.json(
+        {
+          error: "database_unavailable",
+          message: "La base de données web est indisponible pour le moment.",
+          details: message,
+        },
+        { status: 503 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Failed to load tree", details: message },
+      { status: 500 }
+    );
   }
 }
 

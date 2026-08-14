@@ -38,7 +38,7 @@ function parseSchema(filePath: string) {
     relations: string[];
   }> = [];
 
-  for (const [modelName, bounds] of modelDefinitions) {
+  for (const [modelName, bounds] of Array.from(modelDefinitions)) {
     const body = content.slice(bounds.lineStart, bounds.lineEnd);
 
     const columns: Array<{

@@ -1,9 +1,9 @@
-import "dotenv/config";
-import { prisma } from "../src/lib/prisma";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 import fs from "fs";
 import path from "path";
 
-const DATA_DIR = process.cwd() + "/.data";
+const DATA_DIR = path.join(process.cwd(), ".data");
 
 async function importDir(dirPath: string, parentId: number | null): Promise<number> {
   const entries = fs.readdirSync(dirPath);
@@ -40,26 +40,22 @@ async function importDir(dirPath: string, parentId: number | null): Promise<numb
   return created;
 }
 
-async function main() {
-  console.log("[tree-data] Scanning .data directory...");
+export async function POST() {
+  try {
+    await prisma.treeNode.deleteMany({});
 
-  await prisma.treeNode.deleteMany({});
-  console.log("[tree-data] Cleared existing tree nodes.");
+    const root = await prisma.treeNode.create({
+      data: { name: ".data", type: "root", order: 0 },
+    });
 
-  const root = await prisma.treeNode.create({
-    data: { name: ".data", type: "root", order: 0 },
-  });
-  console.log("[tree-data] Root node created.");
+    let count = 1;
+    if (fs.existsSync(DATA_DIR)) {
+      count += await importDir(DATA_DIR, root.id);
+    }
 
-  const count = await importDir(DATA_DIR, root.id);
-  console.log(`[tree-data] Imported ${count + 1} nodes.`);
+    return NextResponse.json({ success: true, message: `Web tree reset successfully (${count} nodes)` });
+  } catch (error) {
+    console.error("Failed to reset web tree:", error);
+    return NextResponse.json({ error: "Failed to reset web tree" }, { status: 500 });
+  }
 }
-
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });

@@ -78,6 +78,5 @@ model TreeNode {
 
   @@index([parentId])
   @@index([type])
-  @@unique([name, type])
   @@unique([name, type, parentId])
 }
