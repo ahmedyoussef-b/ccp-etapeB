@@ -1,0 +1,7 @@
+{
+  "libelle": "CONTOURNEMENT BP CR 1",
+  "code": "B1TV22",
+  "type": "groupe",
+  "parentId": "TURBINE VAPEUR",
+  "syncState": "local-only"
+}
