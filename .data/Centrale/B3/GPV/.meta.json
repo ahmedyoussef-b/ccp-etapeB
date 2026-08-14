@@ -1,0 +1,7 @@
+{
+  "libelle": "CIRCUIT PRINCIPAL VAPEUR TV",
+  "code": "GPV",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
