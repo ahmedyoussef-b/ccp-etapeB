@@ -31,7 +31,7 @@ export function DeployButton() {
       }
     } catch (error) {
       setStatus('error');
-      setMessage('Erreur de connexion: ' + error.message);
+      setMessage('Erreur de connexion: ' + (error as Error).message);
     } finally {
       setIsDeploying(false);
     }
