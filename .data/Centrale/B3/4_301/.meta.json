@@ -1,0 +1,7 @@
+{
+  "libelle": "MESURES SIL 3 VOIE 3",
+  "code": "4_301",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
