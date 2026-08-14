@@ -1,0 +1,7 @@
+{
+  "libelle": "PROT ALTERNATEUR TV",
+  "code": "GPA",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
