@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import crypto from 'crypto';
 
 export async function POST() {
   try {
@@ -25,7 +25,6 @@ export async function POST() {
     // PHASE 1: TEST - Vérification
     // ============================================
     console.log('🔍 PHASE 1: Test de verification...');
-    console.log('  ✅ Token valide');
 
     try {
       await octokit.rest.repos.get({ owner, repo });
@@ -49,9 +48,9 @@ export async function POST() {
     // ============================================
     console.log('📂 PHASE 2: Analyse des fichiers...');
 
-    // Récupérer les fichiers existants sur GitHub
-    let existingFiles = [];
+    // Récupérer les fichiers existants sur GitHub avec leur SHA
     let existingFilesMap = {};
+    let existingFiles = [];
     try {
       const { data: refData } = await octokit.rest.git.getRef({
         owner,
@@ -80,20 +79,16 @@ export async function POST() {
       console.log('  ℹ️ Aucun fichier existant (depot vide)');
     }
 
-    // Scanner les fichiers locaux (IGNORER .git ABSOLUMENT)
+    // Scanner les fichiers locaux
     const appDir = process.cwd();
     const localFiles = [];
-    
-    // Dossiers à ignorer absolument
     const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git'];
     
     function walkDir(dir, relativePath = '') {
       try {
         const items = fs.readdirSync(dir);
         for (const item of items) {
-          // Ignorer .git et autres dossiers systemes
           if (ignoreDirs.includes(item)) continue;
-          if (item === '.git') continue; // Double sécurité
           
           const fullPath = path.join(dir, item);
           const relPath = relativePath ? path.join(relativePath, item) : item;
@@ -101,20 +96,22 @@ export async function POST() {
           try {
             const stats = fs.statSync(fullPath);
             if (stats.isDirectory()) {
-              // Ne pas entrer dans .git
-              if (item !== '.git') {
-                walkDir(fullPath, relPath);
-              }
+              walkDir(fullPath, relPath);
             } else {
-              // Ignorer les fichiers dans .git
               if (relPath.startsWith('.git')) continue;
               
               const content = fs.readFileSync(fullPath);
+              // Calculer le SHA du fichier local (hash du contenu)
+              const hash = crypto.createHash('sha1');
+              hash.update(content);
+              const localSha = hash.digest('hex');
+              
               localFiles.push({
                 localPath: fullPath,
                 githubPath: relPath.replace(/\\/g, '/'),
                 size: stats.size,
-                content: content
+                content: content,
+                sha: localSha
               });
             }
           } catch (err) {
@@ -127,23 +124,56 @@ export async function POST() {
     }
     
     walkDir(appDir);
-    console.log('  📁 ' + localFiles.length + ' fichiers locaux trouves (.git exclu)');
+    console.log('  📁 ' + localFiles.length + ' fichiers locaux trouves');
+
+    // Identifier les fichiers modifiés et nouveaux
+    const toUpload = [];
+    const toDelete = [];
+    const unchanged = [];
 
     const localPaths = new Set(localFiles.map(f => f.githubPath));
     const remotePaths = new Set(Object.keys(existingFilesMap));
 
-    const toUpdate = localFiles.filter(f => 
-      !existingFilesMap[f.githubPath] || 
-      existingFilesMap[f.githubPath]
-    );
+    for (const file of localFiles) {
+      const remoteSha = existingFilesMap[file.githubPath];
+      if (!remoteSha) {
+        // Nouveau fichier
+        toUpload.push({ ...file, action: 'nouveau' });
+      } else if (remoteSha !== file.sha) {
+        // Fichier modifié
+        toUpload.push({ ...file, action: 'modifie' });
+      } else {
+        // Fichier inchangé
+        unchanged.push(file.githubPath);
+      }
+    }
 
-    const toDelete = [...remotePaths].filter(p => !localPaths.has(p));
+    // Fichiers à supprimer (présents sur GitHub mais pas en local)
+    for (const remotePath of remotePaths) {
+      if (!localPaths.has(remotePath)) {
+        toDelete.push(remotePath);
+      }
+    }
 
     console.log('');
     console.log('📊 Resume des changements:');
-    console.log('  ✅ A ajouter/mettre a jour: ' + toUpdate.length + ' fichiers');
-    console.log('  🗑️ A supprimer: ' + toDelete.length + ' fichiers');
+    console.log('  ✅ Nouveaux fichiers: ' + toUpload.filter(f => f.action === 'nouveau').length);
+    console.log('  📝 Fichiers modifies: ' + toUpload.filter(f => f.action === 'modifie').length);
+    console.log('  ⏭️ Fichiers inchanges: ' + unchanged.length + ' (ignores)');
+    console.log('  🗑️ A supprimer: ' + toDelete.length);
     console.log('');
+
+    // Afficher les fichiers qui vont être uploadés
+    if (toUpload.length > 0) {
+      console.log('📤 Fichiers a uploader:');
+      toUpload.slice(0, 10).forEach(f => {
+        console.log('  ' + (f.action === 'nouveau' ? '➕' : '📝') + ' ' + f.githubPath);
+      });
+      if (toUpload.length > 10) {
+        console.log('  ... et ' + (toUpload.length - 10) + ' autres');
+      }
+      console.log('');
+    }
 
     // ============================================
     // PHASE 3: EXECUTION - Déploiement
@@ -154,7 +184,7 @@ export async function POST() {
     let deleted = 0;
     let errors = 0;
 
-    // 1. Supprimer les fichiers
+    // 1. Supprimer les fichiers (si besoin)
     if (toDelete.length > 0) {
       console.log('🗑️ Suppression des fichiers...');
       for (const filePath of toDelete) {
@@ -177,10 +207,10 @@ export async function POST() {
       console.log('');
     }
 
-    // 2. Uploader les fichiers
-    if (toUpdate.length > 0) {
-      console.log('📤 Upload des fichiers...');
-      for (const file of toUpdate) {
+    // 2. Uploader les fichiers modifiés ou nouveaux
+    if (toUpload.length > 0) {
+      console.log('📤 Upload des fichiers modifies/nouveaux...');
+      for (const file of toUpload) {
         try {
           const contentBase64 = file.content.toString('base64');
           const sha = existingFilesMap[file.githubPath] || undefined;
@@ -195,7 +225,8 @@ export async function POST() {
             sha: sha
           });
           uploaded++;
-          console.log('  ✅ Upload: ' + file.githubPath + (sha ? ' (mis a jour)' : ' (nouveau)'));
+          const action = file.action === 'nouveau' ? 'nouveau' : 'mis a jour';
+          console.log('  ✅ Upload: ' + file.githubPath + ' (' + action + ')');
         } catch (err) {
           errors++;
           console.log('  ❌ Erreur pour ' + file.githubPath + ': ' + err.message);
@@ -212,9 +243,11 @@ export async function POST() {
     console.log('========================================');
     console.log('  ✅ Tests: PASSES');
     console.log('  📤 Uploades: ' + uploaded + ' fichiers');
+    console.log('     ➕ Nouveaux: ' + toUpload.filter(f => f.action === 'nouveau').length);
+    console.log('     📝 Modifies: ' + toUpload.filter(f => f.action === 'modifie').length);
     console.log('  🗑️ Supprimes: ' + deleted + ' fichiers');
-    console.log('  ❌ Erreurs: ' + errors + ' fichiers');
-    console.log('  🚫 .git ignore');
+    console.log('  ⏭️ Inchanges: ' + unchanged.length + ' fichiers (ignores)');
+    console.log('  ❌ Erreurs: ' + errors);
     console.log('========================================');
 
     if (errors === 0) {
@@ -231,7 +264,9 @@ export async function POST() {
         uploaded: uploaded,
         deleted: deleted,
         errors: errors,
-        toDelete: toDelete.length
+        unchanged: unchanged.length,
+        new: toUpload.filter(f => f.action === 'nouveau').length,
+        modified: toUpload.filter(f => f.action === 'modifie').length
       }
     });
 
