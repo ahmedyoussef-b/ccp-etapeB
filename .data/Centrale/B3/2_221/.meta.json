@@ -1,0 +1,7 @@
+{
+  "libelle": "ZONE DE VITESSE CRITIQUE",
+  "code": "2_221",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
