@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Team {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  color       String?
+  members     Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships TeamMember[]
+}
+
+model Member {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String   @unique
+  role        String
+  status      String   @default("active")
+  avatar      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships TeamMember[]
+}
+
+model TeamMember {
+  id        Int      @id @default(autoincrement())
+  teamId    Int
+  memberId  Int
+  createdAt DateTime @default(now())
+
+  team    Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  member  Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, memberId])
+}
+
+model Procedure {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  content     String?
+  category    String?
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  action    String
+  entity    String
+  entityId  Int?
+  metadata  String?
+  createdAt DateTime @default(now())
+}
+
+model TreeNode {
+  id         Int      @id @default(autoincrement())
+  name       String
+  type       String
+  metadata   String?
+  parentId   Int?
+  parent     TreeNode?   @relation("TreeChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children   TreeNode[]  @relation("TreeChildren")
+  order      Int        @default(0)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([parentId])
+  @@index([type])
+  @@unique([name, type])
+  @@unique([name, type, parentId])
+}
