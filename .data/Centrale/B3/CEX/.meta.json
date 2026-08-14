@@ -1,0 +1,7 @@
+{
+  "libelle": "CONDENSATION ET EXTRACTION",
+  "code": "CEX",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
