@@ -30,14 +30,14 @@ export async function POST() {
       await octokit.rest.repos.get({ owner, repo });
       console.log('  ✅ Acces au depot OK');
     } catch (err) {
-      throw new Error('Impossible d\'acceder au depot: ' + err.message);
+      throw new Error('Impossible d\'acceder au depot: ' + (err as Error).message);
     }
 
     // Vérifier la branche
     try {
       await octokit.rest.git.getRef({ owner, repo, ref: 'heads/' + branch });
       console.log('  ✅ Branche ' + branch + ' OK');
-    } catch (err) {
+    } catch {
       throw new Error('Branche ' + branch + ' introuvable');
     }
 
@@ -56,12 +56,12 @@ export async function POST() {
       ref: 'heads/' + branch
     });
 
-    const { data: treeData } = await octokit.rest.git.getTree({
-      owner,
-      repo,
-      tree_sha: refData.object.sha,
-      recursive: true
-    });
+      const { data: treeData } = await octokit.rest.git.getTree({
+        owner,
+        repo,
+        tree_sha: refData.object.sha,
+        recursive: '1'
+      });
 
     const githubFiles = treeData.tree
       .filter(item => item.type === 'blob')
@@ -78,9 +78,6 @@ export async function POST() {
     let errors = 0;
     const appDir = process.cwd();
 
-    // Dossiers à ignorer localement
-    const ignoreDirs = ['node_modules', '.git', '.next', 'dist', 'build'];
-
     for (const file of githubFiles) {
       try {
         // Récupérer le contenu du fichier
@@ -92,7 +89,7 @@ export async function POST() {
         });
 
         // Décoder le contenu Base64
-        const content = Buffer.from(fileData.content, 'base64');
+        const content = Buffer.from((fileData as { content: string }).content, 'base64');
 
         // Créer le chemin local
         const localPath = path.join(appDir, file.path);
@@ -110,7 +107,7 @@ export async function POST() {
 
       } catch (err) {
         errors++;
-        console.log('  ❌ Erreur pour ' + file.path + ': ' + err.message);
+        console.log('  ❌ Erreur pour ' + file.path + ': ' + (err as Error).message);
       }
     }
 
@@ -145,7 +142,7 @@ export async function POST() {
   } catch (error) {
     console.error('❌ Erreur:', error);
     return NextResponse.json(
-      { error: error.message },
+      { error: (error as Error).message },
       { status: 500 }
     );
   }
