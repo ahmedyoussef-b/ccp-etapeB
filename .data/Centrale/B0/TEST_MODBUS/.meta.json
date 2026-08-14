@@ -1,0 +1,7 @@
+{
+  "libelle": "Essais CSS-F Modbus",
+  "code": "TEST_MODBUS",
+  "type": "sous_centrale",
+  "parentId": "B0",
+  "syncState": "local-only"
+}

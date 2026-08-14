@@ -1,0 +1,7 @@
+{
+  "libelle": "GRAISSAGE,SOULEVEMENT,VIRAGE TV",
+  "code": "GGR",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

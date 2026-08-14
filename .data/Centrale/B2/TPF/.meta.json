@@ -1,0 +1,7 @@
+{
+  "libelle": "ALIMENTATION EN FIOUL TG 2",
+  "code": "TPF",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}

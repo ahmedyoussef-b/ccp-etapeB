@@ -1,0 +1,7 @@
+{
+  "libelle": "AUTOMATES LOGIQUES CR 1",
+  "code": "KCZ",
+  "type": "sous_centrale",
+  "parentId": "B1",
+  "syncState": "local-only"
+}

@@ -1,0 +1,7 @@
+{
+  "libelle": "DECLENCHEMENT RACK PWS 2",
+  "code": "0_218",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

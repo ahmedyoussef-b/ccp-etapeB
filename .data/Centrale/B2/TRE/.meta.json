@@ -1,0 +1,7 @@
+{
+  "libelle": "CTRL LOGIQUE ET ANALOGIQUE TG 2",
+  "code": "TRE",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}

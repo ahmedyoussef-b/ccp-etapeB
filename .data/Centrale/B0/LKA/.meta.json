@@ -1,0 +1,7 @@
+{
+  "libelle": "DISTRIBUTION BT NORMALE BLOC",
+  "code": "LKA",
+  "type": "sous_centrale",
+  "parentId": "B0",
+  "syncState": "local-only"
+}

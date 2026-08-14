@@ -1,0 +1,7 @@
+{
+  "libelle": "TEST DE MANOEUVRABILITE",
+  "code": "2_401",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

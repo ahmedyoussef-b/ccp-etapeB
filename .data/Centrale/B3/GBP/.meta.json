@@ -1,0 +1,7 @@
+{
+  "libelle": "CONTOURNEMENT BP TV",
+  "code": "GBP",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

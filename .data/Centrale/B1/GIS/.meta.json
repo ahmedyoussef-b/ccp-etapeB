@@ -1,0 +1,7 @@
+{
+  "libelle": "Poste blindé",
+  "code": "GIS",
+  "type": "sous_centrale",
+  "parentId": "B1",
+  "syncState": "local-only"
+}

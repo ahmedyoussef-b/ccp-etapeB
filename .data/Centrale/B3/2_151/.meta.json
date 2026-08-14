@@ -1,0 +1,7 @@
+{
+  "libelle": "MIN HP",
+  "code": "2_151",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

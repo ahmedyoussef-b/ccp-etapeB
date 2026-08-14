@@ -1,0 +1,7 @@
+{
+  "libelle": "SURVEILLANCE LIGNE D'ARBRE TV",
+  "code": "B3TV31",
+  "type": "groupe",
+  "parentId": "TURBINE VAPEUR",
+  "syncState": "local-only"
+}

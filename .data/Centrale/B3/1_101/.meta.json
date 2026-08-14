@@ -1,0 +1,7 @@
+{
+  "libelle": "OLC",
+  "code": "1_101",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

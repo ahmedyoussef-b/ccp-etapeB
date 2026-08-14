@@ -1,0 +1,7 @@
+{
+  "libelle": "LUBRIFICATION TG 2",
+  "code": "B2TG21",
+  "type": "groupe",
+  "parentId": "TURBINE GAZ 2",
+  "syncState": "local-only"
+}

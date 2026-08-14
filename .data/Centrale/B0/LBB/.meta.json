@@ -1,0 +1,7 @@
+{
+  "libelle": "PROD ET DISTR 125V CC BLOC",
+  "code": "LBB",
+  "type": "sous_centrale",
+  "parentId": "B0",
+  "syncState": "local-only"
+}

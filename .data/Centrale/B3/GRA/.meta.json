@@ -1,0 +1,7 @@
+{
+  "libelle": "REFRI ALTERNATEUR TV",
+  "code": "GRA",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

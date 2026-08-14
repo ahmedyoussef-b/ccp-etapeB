@@ -1,0 +1,7 @@
+{
+  "libelle": "ALIMENTATION EN GAZ TG 2",
+  "code": "TPG",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}

@@ -1,0 +1,7 @@
+{
+  "libelle": "CONTOURNEMENT HP TV",
+  "code": "GHP",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

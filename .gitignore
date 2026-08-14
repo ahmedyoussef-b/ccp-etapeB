@@ -37,3 +37,5 @@ next-env.d.ts
 
 # local env
 .env.local
+
+/src/generated/prisma

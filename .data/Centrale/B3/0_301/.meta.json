@@ -1,0 +1,7 @@
+{
+  "libelle": "SURVITESSE 3",
+  "code": "0_301",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
