@@ -29,14 +29,14 @@ export async function POST() {
     try {
       await octokit.rest.repos.get({ owner, repo });
       console.log('  ✅ Acces au depot OK');
-    } catch (err) {
-      throw new Error('Impossible d\'acceder au depot: ' + err.message);
+    } catch (err: unknown) {
+      throw new Error('Impossible d\'acceder au depot: ' + (err as Error).message);
     }
 
     try {
       await octokit.rest.git.getRef({ owner, repo, ref: 'heads/' + branch });
       console.log('  ✅ Branche ' + branch + ' OK');
-    } catch (err) {
+    } catch {
       throw new Error('Branche ' + branch + ' introuvable');
     }
 
@@ -49,7 +49,7 @@ export async function POST() {
     console.log('📂 PHASE 2: Analyse des fichiers...');
 
     // Récupérer les fichiers existants sur GitHub avec leur SHA
-    let existingFilesMap = {};
+    let existingFilesMap: Record<string, string> = {};
     let existingFiles = [];
     try {
       const { data: refData } = await octokit.rest.git.getRef({
@@ -62,31 +62,37 @@ export async function POST() {
         owner,
         repo,
         tree_sha: refData.object.sha,
-        recursive: true
+        recursive: '1'
       });
 
       existingFiles = treeData.tree
         .filter(item => item.type === 'blob')
         .map(item => ({ path: item.path, sha: item.sha }));
       
-      existingFilesMap = existingFiles.reduce((acc, f) => {
+      existingFilesMap = existingFiles.reduce<Record<string, string>>((acc, f) => {
         acc[f.path] = f.sha;
         return acc;
       }, {});
       
       console.log('  📁 ' + existingFiles.length + ' fichiers existants sur GitHub');
-    } catch (err) {
+    } catch {
       console.log('  ℹ️ Aucun fichier existant (depot vide)');
     }
 
     // Scanner les fichiers locaux
     const appDir = process.cwd();
-    const localFiles = [];
+    const localFiles: Array<{
+      localPath: string;
+      githubPath: string;
+      size: number;
+      content: Buffer;
+      sha: string;
+    }> = [];
     
     const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git'];
     const ignoreFiles = ['.env.local', '.env.development', '.env.production', '.env'];
     
-    function walkDir(dir, relativePath = '') {
+    const walkDir = (dir: string, relativePath = ''): void => {
       try {
         const items = fs.readdirSync(dir);
         for (const item of items) {
@@ -108,8 +114,6 @@ export async function POST() {
               
               const content = fs.readFileSync(fullPath);
               
-              // Calculer le SHA Git (format blob)
-              // Format: "blob " + taille + "\0" + contenu
               const blobHeader = 'blob ' + content.length + '\0';
               const blobData = Buffer.concat([Buffer.from(blobHeader), content]);
               const hash = crypto.createHash('sha1');
@@ -125,13 +129,13 @@ export async function POST() {
               });
             }
           } catch (err) {
-            console.log('  ⚠️ Erreur sur ' + fullPath + ': ' + err.message);
+            console.log('  ⚠️ Erreur sur ' + fullPath + ': ' + (err as Error).message);
           }
         }
       } catch (err) {
-        console.log('  ⚠️ Erreur de lecture de ' + dir + ': ' + err.message);
+        console.log('  ⚠️ Erreur de lecture de ' + dir + ': ' + (err as Error).message);
       }
-    }
+    };
     
     walkDir(appDir);
     console.log('  📁 ' + localFiles.length + ' fichiers locaux trouves');
@@ -155,7 +159,7 @@ export async function POST() {
       }
     }
 
-    for (const remotePath of remotePaths) {
+    for (const remotePath of Array.from(remotePaths)) {
       if (!localPaths.has(remotePath)) {
         toDelete.push(remotePath);
       }
@@ -222,7 +226,7 @@ export async function POST() {
           console.log('  ✅ Supprime: ' + filePath);
         } catch (err) {
           errors++;
-          console.log('  ❌ Erreur pour ' + filePath + ': ' + err.message);
+          console.log('  ❌ Erreur pour ' + filePath + ': ' + (err as Error).message);
         }
       }
       console.log('');
@@ -251,7 +255,7 @@ export async function POST() {
           console.log('  ✅ Upload: ' + file.githubPath + ' (' + action + ')');
         } catch (err) {
           errors++;
-          console.log('  ❌ Erreur pour ' + file.githubPath + ': ' + err.message);
+          console.log('  ❌ Erreur pour ' + file.githubPath + ': ' + (err as Error).message);
         }
       }
       uploaded = uploadedCount;
@@ -294,7 +298,7 @@ export async function POST() {
   } catch (error) {
     console.error('❌ Erreur:', error);
     return NextResponse.json(
-      { error: error.message },
+      { error: (error as Error).message },
       { status: 500 }
     );
   }
