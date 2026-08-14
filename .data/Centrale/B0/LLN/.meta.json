@@ -1,0 +1,7 @@
+{
+  "libelle": "DISTRIBUTION ECLAIRAGE SECOURS",
+  "code": "LLN",
+  "type": "sous_centrale",
+  "parentId": "B0",
+  "syncState": "local-only"
+}
