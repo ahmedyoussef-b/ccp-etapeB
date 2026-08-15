@@ -5,7 +5,8 @@ export function middleware(request: Request) {
   const isDev = process.env.NODE_ENV !== 'production';
 
   if (!isDev && (url.pathname.startsWith('/pipeline') || url.pathname.startsWith('/api/pipeline'))) {
-    return NextResponse.redirect(new URL('/', request.url));
+    const target = new URL('/', request.url);
+    return NextResponse.redirect(target);
   }
 }
 
