@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import type { PrismaClient } from "@prisma/client";
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 interface TreeNodeWithChildren {
   id: number;
@@ -15,7 +16,7 @@ interface TreeNodeWithChildren {
   children: TreeNodeWithChildren[];
 }
 
-async function buildTree(parentId: number | null): Promise<TreeNodeWithChildren[]> {
+async function buildTree(prisma: PrismaClient, parentId: number | null): Promise<TreeNodeWithChildren[]> {
   const nodes = await prisma.treeNode.findMany({
     where: { parentId },
     orderBy: { order: "asc" },
@@ -36,7 +37,7 @@ async function buildTree(parentId: number | null): Promise<TreeNodeWithChildren[
     };
 
     if (node.type === "directory" || node.type === "root") {
-      item.children = await buildTree(node.id);
+      item.children = await buildTree(prisma, node.id);
     }
 
     result.push(item);
@@ -47,6 +48,7 @@ async function buildTree(parentId: number | null): Promise<TreeNodeWithChildren[
 
 export async function GET() {
   try {
+    const { prisma } = await import("@/lib/prisma");
     const roots = await prisma.treeNode.findMany({
       where: { parentId: null },
       orderBy: { order: "asc" },
@@ -67,7 +69,7 @@ export async function GET() {
       };
 
       if (root.type === "directory" || root.type === "root") {
-        item.children = await buildTree(root.id);
+        item.children = await buildTree(prisma, root.id);
       }
 
       tree.push(item);
