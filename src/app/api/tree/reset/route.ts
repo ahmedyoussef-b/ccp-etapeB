@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import fs from "fs";
 import path from "path";
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 
@@ -17,6 +17,7 @@ async function importDir(dirPath: string, parentId: number | null): Promise<numb
     const stat = fs.statSync(fullPath);
 
     if (stat.isDirectory()) {
+      const { prisma } = await import("@/lib/prisma");
       const node = await prisma.treeNode.create({
         data: {
           name: item,
@@ -28,6 +29,7 @@ async function importDir(dirPath: string, parentId: number | null): Promise<numb
       created += 1;
       created += await importDir(fullPath, node.id);
     } else if (item !== ".meta.json") {
+      const { prisma } = await import("@/lib/prisma");
       await prisma.treeNode.create({
         data: {
           name: item,
@@ -45,6 +47,7 @@ async function importDir(dirPath: string, parentId: number | null): Promise<numb
 
 export async function POST() {
   try {
+    const { prisma } = await import("@/lib/prisma");
     await prisma.treeNode.deleteMany({});
 
     const root = await prisma.treeNode.create({

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function DELETE(
   _request: Request,
@@ -9,6 +9,7 @@ export async function DELETE(
 ) {
   try {
     const id = parseInt(params.id, 10);
+    const { prisma } = await import("@/lib/prisma");
     await prisma.treeNode.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -24,7 +25,7 @@ export async function PUT(
   try {
     const id = parseInt(params.id, 10);
     const { name } = await request.json();
-
+    const { prisma } = await import("@/lib/prisma");
     await prisma.treeNode.update({
       where: { id },
       data: { name },
@@ -44,7 +45,7 @@ export async function POST(
   try {
     const parentId = parseInt(params.id, 10);
     const { name, type = "directory" } = await request.json();
-
+    const { prisma } = await import("@/lib/prisma");
     const maxOrder = await prisma.treeNode.findFirst({
       where: { parentId },
       orderBy: { order: "desc" },

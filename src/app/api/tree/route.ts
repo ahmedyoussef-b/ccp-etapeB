@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 interface TreeNodeWithChildren {
   id: number;
@@ -17,6 +17,7 @@ interface TreeNodeWithChildren {
 
 export async function GET() {
   try {
+    const { prisma } = await import("@/lib/prisma");
     const nodes = await prisma.treeNode.findMany({
       orderBy: { order: "asc" },
     });
@@ -74,6 +75,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const { prisma } = await import("@/lib/prisma");
     const parentId = body.parentId ?? null;
 
     const maxOrder = await prisma.treeNode.findFirst({

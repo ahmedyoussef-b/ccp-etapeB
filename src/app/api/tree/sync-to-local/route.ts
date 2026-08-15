@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import fs from "fs";
 import path from "path";
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 const MIRROR_FILE = path.join(DATA_DIR, "mirror.json");
@@ -21,6 +21,7 @@ interface TreeNode {
 }
 
 async function buildTree(parentId: number | null): Promise<TreeNode[]> {
+  const { prisma } = await import("@/lib/prisma");
   const nodes = await prisma.treeNode.findMany({
     where: { parentId },
     orderBy: { order: "asc" },
@@ -52,6 +53,7 @@ async function buildTree(parentId: number | null): Promise<TreeNode[]> {
 
 export async function POST() {
   try {
+    const { prisma } = await import("@/lib/prisma");
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
