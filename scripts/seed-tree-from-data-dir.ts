@@ -5,7 +5,7 @@ import path from "path";
 
 const DATA_DIR = process.cwd() + "/.data";
 
-async function importDir(dirPath: string, parentId: number | null): Promise<number> {
+async function importDir(tx: any, dirPath: string, parentId: number | null): Promise<number> {
   const entries = fs.readdirSync(dirPath);
   let created = 0;
 
@@ -14,7 +14,7 @@ async function importDir(dirPath: string, parentId: number | null): Promise<numb
     const stat = fs.statSync(fullPath);
 
     if (stat.isDirectory()) {
-      const node = await prisma.treeNode.create({
+      const node = await tx.treeNode.create({
         data: {
           name: item,
           type: "directory",
@@ -23,9 +23,9 @@ async function importDir(dirPath: string, parentId: number | null): Promise<numb
         },
       });
       created += 1;
-      created += await importDir(fullPath, node.id);
+      created += await importDir(tx, fullPath, node.id);
     } else if (item !== ".meta.json") {
-      await prisma.treeNode.create({
+      await tx.treeNode.create({
         data: {
           name: item,
           type: "file",
@@ -40,19 +40,18 @@ async function importDir(dirPath: string, parentId: number | null): Promise<numb
   return created;
 }
 
-async function main() {
-  console.log("[tree-data] Scanning .data directory...");
-
-  await prisma.treeNode.deleteMany({});
-  console.log("[tree-data] Cleared existing tree nodes.");
-
-  const root = await prisma.treeNode.create({
+export async function seedTreeFromDataDir(tx: any): Promise<number> {
+  await tx.treeNode.deleteMany({});
+  const root = await tx.treeNode.create({
     data: { name: ".data", type: "root", order: 0 },
   });
-  console.log("[tree-data] Root node created.");
+  const count = fs.existsSync(DATA_DIR) ? await importDir(tx, DATA_DIR, root.id) : 0;
+  return count + 1;
+}
 
-  const count = await importDir(DATA_DIR, root.id);
-  console.log(`[tree-data] Imported ${count + 1} nodes.`);
+async function main() {
+  const count = await seedTreeFromDataDir(prisma);
+  console.log(`[tree-data] Imported ${count} nodes.`);
 }
 
 main()
