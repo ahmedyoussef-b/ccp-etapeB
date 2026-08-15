@@ -9,7 +9,8 @@ async function importDir(dirPath: string, parentId: number | null): Promise<numb
   const entries = fs.readdirSync(dirPath);
   let created = 0;
 
-  for (const item of entries) {
+  for (let i = 0; i < entries.length; i++) {
+    const item = entries[i];
     const fullPath = path.join(dirPath, item);
     const stat = fs.statSync(fullPath);
 
@@ -19,7 +20,7 @@ async function importDir(dirPath: string, parentId: number | null): Promise<numb
           name: item,
           type: "directory",
           parentId,
-          order: 0,
+          order: i,
         },
       });
       created += 1;
@@ -30,7 +31,7 @@ async function importDir(dirPath: string, parentId: number | null): Promise<numb
           name: item,
           type: "file",
           parentId,
-          order: 0,
+          order: i,
         },
       });
       created += 1;
