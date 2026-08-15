@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAll, create } from "@/lib/etat-des-lieux/server-store";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const reports = await getAll();

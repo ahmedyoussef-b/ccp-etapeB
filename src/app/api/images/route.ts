@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAll, create, getCategories } from "@/lib/images/server-store";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const [items, categories] = await Promise.all([getAll(), getCategories()]);

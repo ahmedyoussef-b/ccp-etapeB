@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
+export const dynamic = 'force-dynamic';
+
 function parseSchema(filePath: string) {
   const content = fs.readFileSync(filePath, "utf-8");
 

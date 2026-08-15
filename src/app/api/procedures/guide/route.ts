@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { offlineRepo } from "@/lib/procedures/offline-repo";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const procedures = await offlineRepo.getAll();
   return NextResponse.json(procedures);
