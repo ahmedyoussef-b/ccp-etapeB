@@ -72,13 +72,27 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const parentId = body.parentId ?? null;
+
+    const maxOrder = await prisma.treeNode.findFirst({
+      where: { parentId },
+      orderBy: { order: "desc" },
+      select: { order: true },
+    });
+    const nextOrder = (maxOrder?.order ?? -1) + 1;
+
+    const validTypes = ["root", "directory", "file"];
+    if (!validTypes.includes(body.type)) {
+      return NextResponse.json({ error: "Invalid node type" }, { status: 400 });
+    }
+
     const node = await prisma.treeNode.create({
       data: {
         name: body.name,
         type: body.type,
         metadata: body.metadata ?? null,
-        parentId: body.parentId ?? null,
-        order: body.order ?? 0,
+        parentId,
+        order: nextOrder,
       },
     });
     return NextResponse.json(node, { status: 201 });
