@@ -6,6 +6,10 @@ import crypto from 'crypto';
 import { execSync } from 'child_process';
 
 export async function POST() {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not available in production' }, { status: 403 });
+  }
+
   try {
     const token = process.env.GITHUB_TOKEN;
     const owner = process.env.GITHUB_OWNER || 'ahmedyoussef-b';
