@@ -7,9 +7,7 @@ export async function DELETE(
 ) {
   try {
     const id = parseInt(params.id, 10);
-    await prisma.treeNode.deleteMany({
-      where: { OR: [{ id }, { parentId: id }] },
-    });
+    await prisma.treeNode.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete tree node:", error);
@@ -45,12 +43,19 @@ export async function POST(
     const parentId = parseInt(params.id, 10);
     const { name, type = "directory" } = await request.json();
 
+    const maxOrder = await prisma.treeNode.findFirst({
+      where: { parentId },
+      orderBy: { order: "desc" },
+      select: { order: true },
+    });
+    const nextOrder = (maxOrder?.order ?? -1) + 1;
+
     const node = await prisma.treeNode.create({
       data: {
         name,
         type,
         parentId,
-        order: 0,
+        order: nextOrder,
       },
     });
 
