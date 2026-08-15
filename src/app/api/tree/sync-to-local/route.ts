@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import fs from "fs";
 import path from "path";
 
+export const dynamic = 'force-dynamic';
+
 const DATA_DIR = path.join(process.cwd(), ".data");
 const MIRROR_FILE = path.join(DATA_DIR, "mirror.json");
 
