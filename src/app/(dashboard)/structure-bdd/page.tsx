@@ -20,12 +20,14 @@ import {
   FolderTree,
   FileText,
   FileJson,
+  Eye,
   RefreshCw,
   RotateCcw,
   ArrowRightLeft,
   Trash2,
   Plus,
   Pencil,
+  Download,
   type LucideIcon,
 } from "lucide-react";
 
@@ -69,6 +71,7 @@ function TreeNodeItem({
   onAdd,
   onRename,
   onEdit,
+  onPreview,
 }: {
   node: WebTreeNode | LocalNode;
   depth?: number;
@@ -76,6 +79,7 @@ function TreeNodeItem({
   onAdd?: (node: WebTreeNode | LocalNode) => void;
   onRename?: (node: WebTreeNode | LocalNode) => void;
   onEdit?: (node: LocalNode) => void;
+  onPreview?: (node: WebTreeNode | LocalNode) => void;
 }) {
   const [expanded, setExpanded] = useState(depth < 1);
   const [showActions, setShowActions] = useState(false);
@@ -102,6 +106,7 @@ function TreeNodeItem({
   };
 
   const isJsonFile = isLocal && nodeType === "file" && node.name.endsWith(".json");
+  const isFileNode = nodeType === "file" || nodeType === "item";
 
   return (
     <div
@@ -183,6 +188,20 @@ function TreeNodeItem({
                 <FileJson className="h-3 w-3" />
               </Button>
             )}
+            {isFileNode && onPreview && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPreview(node);
+                }}
+                title="Aperçu"
+              >
+                <Eye className="h-3 w-3" />
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -209,6 +228,7 @@ function TreeNodeItem({
 export default function StructureBDDPage() {
   const [webTree, setWebTree] = useState<WebTreeNode[]>([]);
   const [localTree, setLocalTree] = useState<LocalNode[]>([]);
+  const [webNodeMap, setWebNodeMap] = useState<Map<number, WebTreeNode>>(new Map());
   const [loading, setLoading] = useState(true);
   const [webError, setWebError] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -224,6 +244,9 @@ export default function StructureBDDPage() {
   const [renameValue, setRenameValue] = useState("");
   const [editingFile, setEditingFile] = useState<{ tree: "web" | "local"; path: string; content: string } | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [previewingFile, setPreviewingFile] = useState<{ path: string; name: string; tree: "web" | "local" } | null>(null);
+  const [previewData, setPreviewData] = useState<{ content?: string; dataUrl?: string; mimeType: string; name: string; size: number; isText: boolean } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const { sync, isSyncing } = useSyncData();
 
   const loadTrees = async () => {
@@ -237,7 +260,9 @@ export default function StructureBDDPage() {
         return res.json();
       })
       .then((data) => {
-        setWebTree((data as { roots: WebTreeNode[] }).roots);
+        const roots = (data as { roots: WebTreeNode[] }).roots;
+        setWebTree(roots);
+        setWebNodeMap(buildWebNodeMap(roots));
       })
       .catch((err) => {
         setWebError(err instanceof Error ? err.message : "Unknown error");
@@ -545,6 +570,68 @@ export default function StructureBDDPage() {
     return prune(nodes);
   };
 
+  const buildWebNodeMap = (nodes: WebTreeNode[]): Map<number, WebTreeNode> => {
+    const map = new Map<number, WebTreeNode>();
+    const traverse = (items: WebTreeNode[]) => {
+      for (const node of items) {
+        map.set(node.id, node);
+        if (node.children.length > 0) traverse(node.children);
+      }
+    };
+    traverse(nodes);
+    return map;
+  };
+
+  const findLocalPathForWebNode = (webNode: WebTreeNode, localTree: LocalNode[]): string | null => {
+    const ancestorNames: string[] = [];
+    let current: WebTreeNode | undefined = webNode;
+    while (current) {
+      ancestorNames.unshift(current.name);
+      current = webNodeMap.get(current.parentId ?? 0);
+    }
+
+    let currentNodes: LocalNode[] = localTree;
+    for (const name of ancestorNames) {
+      const found = currentNodes.find((n) => n.name === name);
+      if (!found) return null;
+      if (found.type === "file") return found.path;
+      currentNodes = found.children;
+    }
+    return null;
+  };
+
+  const handlePreviewFile = async (node: WebTreeNode | LocalNode) => {
+    const isLocal = "path" in node;
+    let localPath: string | null = null;
+
+    if (isLocal) {
+      localPath = node.path;
+    } else {
+      localPath = findLocalPathForWebNode(node, localTree);
+    }
+
+    if (!localPath) {
+      toast.error("Impossible de trouver le fichier local correspondant");
+      return;
+    }
+
+    setPreviewingFile({ path: localPath, name: node.name, tree: isLocal ? "local" : "web" });
+    setPreviewData(null);
+    setPreviewLoading(true);
+
+    try {
+      const res = await fetch(`/api/local-tree/view/${encodeURIComponent(localPath)}`);
+      if (!res.ok) throw new Error("Failed to load file");
+      const data = await res.json();
+      setPreviewData(data);
+    } catch {
+      toast.error("Erreur lors du chargement du fichier");
+      setPreviewingFile(null);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
   const visibleWebTree = filterWebTree(webTree);
   const visibleLocalTree = filterLocalTree(localTree);
   const totalNodes = (nodes: (WebTreeNode | LocalNode)[]): number =>
@@ -639,6 +726,7 @@ export default function StructureBDDPage() {
                   onDelete={handleDeleteWeb}
                   onAdd={handleAddWeb}
                   onRename={handleRenameWeb}
+                  onPreview={handlePreviewFile}
                 />
               ))
             )}
@@ -694,6 +782,7 @@ export default function StructureBDDPage() {
                   onAdd={handleAddLocal}
                   onRename={handleRenameLocal}
                   onEdit={handleEditJson}
+                  onPreview={handlePreviewFile}
                 />
               ))
             )}
@@ -781,6 +870,122 @@ export default function StructureBDDPage() {
               Annuler
             </Button>
             <Button onClick={confirmEditJson}>Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Modal */}
+      <Dialog open={!!previewingFile} onOpenChange={(open) => !open && setPreviewingFile(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-4 w-4 text-primary" />
+              Aperçu : {previewingFile?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {previewLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : previewData ? (
+              <>
+                <div className="flex items-center justify-between rounded-lg bg-muted/30 px-4 py-2">
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className="text-xs">
+                      {previewData.mimeType || "application/octet-stream"}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {(previewData.size / 1024).toFixed(1)} KB
+                    </span>
+                  </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const link = document.createElement("a");
+                        link.href = previewData.dataUrl || `/api/local-tree/view/${encodeURIComponent(previewingFile?.path || "")}`;
+                        link.download = previewingFile?.name || "file";
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Télécharger
+                    </Button>
+                </div>
+                <div className="rounded-lg border border-border/60 bg-muted/10 overflow-hidden">
+                  {previewData.isText && previewData.content !== undefined ? (
+                    <pre className="p-4 text-sm font-mono text-foreground overflow-auto max-h-[60vh] whitespace-pre-wrap break-all">
+                      {previewData.content}
+                    </pre>
+                     ) : previewData.dataUrl ? (
+                     previewData.mimeType.startsWith("image/") ? (
+                       // eslint-disable-next-line @next/next/no-img-element
+                       <img
+                         src={previewData.dataUrl}
+                         alt={previewData.name}
+                         className="max-h-[60vh] w-full object-contain"
+                       />
+                    ) : previewData.mimeType.startsWith("video/") ? (
+                      <video
+                        src={previewData.dataUrl}
+                        controls
+                        className="max-h-[60vh] w-full"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                        <FileText className="h-12 w-12 mb-2" />
+                        <p className="text-sm">Aperçu non disponible pour ce type de fichier</p>
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           className="mt-4"
+                           onClick={() => {
+                             const link = document.createElement("a");
+                             link.href = previewData.dataUrl || `/api/local-tree/view/${encodeURIComponent(previewingFile?.path || "")}`;
+                             link.download = previewingFile?.name || "file";
+                             document.body.appendChild(link);
+                             link.click();
+                             document.body.removeChild(link);
+                           }}
+                         >
+                           <Download className="h-4 w-4 mr-2" />
+                           Télécharger
+                         </Button>
+                      </div>
+                    )
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                      <FileText className="h-12 w-12 mb-2" />
+                      <p className="text-sm">Aperçu non disponible pour ce type de fichier</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-4"
+                        onClick={() => {
+                          const link = document.createElement("a");
+                          link.href = `/api/local-tree/view/${encodeURIComponent(previewingFile?.path || "")}`;
+                          link.download = previewingFile?.name || "file";
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Télécharger
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : null}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPreviewingFile(null)}>
+              Fermer
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
