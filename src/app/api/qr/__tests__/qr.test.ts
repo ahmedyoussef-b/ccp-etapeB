@@ -12,6 +12,26 @@ const mockFs = vi.hoisted(() => ({
   statSync: vi.fn(() => ({ isFile: () => true })),
 }));
 
+const mockPrisma = vi.hoisted(() => ({
+  qAPair: {
+    findMany: vi.fn(),
+    create: vi.fn(),
+    delete: vi.fn(),
+    findFirst: vi.fn(),
+    update: vi.fn(),
+    findUnique: vi.fn(),
+    upsert: vi.fn(),
+    deleteMany: vi.fn(),
+  },
+  qARegistry: {
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    findMany: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+  },
+}));
+
 vi.mock("fs", () => ({
   ...mockFs,
   default: { ...mockFs },
@@ -23,18 +43,31 @@ vi.mock("path", () => ({
 }));
 
 vi.mock("@/lib/prisma", () => ({
-  prisma: {
-    qAPair: { findMany: vi.fn(), create: vi.fn(), delete: vi.fn(), findFirst: vi.fn(), update: vi.fn(), findUnique: vi.fn(), upsert: vi.fn(), deleteMany: vi.fn() },
-    qARegistry: { findFirst: vi.fn(), create: vi.fn(), findMany: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
-  },
+  prisma: mockPrisma,
+}));
+
+vi.mock("os", () => ({
+  default: { tmpdir: () => "/tmp" },
+  tmpdir: () => "/tmp",
 }));
 
 const PAIRS_FILE = ".local-db/qr/pairs.json";
 const ITEMS_DIR = ".data/registry/items";
 
-describe("Q/R server-store (file-based)", () => {
+describe("Q/R server-store", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Prisma always fails in tests → file-based fallback is used
+    mockPrisma.qAPair.findMany.mockRejectedValue(new Error("DB not available"));
+    mockPrisma.qAPair.create.mockRejectedValue(new Error("DB not available"));
+    mockPrisma.qAPair.delete.mockRejectedValue(new Error("DB not available"));
+    mockPrisma.qAPair.findUnique.mockRejectedValue(new Error("DB not available"));
+    mockPrisma.qAPair.update.mockRejectedValue(new Error("DB not available"));
+    mockPrisma.qARegistry.findFirst.mockRejectedValue(new Error("DB not available"));
+    mockPrisma.qARegistry.create.mockRejectedValue(new Error("DB not available"));
+    mockPrisma.qARegistry.findMany.mockRejectedValue(new Error("DB not available"));
+
+    // File-based mock setup
     mockFs.existsSync.mockImplementation((p: string) => p === PAIRS_FILE || p === ITEMS_DIR);
     mockFs.readFileSync.mockReturnValue("[]");
   });
