@@ -31,6 +31,7 @@ export default function LoginPage() {
       document.cookie = `userId=${userId}; path=/; max-age=${60 * 60 * 24 * 7}`;
       document.cookie = `userEmail=${encodeURIComponent(email)}; path=/; max-age=${60 * 60 * 24 * 7}`;
     }
+      console.log("[Login] Connexion réussie", { email, role });
     const route = role === "admin" ? "/admin" : `/${role}`;
     router.push(route);
   };
