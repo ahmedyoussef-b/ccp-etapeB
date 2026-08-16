@@ -99,20 +99,25 @@ export default function QAPage() {
     }
     setSending(true);
     try {
+      console.log("[Q/R] handleSend: creating pair in BDD...");
       const created = await qrService.create({
         question: question.trim(),
         answer: answer.trim(),
       });
+      console.log("[Q/R] handleSend: pair created, id =", created.id);
       setItems([created, ...items]);
 
+      console.log("[Q/R] handleSend: exporting JSON to items/...");
       const data = await qrService.send({
         question: question.trim(),
         answer: answer.trim(),
       });
+      console.log("[Q/R] handleSend: exported as", data.filename);
       toast.success(`Q/R collectée dans ${data.filename}`);
       resetForm();
-    } catch {
-      toast.error("Erreur d'export");
+    } catch (err) {
+      console.error("[Q/R] handleSend error:", err);
+      toast.error(`Erreur d'export: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setSending(false);
     }
