@@ -50,7 +50,12 @@ export default function GuideProcedurePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setProcedures(getProcedures());
+    const procedures = getProcedures();
+    console.log("[GuideProcedurePage] Loaded procedures from storage", {
+      count: procedures.length,
+      codes: procedures.map((p) => p.metadata.code),
+    });
+    setProcedures(procedures);
   }, []);
 
   const handleImport = useCallback(async () => {
@@ -61,26 +66,37 @@ export default function GuideProcedurePage() {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
+      console.log("[GuideProcedurePage] Importing procedure", {
+        filename: file.name,
+        code: parsed.metadata?.code || parsed.code,
+        title: parsed.metadata?.title || parsed.title,
+      });
       importProcedure(parsed);
-      setProcedures(getProcedures());
+      const updated = getProcedures();
+      setProcedures(updated);
       toast.success("Procédure importée avec succès");
 
       syncToServer(parsed)
         .then((result) => {
           if (result.success) {
             if (result.offline) {
+              console.log("[GuideProcedurePage] Sync: server unavailable, saved locally");
               toast.info("Procédure sauvegardée localement (serveur indisponible)");
             } else {
+              console.log("[GuideProcedurePage] Sync: successfully synced to server");
               toast.success("Procédure synchronisée sur le serveur");
             }
           } else {
+            console.log("[GuideProcedurePage] Sync: failed");
             toast.error("Échec de la synchronisation serveur (données locales conservées)");
           }
         })
         .catch(() => {
+          console.log("[GuideProcedurePage] Sync: error");
           toast.error("Échec de la synchronisation serveur (données locales conservées)");
         });
     } catch (e) {
+      console.log("[GuideProcedurePage] Import failed", e);
       toast.error(e instanceof Error ? e.message : "JSON invalide");
     } finally {
       setIsImporting(false);
@@ -89,11 +105,17 @@ export default function GuideProcedurePage() {
   }, []);
 
   const handleStartGuide = useCallback((procedure: TProcedure) => {
+    console.log("[GuideProcedurePage] Starting guide", {
+      code: procedure.metadata.code,
+      title: procedure.metadata.title,
+      steps: procedure.steps.length,
+    });
     router.push(`/procedures/guide/${encodeURIComponent(procedure.metadata.code)}`);
   }, [router]);
 
   const handleDeleteProcedure = useCallback(
     async (code: string) => {
+      console.log("[GuideProcedurePage] Delete requested", { code });
       try {
         const res = await csrfFetch(`/api/procedures/guide/${encodeURIComponent(code)}`, {
           method: "DELETE",
@@ -102,19 +124,23 @@ export default function GuideProcedurePage() {
           const stored = getProcedures().filter((p) => p.metadata.code !== code);
           localStorage.setItem("nexaflow_procedures", JSON.stringify(stored));
           setProcedures(stored);
+          console.log("[GuideProcedurePage] Deleted from server and local", { code });
           toast.success("Procédure supprimée");
         } else if (res.status === 404) {
           const stored = getProcedures().filter((p) => p.metadata.code !== code);
           localStorage.setItem("nexaflow_procedures", JSON.stringify(stored));
           setProcedures(stored);
+          console.log("[GuideProcedurePage] Deleted from local only (404)", { code });
           toast.success("Procédure supprimée du guide local");
         } else {
+          console.log("[GuideProcedurePage] Delete failed", { code, status: res.status });
           toast.error("Impossible de supprimer la procédure");
         }
       } catch {
         const stored = getProcedures().filter((p) => p.metadata.code !== code);
         localStorage.setItem("nexaflow_procedures", JSON.stringify(stored));
         setProcedures(stored);
+        console.log("[GuideProcedurePage] Deleted from local only (error)", { code });
         toast.success("Procédure supprimée du guide local");
       }
     },
