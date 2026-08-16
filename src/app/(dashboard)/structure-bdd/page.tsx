@@ -244,7 +244,7 @@ export default function StructureBDDPage() {
   const [renameValue, setRenameValue] = useState("");
   const [editingFile, setEditingFile] = useState<{ tree: "web" | "local"; path: string; content: string } | null>(null);
   const [editContent, setEditContent] = useState("");
-  const [previewingFile, setPreviewingFile] = useState<{ path: string; name: string; tree: "web" | "local" } | null>(null);
+  const [previewingFile, setPreviewingFile] = useState<{ path?: string; name: string; tree: "web" | "local" } | null>(null);
   const [previewData, setPreviewData] = useState<{ content?: string; dataUrl?: string; mimeType: string; name: string; size: number; isText: boolean } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const { sync, isSyncing } = useSyncData();
@@ -602,20 +602,38 @@ export default function StructureBDDPage() {
 
   const handlePreviewFile = async (node: WebTreeNode | LocalNode) => {
     const isLocal = "path" in node;
-    let localPath: string | null = null;
 
-    if (isLocal) {
-      localPath = node.path;
-    } else {
-      localPath = findLocalPathForWebNode(node, localTree);
-    }
-
-    if (!localPath) {
-      toast.error("Impossible de trouver le fichier local correspondant");
+    // BDD Web: read metadata directly from the node (no local file needed)
+    if (!isLocal) {
+      const webNode = node as WebTreeNode;
+      setPreviewingFile({ name: webNode.name, tree: "web" });
+      setPreviewData(null);
+      setPreviewLoading(true);
+      try {
+        const raw = webNode.metadata || "{}";
+        const content = typeof raw === "string" ? raw : JSON.stringify(raw, null, 2);
+        // Pretty-print if JSON
+        let pretty = content;
+        try { pretty = JSON.stringify(JSON.parse(content), null, 2); } catch { /* not json */ }
+        setPreviewData({
+          content: pretty,
+          mimeType: "application/json",
+          name: webNode.name,
+          size: new TextEncoder().encode(pretty).length,
+          isText: true,
+        });
+      } catch {
+        toast.error("Erreur lors de la lecture des métadonnées");
+        setPreviewingFile(null);
+      } finally {
+        setPreviewLoading(false);
+      }
       return;
     }
 
-    setPreviewingFile({ path: localPath, name: node.name, tree: isLocal ? "local" : "web" });
+    // BDD Locale: read the physical file
+    const localPath = node.path;
+    setPreviewingFile({ path: localPath, name: node.name, tree: "local" });
     setPreviewData(null);
     setPreviewLoading(true);
 
@@ -903,12 +921,24 @@ export default function StructureBDDPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        const link = document.createElement("a");
-                        link.href = previewData.dataUrl || `/api/local-tree/view/${encodeURIComponent(previewingFile?.path || "")}`;
-                        link.download = previewingFile?.name || "file";
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
+                        if (previewData.content) {
+                          const blob = new Blob([previewData.content], { type: previewData.mimeType || "text/plain" });
+                          const url = URL.createObjectURL(blob);
+                          const link = document.createElement("a");
+                          link.href = url;
+                          link.download = previewingFile?.name || "file";
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          URL.revokeObjectURL(url);
+                        } else {
+                          const link = document.createElement("a");
+                          link.href = previewData.dataUrl || `/api/local-tree/view/${encodeURIComponent(previewingFile?.path || "")}`;
+                          link.download = previewingFile?.name || "file";
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }
                       }}
                     >
                       <Download className="h-4 w-4 mr-2" />
