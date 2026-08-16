@@ -178,6 +178,7 @@ export default function ImagesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadData = useCallback(async () => {
+    console.log(`[ImagesPage] loadData() - starting load | sortBy=${sortBy} sortOrder=${sortOrder} category=${filterCategory} search="${search}"`);
     setLoading(true);
     try {
       const [{ items, total }, cats] = await Promise.all([
@@ -195,7 +196,9 @@ export default function ImagesPage() {
       setTotalCount(total);
       setHasMore(items.length === limit && total > limit);
       setCategories(cats);
+      console.log(`[ImagesPage] loadData() - loaded ${items.length}/${total} items, ${cats.length} categories`);
     } catch {
+      console.log(`[ImagesPage] loadData() - ERROR loading data`);
       toast.error("Erreur lors du chargement des médias");
     } finally {
       setLoading(false);
@@ -204,6 +207,7 @@ export default function ImagesPage() {
 
   const loadMore = useCallback(async () => {
     const nextOffset = offset + limit;
+    console.log(`[ImagesPage] loadMore() - loading more from offset=${nextOffset}`);
     try {
       const { items, total } = await imageService.getAll({
         limit,
@@ -216,7 +220,9 @@ export default function ImagesPage() {
       setItems((prev) => [...prev, ...items]);
       setOffset(nextOffset);
       setHasMore(nextOffset + items.length < total);
+      console.log(`[ImagesPage] loadMore() - loaded ${items.length} more, total=${total} hasMore=${nextOffset + items.length < total}`);
     } catch {
+      console.log(`[ImagesPage] loadMore() - ERROR`);
       toast.error("Erreur lors du chargement");
     }
   }, [limit, offset, sortBy, sortOrder, search, filterCategory]);
@@ -232,17 +238,22 @@ export default function ImagesPage() {
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+    console.log(`[ImagesPage] handleBulkDelete() - deleting ${ids.length} items: [${ids.join(",")}]`);
     setBulkDeleting(true);
     try {
-      const success = await imageService.bulkDelete(Array.from(selectedIds));
+      const success = await imageService.bulkDelete(ids);
       if (success) {
+        console.log(`[ImagesPage] handleBulkDelete() - deleted ${ids.length} items`);
         toast.success(`${selectedIds.size} média(s) supprimé(s)`);
         setSelectedIds(new Set());
         await loadData();
       } else {
+        console.log(`[ImagesPage] handleBulkDelete() - failed`);
         toast.error("Erreur lors de la suppression");
       }
     } catch {
+      console.log(`[ImagesPage] handleBulkDelete() - ERROR`);
       toast.error("Erreur lors de la suppression");
     } finally {
       setBulkDeleting(false);
@@ -250,6 +261,8 @@ export default function ImagesPage() {
   };
 
   const handleBulkDownload = () => {
+    const ids = Array.from(selectedIds);
+    console.log(`[ImagesPage] handleBulkDownload() - downloading ${ids.length} items`);
     selectedIds.forEach((id) => {
       const item = items.find((i) => i.id === id);
       if (item?.dataUrl) {
@@ -267,37 +280,48 @@ export default function ImagesPage() {
   const handleBulkTag = async () => {
     if (selectedIds.size === 0 || !tagInput.trim()) return;
     const tags = tagInput.split(",").map((t) => t.trim()).filter((t) => t.length > 0);
+    const ids = Array.from(selectedIds);
+    console.log(`[ImagesPage] handleBulkTag() - tagging ${ids.length} items with [${tags.join(",")}]`);
     try {
-      const success = await imageService.bulkTag(Array.from(selectedIds), tags);
+      const success = await imageService.bulkTag(ids, tags);
       if (success) {
+        console.log(`[ImagesPage] handleBulkTag() - success`);
         toast.success(`Tags ajoutés à ${selectedIds.size} média(s)`);
         setShowTagDialog(false);
         setTagInput("");
         setSelectedIds(new Set());
         await loadData();
+      } else {
+        console.log(`[ImagesPage] handleBulkTag() - failed`);
       }
     } catch {
+      console.log(`[ImagesPage] handleBulkTag() - ERROR`);
       toast.error("Erreur lors de l'ajout des tags");
     }
   };
 
   const openLightbox = (item: MediaItem) => {
+    console.log(`[ImagesPage] openLightbox() - id=${item.id} title="${item.title}" kind=${item.kind}`);
     setLightboxItem(item);
     setLightboxOpen(true);
   };
 
   const closeLightbox = () => {
+    console.log(`[ImagesPage] closeLightbox()`);
     setLightboxOpen(false);
     setLightboxItem(null);
   };
 
   const handleGeoCapture = async () => {
+    console.log(`[ImagesPage] handleGeoCapture() - requesting geolocation`);
     try {
       setIsCapturingGeo(true);
       const geo = await getGeolocation();
       setGeoLocation({ lat: geo.lat, lng: geo.lng });
+      console.log(`[ImagesPage] handleGeoCapture() - captured lat=${geo.lat.toFixed(4)} lng=${geo.lng.toFixed(4)} accuracy=${geo.accuracy}m`);
       toast.success("Géolocalisation capturée");
     } catch {
+      console.log(`[ImagesPage] handleGeoCapture() - ERROR`);
       toast.error("Impossible d'obtenir la géolocalisation");
     } finally {
       setIsCapturingGeo(false);
@@ -367,6 +391,7 @@ export default function ImagesPage() {
   };
 
   const handleFileSelect = async (file: File) => {
+    console.log(`[ImagesPage] handleFileSelect() - file="${file.name}" type=${file.type} size=${formatSize(file.size)}`);
     if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
       toast.error("Format non supporté. Utilisez une image ou une vidéo.");
       return;
@@ -377,8 +402,10 @@ export default function ImagesPage() {
     let thumbnailDataUrl = "";
     try {
       thumbnailDataUrl = await generateThumbnailForKind(dataUrl, kind);
+      console.log(`[ImagesPage] handleFileSelect() - thumbnail generated=${!!thumbnailDataUrl}`);
     } catch {
       thumbnailDataUrl = "";
+      console.log(`[ImagesPage] handleFileSelect() - thumbnail generation failed`);
     }
 
     setFormData((prev) => ({
@@ -393,6 +420,7 @@ export default function ImagesPage() {
     setPreviewUrl(dataUrl);
     setPreviewKind(kind);
     setSourceMode("upload");
+    console.log(`[ImagesPage] handleFileSelect() - file ready for upload`);
   };
 
   const handleFileInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -466,6 +494,7 @@ export default function ImagesPage() {
     } catch {
       thumbnailDataUrl = "";
     }
+    console.log(`[ImagesPage] capturePhoto() - captured photo size=${formatSize(dataUrl.length)} thumbnail=${!!thumbnailDataUrl}`);
     setFormData((prev) => ({
       ...prev,
       kind: "image",
@@ -500,6 +529,7 @@ export default function ImagesPage() {
         } catch {
           thumbnailDataUrl = "";
         }
+        console.log(`[ImagesPage] startVideoRecording() - recorded video size=${formatSize(blob.size)} thumbnail=${!!thumbnailDataUrl}`);
         setFormData((prev) => ({
           ...prev,
           kind: "video",
@@ -517,6 +547,7 @@ export default function ImagesPage() {
     mediaRecorderRef.current = recorder;
     recorder.start();
     setIsRecording(true);
+    console.log(`[ImagesPage] startVideoRecording() - recording started`);
   };
 
   const stopVideoRecording = () => {
@@ -548,6 +579,7 @@ export default function ImagesPage() {
     setSaving(true);
     try {
       if (editingItem) {
+        console.log(`[ImagesPage] handleSave() - UPDATE id=${editingItem.id} title="${formData.title}"`);
         await imageService.update(editingItem.id, {
           title: formData.title.trim(),
           category: formData.category,
@@ -560,8 +592,10 @@ export default function ImagesPage() {
           size: formData.size,
           geolocation: geoLocation || undefined,
         });
+        console.log(`[ImagesPage] handleSave() - UPDATE success`);
         toast.success("Média mis à jour avec succès");
       } else {
+        console.log(`[ImagesPage] handleSave() - CREATE title="${formData.title}" kind=${formData.kind} size=${formatSize(formData.size)}`);
         await imageService.create({
           title: formData.title.trim(),
           category: formData.category,
@@ -574,12 +608,14 @@ export default function ImagesPage() {
           size: formData.size,
           geolocation: geoLocation || undefined,
         });
+        console.log(`[ImagesPage] handleSave() - CREATE success`);
         toast.success("Média ajouté avec succès");
       }
       setDialogOpen(false);
       resetForm();
       await loadData();
     } catch {
+      console.log(`[ImagesPage] handleSave() - ERROR`);
       toast.error("Erreur lors de l'enregistrement");
     } finally {
       setSaving(false);
@@ -587,13 +623,16 @@ export default function ImagesPage() {
   };
 
   const handleDelete = async (id: string) => {
+    console.log(`[ImagesPage] handleDelete() - id=${id}`);
     setDeletingId(id);
     const success = await imageService.delete(id);
     setDeletingId(null);
     if (success) {
+      console.log(`[ImagesPage] handleDelete() - deleted successfully`);
       toast.success("Média supprimé");
       await loadData();
     } else {
+      console.log(`[ImagesPage] handleDelete() - delete failed`);
       toast.error("Erreur lors de la suppression");
     }
   };
@@ -603,6 +642,7 @@ export default function ImagesPage() {
       toast.error("Aucune donnée disponible pour le téléchargement");
       return;
     }
+    console.log(`[ImagesPage] handleDownload() - id=${item.id} title="${item.title}" size=${formatSize(item.size)}`);
     const link = document.createElement("a");
     link.href = item.dataUrl;
     link.download = item.title;
@@ -707,6 +747,7 @@ export default function ImagesPage() {
               value={`${sortBy}-${sortOrder}`}
               onValueChange={(value) => {
                 const [field, order] = (value as string).split("-") as [typeof sortBy, typeof sortOrder];
+                console.log(`[ImagesPage] sort changed - sortBy=${field} sortOrder=${order}`);
                 setSortBy(field);
                 setSortOrder(order);
                 setOffset(0);
@@ -739,7 +780,7 @@ export default function ImagesPage() {
                 key={cat}
                 variant={filterCategory === cat ? "default" : "outline"}
                 size="sm"
-                onClick={() => { setFilterCategory(cat); setOffset(0); }}
+                onClick={() => { console.log(`[ImagesPage] category filter changed to "${cat}"`); setFilterCategory(cat); setOffset(0); }}
                 className={
                   filterCategory === cat
                     ? "bg-primary text-primary-foreground shadow-sm"
@@ -753,7 +794,7 @@ export default function ImagesPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => { setFilterCategory("Tous"); setOffset(0); }}
+                onClick={() => { console.log(`[ImagesPage] category filter cleared`); setFilterCategory("Tous"); setOffset(0); }}
                 className="text-muted-foreground hover:text-foreground"
               >
                 <X className="h-3.5 w-3.5 mr-1" />
@@ -766,7 +807,7 @@ export default function ImagesPage() {
             <Input
               placeholder="Rechercher par titre, description ou tag..."
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setOffset(0); }}
+              onChange={(e) => { const val = e.target.value; if (val.length <= 3 || val.length % 10 === 0) console.log(`[ImagesPage] search changed to "${val}"`); setSearch(val); setOffset(0); }}
               className="pl-9 w-full sm:w-72 bg-background/60 backdrop-blur"
             />
           </div>
