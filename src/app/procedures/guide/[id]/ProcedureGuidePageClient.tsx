@@ -25,7 +25,10 @@ export function ProcedureGuidePageClient({ id }: ProcedureGuidePageClientProps) 
         if (res.status === 404) {
           throw new Error("Procédure introuvable.");
         }
-        throw new Error("Erreur lors du chargement de la procédure.");
+        if (res.status === 403) {
+          throw new Error("Accès refusé. Vous n'avez pas les permissions pour consulter cette procédure.");
+        }
+        throw new Error(`Erreur lors du chargement de la procédure (code: ${res.status}).`);
       }
       const data = (await res.json()) as TProcedure;
       setProcedure(data);

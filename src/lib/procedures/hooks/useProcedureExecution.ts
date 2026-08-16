@@ -3,11 +3,16 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { TProcedure, TStep } from "../services/validator.service";
 import { GuidePhase, ProcedureExecutionContext } from "../types";
+import { logExecutionStart, logExecutionEnd, logStepStart, logStepEnd } from "../services/execution-logger.service";
+import { evaluateAllStepAlarms, TriggeredAlarm } from "../services/alert-evaluator.service";
 
 export interface UseProcedureExecutionOptions {
   procedure: TProcedure;
   onComplete?: (context: ProcedureExecutionContext) => void;
   onAbort?: (context: ProcedureExecutionContext, reason: string) => void;
+  userId?: string;
+  userRole?: string;
+  onAlarmTriggered?: (alarms: TriggeredAlarm[]) => void;
 }
 
 export interface UseProcedureExecutionReturn {
@@ -16,6 +21,7 @@ export interface UseProcedureExecutionReturn {
   currentStepIndex: number;
   totalSteps: number;
   completedSteps: Set<string>;
+  executionId: string | null;
   context: ProcedureExecutionContext;
   timer: {
     stepRemaining: number;
@@ -36,7 +42,9 @@ export interface UseProcedureExecutionReturn {
     setPhase: (phase: GuidePhase) => void;
     abort: (reason: string) => void;
     reset: () => void;
+    checkAlarms: (sensorData: Record<string, unknown>) => TriggeredAlarm[];
   };
+  activeAlarms: TriggeredAlarm[];
 }
 
 function createInitialContext(): ProcedureExecutionContext {
@@ -52,6 +60,9 @@ export function useProcedureExecution({
   procedure,
   onComplete,
   onAbort,
+  userId,
+  userRole,
+  onAlarmTriggered,
 }: UseProcedureExecutionOptions): UseProcedureExecutionReturn {
   const [phase, setPhase] = useState<GuidePhase>("briefing");
   const [context, setContext] = useState<ProcedureExecutionContext>(() =>
@@ -61,9 +72,15 @@ export function useProcedureExecution({
   const [isTimerPaused, setIsTimerPaused] = useState(false);
   const [stepRemaining, setStepRemaining] = useState(0);
   const [globalElapsed, setGlobalElapsed] = useState(0);
+  const [executionId, setExecutionId] = useState<string | null>(null);
+  const [activeAlarms, setActiveAlarms] = useState<TriggeredAlarm[]>([]);
 
   const timerIntervalRef = useRef<number | null>(null);
   const currentStepRef = useRef<TStep | null>(null);
+  const loggedStepsRef = useRef<Set<string>>(new Set());
+  const executionLoggedRef = useRef(false);
+  const onAlarmTriggeredRef = useRef(onAlarmTriggered);
+  onAlarmTriggeredRef.current = onAlarmTriggered;
 
   const sortedSteps = useRef<TStep[]>([...procedure.steps].sort((a, b) => a.order - b.order));
 
@@ -94,6 +111,12 @@ export function useProcedureExecution({
               ...ctx,
               anomalies: [...ctx.anomalies, `Temps écoulé pour l'étape: ${currentStep.title}`],
             }));
+            logStepEnd(
+              executionId || "0",
+              currentStep.id,
+              false,
+              `Timer expired: ${currentStep.title}`
+            ).catch(() => {});
             return 0;
           }
           return prev - 1;
@@ -101,7 +124,7 @@ export function useProcedureExecution({
       }, 1000);
     }
     return clearTimer;
-  }, [isTimerRunning, isTimerPaused, currentStep, clearTimer]);
+  }, [isTimerRunning, isTimerPaused, currentStep, clearTimer, executionId]);
 
   useEffect(() => {
     let globalInterval: number | null = null;
@@ -145,6 +168,18 @@ export function useProcedureExecution({
 
   const contextRef = useRef(context);
   contextRef.current = context;
+
+  const logExecutionStartIfNeeded = useCallback(async () => {
+    if (executionLoggedRef.current) return;
+    executionLoggedRef.current = true;
+    try {
+      const id = await logExecutionStart(procedure.metadata.code, userId, userRole);
+      setExecutionId(id);
+    } catch {
+      const fallbackId = `exec_${Date.now()}`;
+      setExecutionId(fallbackId);
+    }
+  }, [procedure.metadata.code, userId, userRole]);
 
   const goToStep = useCallback(
     (index: number) => {
@@ -198,6 +233,28 @@ export function useProcedureExecution({
     []
   );
 
+  const setPhaseWithLogging = useCallback(
+    (nextPhase: GuidePhase) => {
+      setPhase(nextPhase);
+      logExecutionStartIfNeeded();
+      if (nextPhase === "executing" && currentStepRef.current) {
+        const step = currentStepRef.current;
+        if (!loggedStepsRef.current.has(step.id)) {
+          loggedStepsRef.current.add(step.id);
+          logStepStart({
+            executionId: executionId || "0",
+            stepId: step.id,
+            stepOrder: step.order,
+            title: step.title,
+            type: step.type,
+            isMandatory: step.isMandatory,
+          }).catch(() => {});
+        }
+      }
+    },
+    [logExecutionStartIfNeeded, executionId]
+  );
+
   const abort = useCallback(
     (reason: string) => {
       const current = contextRef.current;
@@ -208,9 +265,15 @@ export function useProcedureExecution({
         anomalies: [...ctx.anomalies, reason],
       }));
       setPhase("aborted");
+      logExecutionEnd(
+        executionId || "0",
+        "aborted",
+        [reason],
+        globalElapsed
+      ).catch(() => {});
       onAbort?.(current, reason);
     },
-    [stopTimer, onAbort]
+    [stopTimer, executionId, globalElapsed, onAbort]
   );
 
   const reset = useCallback(() => {
@@ -218,7 +281,37 @@ export function useProcedureExecution({
     setContext(createInitialContext());
     setPhase("briefing");
     setGlobalElapsed(0);
+    setExecutionId(null);
+    executionLoggedRef.current = false;
+    loggedStepsRef.current.clear();
+    setActiveAlarms([]);
   }, [stopTimer]);
+
+  const checkAlarms = useCallback(
+    (sensorData: Record<string, unknown>): TriggeredAlarm[] => {
+      const current = currentStepRef.current;
+      if (!current) return [];
+      const typedData = sensorData as unknown as Parameters<typeof evaluateAllStepAlarms>[1];
+      const alarms = evaluateAllStepAlarms(
+        procedure.steps,
+        typedData,
+        current.id
+      );
+      if (alarms.length > 0) {
+        setActiveAlarms(alarms);
+        setContext((ctx) => ({
+          ...ctx,
+          anomalies: [
+            ...ctx.anomalies,
+            ...alarms.map((a) => `[ALARME] ${a.severity}: ${a.alarm.message}`),
+          ],
+        }));
+        onAlarmTriggeredRef.current?.(alarms);
+      }
+      return alarms;
+    },
+    [procedure.steps]
+  );
 
   return {
     phase,
@@ -226,6 +319,7 @@ export function useProcedureExecution({
     currentStepIndex: context.currentStepIndex,
     totalSteps: sortedSteps.current.length,
     completedSteps: context.completedSteps,
+    executionId,
     context,
     timer: {
       stepRemaining,
@@ -243,9 +337,11 @@ export function useProcedureExecution({
       nextStep,
       previousStep,
       completeStep,
-      setPhase,
+      setPhase: setPhaseWithLogging,
       abort,
       reset,
+      checkAlarms,
     },
+    activeAlarms,
   };
 }

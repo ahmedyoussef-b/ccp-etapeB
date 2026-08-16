@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -12,7 +13,25 @@ import { CheckCircle2, Clock, FileText, AlertTriangle, XCircle } from "lucide-re
 interface CompletedStageProps {
   procedure: TProcedure;
   context: ProcedureExecutionContext;
+  executionId?: string | null;
   onClose: () => void;
+}
+
+interface ExecutionSummary {
+  id: number;
+  phase: string;
+  startedAt: string;
+  finishedAt?: string;
+  anomalies: string[];
+  globalElapsed: number;
+  steps: Array<{
+    id: number;
+    stepId: string;
+    title: string;
+    type: string;
+    isCompleted: boolean;
+    anomaly?: string;
+  }>;
 }
 
 function formatDuration(seconds: number): string {
@@ -21,10 +40,29 @@ function formatDuration(seconds: number): string {
   return `${mins} min ${secs} s`;
 }
 
-export function CompletedStage({ procedure, context, onClose }: CompletedStageProps) {
-  const totalDuration = context.finishedAt
-    ? Math.round((context.finishedAt - context.startedAt) / 1000)
-    : Math.round((Date.now() - context.startedAt) / 1000);
+export function CompletedStage({ procedure, context, executionId, onClose }: CompletedStageProps) {
+  const [summary, setSummary] = useState<ExecutionSummary | null>(null);
+
+  useEffect(() => {
+    if (!executionId) return;
+    const numericId = parseInt(executionId);
+    if (Number.isNaN(numericId)) return;
+
+    fetch(`/api/procedures/executions/${numericId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.id) setSummary(data);
+      })
+      .catch(() => {});
+  }, [executionId]);
+
+  const totalDuration = summary?.globalElapsed
+    ? summary.globalElapsed
+    : context.finishedAt
+      ? Math.round((context.finishedAt - context.startedAt) / 1000)
+      : Math.round((Date.now() - context.startedAt) / 1000);
+
+  const anomalies = summary?.anomalies?.length ? summary.anomalies : context.anomalies;
 
   return (
     <div className="flex flex-col h-full">
@@ -95,7 +133,13 @@ export function CompletedStage({ procedure, context, onClose }: CompletedStagePr
               </div>
             </div>
 
-            {context.anomalies.length > 0 && (
+            {executionId && (
+              <div className="text-xs text-muted-foreground font-mono">
+                Execution ID: {executionId}
+              </div>
+            )}
+
+            {anomalies.length > 0 && (
               <>
                 <Separator />
                 <div>
@@ -104,7 +148,7 @@ export function CompletedStage({ procedure, context, onClose }: CompletedStagePr
                     {proceduresFR.guide.completed.anomalies}
                   </p>
                   <ul className="space-y-1.5">
-                    {context.anomalies.map((anomaly, i) => (
+                    {anomalies.map((anomaly, i) => (
                       <li
                         key={i}
                         className="flex items-start gap-2 text-sm text-foreground"

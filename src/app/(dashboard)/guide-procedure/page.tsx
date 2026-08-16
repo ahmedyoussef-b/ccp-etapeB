@@ -11,7 +11,9 @@ import { Separator } from "@/components/ui/separator";
 import {
   getProcedures,
   importProcedure,
+  syncToServer,
 } from "@/lib/procedures/services/procedure-manager.service";
+import { csrfFetch } from "@/lib/procedures/csrf-fetch";
 import { TProcedure } from "@/lib/procedures/services/validator.service";
 import {
   FileText,
@@ -62,6 +64,22 @@ export default function GuideProcedurePage() {
       importProcedure(parsed);
       setProcedures(getProcedures());
       toast.success("Procédure importée avec succès");
+
+      syncToServer(parsed)
+        .then((result) => {
+          if (result.success) {
+            if (result.offline) {
+              toast.info("Procédure sauvegardée localement (serveur indisponible)");
+            } else {
+              toast.success("Procédure synchronisée sur le serveur");
+            }
+          } else {
+            toast.error("Échec de la synchronisation serveur (données locales conservées)");
+          }
+        })
+        .catch(() => {
+          toast.error("Échec de la synchronisation serveur (données locales conservées)");
+        });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "JSON invalide");
     } finally {
@@ -75,11 +93,30 @@ export default function GuideProcedurePage() {
   }, [router]);
 
   const handleDeleteProcedure = useCallback(
-    (code: string) => {
-      const stored = getProcedures().filter((p) => p.metadata.code !== code);
-      localStorage.setItem("nexaflow_procedures", JSON.stringify(stored));
-      setProcedures(stored);
-      toast.success("Procédure supprimée");
+    async (code: string) => {
+      try {
+        const res = await csrfFetch(`/api/procedures/guide/${encodeURIComponent(code)}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          const stored = getProcedures().filter((p) => p.metadata.code !== code);
+          localStorage.setItem("nexaflow_procedures", JSON.stringify(stored));
+          setProcedures(stored);
+          toast.success("Procédure supprimée");
+        } else if (res.status === 404) {
+          const stored = getProcedures().filter((p) => p.metadata.code !== code);
+          localStorage.setItem("nexaflow_procedures", JSON.stringify(stored));
+          setProcedures(stored);
+          toast.success("Procédure supprimée du guide local");
+        } else {
+          toast.error("Impossible de supprimer la procédure");
+        }
+      } catch {
+        const stored = getProcedures().filter((p) => p.metadata.code !== code);
+        localStorage.setItem("nexaflow_procedures", JSON.stringify(stored));
+        setProcedures(stored);
+        toast.success("Procédure supprimée du guide local");
+      }
     },
     []
   );
@@ -175,19 +212,33 @@ export default function GuideProcedurePage() {
                     {procedure.metadata.description || "Aucune description."}
                   </p>
 
-                  <div className="flex flex-wrap items-center gap-2 mb-4">
-                    {category && (
-                      <Badge variant="outline" className="text-xs gap-1">
-                        <Tag className="h-3 w-3" />
-                        {category}
-                      </Badge>
-                    )}
-                    {procedure.metadata.priority && (
-                      <Badge variant="secondary" className={`text-xs ${priority}`}>
-                        {procedure.metadata.priority}
-                      </Badge>
-                    )}
-                  </div>
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            {category && (
+              <Badge variant="outline" className="text-xs gap-1">
+                <Tag className="h-3 w-3" />
+                {category}
+              </Badge>
+            )}
+            {procedure.metadata.priority && (
+              <Badge variant="secondary" className={`text-xs ${priority}`}>
+                {procedure.metadata.priority}
+              </Badge>
+            )}
+            {(procedure as TProcedure & { approvalStatus?: string }).approvalStatus && (
+              <Badge
+                variant={
+                  (procedure as TProcedure & { approvalStatus?: string }).approvalStatus === "approved"
+                    ? "default"
+                    : (procedure as TProcedure & { approvalStatus?: string }).approvalStatus === "rejected"
+                    ? "destructive"
+                    : "secondary"
+                }
+                className="text-xs"
+              >
+                {(procedure as TProcedure & { approvalStatus?: string }).approvalStatus}
+              </Badge>
+            )}
+          </div>
 
                   <div className="flex items-center justify-between pt-3 border-t border-border">
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">

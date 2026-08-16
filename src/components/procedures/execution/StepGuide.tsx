@@ -3,10 +3,11 @@
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { TStep } from "@/lib/procedures/services/validator.service";
+import { TStep, TMediaRequirement } from "@/lib/procedures/services/validator.service";
 import { proceduresFR } from "@/lib/i18n/procedures";
 import {
   AlertTriangle,
@@ -27,6 +28,9 @@ interface StepGuideProps {
   isCompleted: boolean;
   onToggleComplete: () => void;
   advice: string;
+  capturedMedia?: Map<string, { dataUrl: string; type: string }>;
+  onCaptureMedia?: (mediaReq: TMediaRequirement) => void;
+  isCapturing?: boolean;
 }
 
 const stepTypeLabels: Record<string, string> = {
@@ -58,6 +62,9 @@ export function StepGuide({
   isCompleted,
   onToggleComplete,
   advice,
+  capturedMedia,
+  onCaptureMedia,
+  isCapturing,
 }: StepGuideProps) {
   const mediaList = useMemo(() => step.mediaRequirements || [], [step.mediaRequirements]);
 
@@ -138,27 +145,73 @@ export function StepGuide({
               {proceduresFR.media.title}
             </Label>
             <div className="flex flex-wrap gap-2">
-              {mediaList.map((media, i) => (
-                <Badge
-                  key={i}
-                  variant="secondary"
-                  className={`gap-1.5 text-xs ${media.mandatory ? "border-primary/30" : ""}`}
-                >
-                  {mediaTypeIcons[media.type]}
-                  {proceduresFR.media[media.type] || media.type}
-                  {media.mandatory && " *"}
-                  {(media.options?.geolocation || media.options?.timestamp) && (
-                    <span className="text-[10px] text-muted-foreground">
-                      (
-                      {[media.options?.geolocation && "Géo", media.options?.timestamp && "Horodatage"]
-                        .filter(Boolean)
-                        .join(" + ")}
-                      )
-                    </span>
-                  )}
-                </Badge>
-              ))}
+              {mediaList.map((media, i) => {
+                const captured = capturedMedia?.get(`${step.id}-${media.type}`);
+                return (
+                  <div key={i} className="flex flex-col gap-1">
+                    <Badge
+                      variant={captured ? "default" : "secondary"}
+                      className={`gap-1.5 text-xs ${media.mandatory && !captured ? "border-primary/30" : ""}`}
+                    >
+                      {mediaTypeIcons[media.type]}
+                      {proceduresFR.media[media.type] || media.type}
+                      {media.mandatory && " *"}
+                      {(media.options?.geolocation || media.options?.timestamp) && (
+                        <span className="text-[10px] text-muted-foreground">
+                          (
+                          {[media.options?.geolocation && "Géo", media.options?.timestamp && "Horodatage"]
+                            .filter(Boolean)
+                            .join(" + ")}
+                          )
+                        </span>
+                      )}
+                    </Badge>
+                    {!captured && onCaptureMedia && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[10px] gap-1"
+                        onClick={() => onCaptureMedia(media)}
+                        disabled={isCapturing}
+                      >
+                        <Camera className="h-3 w-3" />
+                        Capturer
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
+            {mediaList.some((m) => capturedMedia?.has(`${step.id}-${m.type}`)) && (
+              <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {mediaList
+                  .filter((m) => capturedMedia?.has(`${step.id}-${m.type}`))
+                  .map((media, i) => {
+                    const captured = capturedMedia?.get(`${step.id}-${media.type}`);
+                    if (!captured) return null;
+                    return (
+                      <div
+                        key={i}
+                        className="rounded-lg border border-border overflow-hidden bg-muted/30"
+                      >
+                        {media.type === "signature" || media.type === "photo" ? (
+                          <img
+                            src={captured.dataUrl}
+                            alt={media.type}
+                            className="w-full h-24 object-contain bg-white"
+                          />
+                        ) : media.type === "video" || media.type === "audio" ? (
+                          <video
+                            src={captured.dataUrl}
+                            controls
+                            className="w-full h-24 object-cover"
+                          />
+                        ) : null}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
           </div>
         )}
 

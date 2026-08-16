@@ -29,3 +29,148 @@ model TreeNode {
   @@index([type])
   @@unique([name, type, parentId])
 }
+
+model QARegistry {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  pairs       QAPair[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([title])
+}
+
+model QAPair {
+  id         Int        @id @default(autoincrement())
+  question   String
+  answer     String
+  order      Int        @default(0)
+  registryId Int
+  registry   QARegistry @relation(fields: [registryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([registryId])
+  @@index([question])
+}
+
+model Procedure {
+  id                      Int      @id @default(autoincrement())
+  code                    String   @unique
+  title                   String
+  description             String?
+  category                String
+  priority                String   @default("moyenne")
+  estimatedTimeMinutes    Int      @default(1)
+  requiredRoles           String[]
+  globalSafetyInstructions String[]
+  status                  String   @default("draft")
+  authorId                String?
+  authorName              String?
+  approverId              String?
+  approverName            String?
+  reviewDate              DateTime?
+  version                 String   @default("1.0")
+  tags                    String[]
+  language                String   @default("fr-FR")
+  body                    Json
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  executions              ProcedureExecution[]
+  approvals               Approval[]
+
+  @@index([code])
+  @@index([status])
+  @@index([category])
+}
+
+model ProcedureExecution {
+  id               Int      @id @default(autoincrement())
+  procedureId      Int
+  procedure        Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  userId           String?
+  userName         String?
+  userRole         String?
+  phase            String   @default("briefing")
+  currentStepIndex Int      @default(0)
+  completedSteps   String[]
+  startedAt        DateTime @default(now())
+  finishedAt       DateTime?
+  anomalies        String[]
+  globalElapsed    Int      @default(0)
+  steps            ExecutionStep[]
+  media            ExecutionMedia[]
+
+  @@index([procedureId])
+  @@index([userId])
+  @@index([startedAt])
+}
+
+model ExecutionStep {
+  id          Int      @id @default(autoincrement())
+  executionId Int
+  execution   ProcedureExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  stepId      String
+  stepOrder   Int
+  title       String
+  type        String
+  isMandatory Boolean  @default(false)
+  isCompleted Boolean  @default(false)
+  timerEnabled Boolean @default(false)
+  timerSeconds Int     @default(0)
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  anomaly     String?
+
+  @@index([executionId])
+}
+
+model ExecutionMedia {
+  id          Int      @id @default(autoincrement())
+  executionId Int
+  execution   ProcedureExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  stepId      String
+  type        String
+  url         String?
+  filename    String?
+  mimeType    String?
+  size        Int?
+  geolocation Json?
+  timestamp   DateTime @default(now())
+  capturedAt  DateTime @default(now())
+
+  @@index([executionId])
+  @@index([stepId])
+}
+
+model Approval {
+  id          Int      @id @default(autoincrement())
+  procedureId Int
+  procedure   Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  approverId  String
+  approverName String
+  approverRole String
+  status      String   @default("pending")
+  comment     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([procedureId])
+  @@index([status])
+}
+
+model ProcedureVersion {
+  id            Int      @id @default(autoincrement())
+  procedureCode String
+  version       String
+  body          Json
+  createdAt     DateTime @default(now())
+  createdBy     String?
+  createdByName String?
+  comment       String?
+
+  @@index([procedureCode])
+  @@index([procedureCode, version])
+}
+

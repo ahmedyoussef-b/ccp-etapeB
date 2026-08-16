@@ -1,6 +1,7 @@
 import { TStep } from "../services/validator.service";
 import { GuidePhase } from "../types";
 import { proceduresFR } from "../../i18n/procedures";
+import { csrfFetch } from "@/lib/procedures/csrf-fetch";
 
 export interface AssistantAdvicePayload {
   step: TStep;
@@ -8,6 +9,7 @@ export interface AssistantAdvicePayload {
   totalSteps: number;
   phase: GuidePhase;
   userMessage?: string;
+  procedureId?: string;
 }
 
 function getStepTypeAdvice(type: TStep["type"]): string {
@@ -130,4 +132,38 @@ export function generateAssistantAdvice(payload: AssistantAdvicePayload): string
   }
 
   return lines.join("\n");
+}
+
+export async function callLLMAssistant(payload: AssistantAdvicePayload): Promise<string> {
+  const procedureId = payload.procedureId || "default";
+  const url = `/api/procedures/guide/${encodeURIComponent(procedureId)}/chat`;
+
+  try {
+    const response = await csrfFetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: payload.userMessage || "Donne-moi des conseils pour cette étape.",
+        step: payload.step,
+        stepIndex: payload.stepIndex,
+        totalSteps: payload.totalSteps,
+        phase: payload.phase,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API responded with ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data.response && typeof data.response === "string") {
+      return data.response;
+    }
+    throw new Error("Invalid response format");
+  } catch (error) {
+    console.error("LLM assistant error, falling back to mock:", error);
+    return generateAssistantAdvice(payload);
+  }
 }

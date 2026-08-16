@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, HelpCircle, FileText, MessageSquare, BookOpen, Image, Database, Video, BarChart3, Users, ClipboardList, Bot, Sun, Moon, GitBranch } from "lucide-react";
+import { LayoutDashboard, HelpCircle, FileText, MessageSquare, BookOpen, Image, Database, Video, BarChart3, Users, ClipboardList, Bot, Sun, Moon, GitBranch, CheckCircle2, History } from "lucide-react";
 import { NexaFlowLogo } from "@/components/brand/nexaflow-logo";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,8 @@ const navItems = [
   { href: "/actions-ia", label: "Actions IA", icon: Bot, roles: ["admin"] },
   { href: "/creer-procedure", label: "Créer une procédure", icon: FileText, roles: ["admin", "chef-de-quart"] },
   { href: "/guide-procedure", label: "Guide procédure", icon: BookOpen, roles: ["admin", "chef-de-quart", "chef-de-bloc", "rondier"] },
+  { href: "/approvals", label: "Approbations", icon: CheckCircle2, roles: ["admin", "chef-de-quart"] },
+  { href: "/executions", label: "Historique exécutions", icon: History, roles: ["admin", "chef-de-quart"] },
   { href: "/structure-bdd", label: "Structure BDD", icon: Database, roles: ["admin"] },
   { href: "/images", label: "Banque d'images", icon: Image, roles: ["admin"] },
   { href: "/video-conference", label: "Visioconférence", icon: Video, roles: ["admin", "chef-de-quart", "chef-de-bloc", "rondier"] },
