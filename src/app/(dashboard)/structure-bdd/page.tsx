@@ -582,24 +582,6 @@ export default function StructureBDDPage() {
     return map;
   };
 
-  const findLocalPathForWebNode = (webNode: WebTreeNode, localTree: LocalNode[]): string | null => {
-    const ancestorNames: string[] = [];
-    let current: WebTreeNode | undefined = webNode;
-    while (current) {
-      ancestorNames.unshift(current.name);
-      current = webNodeMap.get(current.parentId ?? 0);
-    }
-
-    let currentNodes: LocalNode[] = localTree;
-    for (const name of ancestorNames) {
-      const found = currentNodes.find((n) => n.name === name);
-      if (!found) return null;
-      if (found.type === "file") return found.path;
-      currentNodes = found.children;
-    }
-    return null;
-  };
-
   const handlePreviewFile = async (node: WebTreeNode | LocalNode) => {
     const isLocal = "path" in node;
 
