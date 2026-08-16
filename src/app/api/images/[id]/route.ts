@@ -25,8 +25,9 @@ export async function PUT(
       return NextResponse.json({ message: "Image not found" }, { status: 404 });
     }
     return NextResponse.json(item);
-  } catch {
-    return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invalid data";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
