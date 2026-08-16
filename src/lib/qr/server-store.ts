@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
+import { PrismaClient } from "@prisma/client";
 import { rankResults, computeWordScore, type QAResult } from "./scoring";
 
 export interface QARegistryRecord {
@@ -74,18 +75,14 @@ function resolveWritableDir(preferred: string, fallback: string): string {
       fs.mkdirSync(preferred, { recursive: true });
     }
     fs.accessSync(preferred, fs.constants.W_OK);
-    console.log("[Q/R] writable dir: preferred OK:", preferred);
     return preferred;
-  } catch (err) {
-    console.warn("[Q/R] writable dir: preferred FAILED, trying fallback:", (err as Error)?.message);
+  } catch {
     try {
       if (!fs.existsSync(fallback)) {
         fs.mkdirSync(fallback, { recursive: true });
       }
-      console.log("[Q/R] writable dir: fallback OK:", fallback);
       return fallback;
-    } catch (fallbackErr) {
-      console.warn("[Q/R] writable dir: fallback FAILED:", (fallbackErr as Error)?.message);
+    } catch {
       return preferred;
     }
   }
@@ -120,10 +117,6 @@ function writePairs(pairs: QAPairDoc[]): void {
   fs.writeFileSync(pairsFile(), JSON.stringify(pairs, null, 2), "utf-8");
 }
 
-function generateId(): number {
-  return Date.now() + Math.floor(Math.random() * 1000);
-}
-
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -133,6 +126,10 @@ function slugify(text: string): string {
     .trim()
     .replace(/\s+/g, "-")
     .substring(0, 60) || `qa-${Date.now()}`;
+}
+
+function generateId(): number {
+  return Date.now() + Math.floor(Math.random() * 1000);
 }
 
 function toRegistryRecord(title: string): QARegistryRecord {
@@ -158,22 +155,109 @@ function toPairWithRegistry(doc: QAPairDoc): QAPairWithRegistry {
   };
 }
 
+function toPairWithRegistryFromPrisma(
+  p: {
+    id: number;
+    question: string;
+    answer: string;
+    order: number;
+    registryId: number;
+    createdAt: Date | string;
+    updatedAt: Date | string;
+    registry: {
+      id: number;
+      title: string;
+      description: string | null;
+      createdAt: Date | string;
+      updatedAt: Date | string;
+    } | null;
+  }
+): QAPairWithRegistry {
+  return {
+    id: p.id,
+    question: p.question,
+    answer: p.answer,
+    registryId: p.registryId,
+    order: p.order ?? 0,
+    createdAt: new Date(p.createdAt).toISOString(),
+    updatedAt: new Date(p.updatedAt).toISOString(),
+    registry: {
+      id: p.registry?.id ?? 0,
+      title: p.registry?.title ?? "unknown",
+      description: p.registry?.description ?? null,
+      createdAt: p.registry ? new Date(p.registry.createdAt).toISOString() : new Date().toISOString(),
+      updatedAt: p.registry ? new Date(p.registry.updatedAt).toISOString() : new Date().toISOString(),
+    },
+  };
+}
+
+async function prismaOrFallback<T>(
+  operation: (p: PrismaClient) => Promise<T>,
+  fallback: () => T
+): Promise<T> {
+  try {
+    const { prisma } = await import("@/lib/prisma");
+    const result = await operation(prisma);
+    console.log("[Q/R] Prisma operation succeeded");
+    return result;
+  } catch (err: unknown) {
+    console.warn("[Q/R] Prisma failed, using file-based fallback:", (err as Error)?.message);
+    return fallback();
+  }
+}
+
 export async function getAllPairs(): Promise<QAPairWithRegistry[]> {
-  return readPairs().map(toPairWithRegistry).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  return prismaOrFallback(
+    async (prisma) => {
+      const rows = await prisma.qAPair.findMany({
+        orderBy: { createdAt: "desc" },
+        include: { registry: true },
+      });
+      return rows.map(toPairWithRegistryFromPrisma);
+    },
+    () => readPairs()
+      .map(toPairWithRegistry)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   );
 }
 
 export async function getRegistries(): Promise<QARegistryRecord[]> {
-  const pairs = readPairs();
-  const titles = Array.from(new Set(pairs.map((p) => p.registryTitle)));
-  return titles.map((t) => toRegistryRecord(t));
+  return prismaOrFallback(
+    async (prisma) => {
+      const rows = await prisma.qARegistry.findMany({
+        orderBy: { title: "asc" },
+      });
+      return rows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description ?? null,
+        createdAt: new Date(r.createdAt).toISOString(),
+        updatedAt: new Date(r.updatedAt).toISOString(),
+      }));
+    },
+    () => {
+      const pairs = readPairs();
+      const titles = Array.from(new Set(pairs.map((p) => p.registryTitle)));
+      return titles.map((t) => toRegistryRecord(t));
+    }
+  );
 }
 
 export async function getPairById(id: number): Promise<QAPairWithRegistry | null> {
-  const pairs = readPairs();
-  const doc = pairs.find((p) => p.id === id);
-  return doc ? toPairWithRegistry(doc) : null;
+  return prismaOrFallback(
+    async (prisma) => {
+      const row = await prisma.qAPair.findUnique({
+        where: { id },
+        include: { registry: true },
+      });
+      return row ? toPairWithRegistryFromPrisma(row) : null;
+    },
+    () => {
+      const pairs = readPairs();
+      const doc = pairs.find((p) => p.id === id);
+      return doc ? toPairWithRegistry(doc) : null;
+    }
+  );
 }
 
 export interface CreatePairInput {
@@ -184,56 +268,123 @@ export interface CreatePairInput {
 }
 
 export async function createPair(input: CreatePairInput): Promise<QAPairWithRegistry> {
-  const pairs = readPairs();
-  const title = input.registryTitle || slugify(input.question);
+  return prismaOrFallback(
+    async (prisma) => {
+      const title = input.registryTitle || slugify(input.question);
+      let registry = await prisma.qARegistry.findFirst({
+        where: { title },
+      });
+      if (!registry) {
+        registry = await prisma.qARegistry.create({
+          data: {
+            title,
+            description: input.registryDescription ?? null,
+          },
+        });
+      }
 
-  const doc: QAPairDoc = {
-    id: generateId(),
-    question: input.question.trim(),
-    answer: input.answer.trim(),
-    registryTitle: title,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
+      const row = await prisma.qAPair.create({
+        data: {
+          question: input.question.trim(),
+          answer: input.answer.trim(),
+          order: 0,
+          registryId: registry.id,
+        },
+        include: { registry: true },
+      });
 
-  pairs.push(doc);
-  console.log("[Q/R server-store] createPair writing to pairs file");
-  writePairs(pairs);
-  syncToWebDb("create", doc).catch(() => {});
+      return toPairWithRegistryFromPrisma(row);
+    },
+    () => {
+      const pairs = readPairs();
+      const title = input.registryTitle || slugify(input.question);
 
-  return toPairWithRegistry(doc);
+      const doc: QAPairDoc = {
+        id: generateId(),
+        question: input.question.trim(),
+        answer: input.answer.trim(),
+        registryTitle: title,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      pairs.push(doc);
+      writePairs(pairs);
+      return toPairWithRegistry(doc);
+    }
+  );
 }
 
 export async function updatePair(
   id: number,
   updates: { question?: string; answer?: string; registryId?: number }
 ): Promise<QAPairWithRegistry | null> {
-  const pairs = readPairs();
-  const idx = pairs.findIndex((p) => p.id === id);
-  if (idx === -1) return null;
+  return prismaOrFallback(
+    async (prisma) => {
+      try {
+        const row = await prisma.qAPair.update({
+          where: { id },
+          data: {
+            ...(updates.question && { question: updates.question }),
+            ...(updates.answer && { answer: updates.answer }),
+            ...(updates.registryId && { registryId: updates.registryId }),
+          },
+          include: { registry: true },
+        });
+        return toPairWithRegistryFromPrisma(row);
+      } catch (err: unknown) {
+        if (isPrismaNotFound(err)) return null;
+        throw err;
+      }
+    },
+    () => {
+      const pairs = readPairs();
+      const idx = pairs.findIndex((p) => p.id === id);
+      if (idx === -1) return null;
 
-  if (updates.question) pairs[idx].question = updates.question;
-  if (updates.answer) pairs[idx].answer = updates.answer;
-  pairs[idx].updatedAt = new Date().toISOString();
+      if (updates.question) pairs[idx].question = updates.question;
+      if (updates.answer) pairs[idx].answer = updates.answer;
+      pairs[idx].updatedAt = new Date().toISOString();
 
-  writePairs(pairs);
-  syncToWebDb("create", pairs[idx]).catch(() => {});
+      writePairs(pairs);
+      return toPairWithRegistry(pairs[idx]);
+    }
+  );
+}
 
-  return toPairWithRegistry(pairs[idx]);
+function isPrismaNotFound(err: unknown): boolean {
+  if (typeof err === "object" && err !== null && "code" in err) {
+    return (err as { code: string }).code === "P2025";
+  }
+  return false;
 }
 
 export async function deletePair(id: number): Promise<boolean> {
-  const pairs = readPairs();
-  const filtered = pairs.filter((p) => p.id !== id);
-  if (filtered.length === pairs.length) return false;
-  writePairs(filtered);
-  syncToWebDb("delete", { id }).catch(() => {});
-  return true;
+  return prismaOrFallback(
+    async (prisma) => {
+      try {
+        await prisma.qAPair.delete({ where: { id } });
+        return true;
+      } catch (err: unknown) {
+        if (isPrismaNotFound(err)) return false;
+        throw err;
+      }
+    },
+    () => {
+      const pairs = readPairs();
+      const filtered = pairs.filter((p) => p.id !== id);
+      if (filtered.length === pairs.length) return false;
+      writePairs(filtered);
+      return true;
+    }
+  );
 }
 
 export async function searchPairs(query: string, limit = 10): Promise<QAResult[]> {
-  const pairs = readPairs();
-  if (!query.trim() || pairs.length === 0) return [];
+  if (!query.trim()) return [];
+
+  const pairs = await getAllPairs();
+  if (pairs.length === 0) return [];
 
   const results = pairs.map((p) => ({
     question: p.question,
@@ -248,13 +399,14 @@ export async function exportPairAsJson(
   pair: { question: string; answer: string },
   title?: string
 ): Promise<string> {
-  if (!fs.existsSync(getItemsDir())) {
-    fs.mkdirSync(getItemsDir(), { recursive: true });
+  const itemsDir = getItemsDir();
+  if (!fs.existsSync(itemsDir)) {
+    fs.mkdirSync(itemsDir, { recursive: true });
   }
 
   const ts = new Date().toISOString().replace(/:/g, "-").replace(/\.\d{3}Z$/, "");
   const filename = `qa_${ts}.json`;
-  const filepath = path.join(getItemsDir(), filename);
+  const filepath = path.join(itemsDir, filename);
 
   const registryTitle = title || slugify(pair.question);
 
@@ -269,54 +421,11 @@ export async function exportPairAsJson(
 
   try {
     fs.writeFileSync(filepath, JSON.stringify(doc, null, 2), "utf-8");
-    console.log("[Q/R server-store] exportPairAsJson written to:", filepath);
   } catch (err) {
-    console.error("[Q/R server-store] exportPairAsJson FAILED:", err);
+    console.error("[Q/R] exportPairAsJson FAILED:", err);
     throw err;
   }
   return filename;
-}
-
-async function syncToWebDb(
-  action: "create" | "delete",
-  doc: QAPairDoc | { id: number }
-): Promise<void> {
-  try {
-    const { prisma } = await import("@/lib/prisma");
-    if (action === "create") {
-      const pairDoc = doc as QAPairDoc;
-      let registry = await prisma.qARegistry.findFirst({
-        where: { title: pairDoc.registryTitle },
-      });
-      if (!registry) {
-        registry = await prisma.qARegistry.create({
-          data: {
-            title: pairDoc.registryTitle,
-            description: null,
-          },
-        });
-      }
-      await prisma.qAPair.upsert({
-        where: { id: pairDoc.id },
-        update: {
-          question: pairDoc.question,
-          answer: pairDoc.answer,
-          registryId: registry.id,
-        },
-        create: {
-          id: pairDoc.id,
-          question: pairDoc.question,
-          answer: pairDoc.answer,
-          order: 0,
-          registryId: registry.id,
-        },
-      });
-    } else {
-      await prisma.qAPair.deleteMany({ where: { id: (doc as { id: number }).id } });
-    }
-  } catch {
-    // Web DB unavailable — file-based storage is the source of truth
-  }
 }
 
 export interface ImportResult {
@@ -337,6 +446,7 @@ export async function importRegistryFiles(): Promise<ImportResult> {
   const existingIds = new Set(existing.map((p) => p.id));
 
   const entries = fs.readdirSync(itemsDir);
+
   for (const entry of entries) {
     const fullPath = path.join(itemsDir, entry);
     if (!fs.statSync(fullPath).isFile() || !entry.endsWith(".json")) continue;
@@ -356,13 +466,8 @@ export async function importRegistryFiles(): Promise<ImportResult> {
       const title = parsed.title || entry.replace(".json", "");
 
       for (const pair of parsed.pairs) {
-        const newId = generateId();
-        while (existingIds.has(newId)) {
-          void generateId();
-        }
-
         const doc: QAPairDoc = {
-          id: newId,
+          id: generateId(),
           question: pair.question,
           answer: pair.answer,
           registryTitle: title,
@@ -371,7 +476,7 @@ export async function importRegistryFiles(): Promise<ImportResult> {
         };
 
         existing.push(doc);
-        existingIds.add(newId);
+        existingIds.add(doc.id);
         imported++;
       }
     } catch {
