@@ -228,7 +228,6 @@ function TreeNodeItem({
 export default function StructureBDDPage() {
   const [webTree, setWebTree] = useState<WebTreeNode[]>([]);
   const [localTree, setLocalTree] = useState<LocalNode[]>([]);
-  const [webNodeMap, setWebNodeMap] = useState<Map<number, WebTreeNode>>(new Map());
   const [loading, setLoading] = useState(true);
   const [webError, setWebError] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -262,7 +261,6 @@ export default function StructureBDDPage() {
       .then((data) => {
         const roots = (data as { roots: WebTreeNode[] }).roots;
         setWebTree(roots);
-        setWebNodeMap(buildWebNodeMap(roots));
       })
       .catch((err) => {
         setWebError(err instanceof Error ? err.message : "Unknown error");
@@ -568,18 +566,6 @@ export default function StructureBDDPage() {
         }));
     };
     return prune(nodes);
-  };
-
-  const buildWebNodeMap = (nodes: WebTreeNode[]): Map<number, WebTreeNode> => {
-    const map = new Map<number, WebTreeNode>();
-    const traverse = (items: WebTreeNode[]) => {
-      for (const node of items) {
-        map.set(node.id, node);
-        if (node.children.length > 0) traverse(node.children);
-      }
-    };
-    traverse(nodes);
-    return map;
   };
 
   const handlePreviewFile = async (node: WebTreeNode | LocalNode) => {
