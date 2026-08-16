@@ -22,6 +22,15 @@ export default function LoginPage() {
         : lower.includes("chef-de-bloc")
           ? "chef-de-bloc"
           : "rondier";
+    if (typeof window !== "undefined") {
+      const userId = `user_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      sessionStorage.setItem("dashboardRole", role);
+      sessionStorage.setItem("dashboardUserId", userId);
+      sessionStorage.setItem("dashboardUserEmail", email);
+      document.cookie = `role=${role}; path=/; max-age=${60 * 60 * 24 * 7}`;
+      document.cookie = `userId=${userId}; path=/; max-age=${60 * 60 * 24 * 7}`;
+      document.cookie = `userEmail=${encodeURIComponent(email)}; path=/; max-age=${60 * 60 * 24 * 7}`;
+    }
     const route = role === "admin" ? "/admin" : `/${role}`;
     router.push(route);
   };
