@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createPair, exportPairsAsJson } from "@/lib/qr/server-store";
+import { createPair } from "@/lib/qr/server-store";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
         type: "qa",
         title: body.title || baseName,
         description: "",
-        pairs: body.items.map((p: any) => ({ question: p.question, answer: p.answer })),
+        pairs: body.items.map((p: { question: string; answer: string }) => ({ question: p.question, answer: p.answer })),
         createdAt: new Date().toISOString(),
         registryPath: `items/${finalName}`,
       };
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
           // 2. Move and rename the existing file to index 1
           const oldName = `${baseName}_1${fileExt}`;
           let oldDoc = {};
-          try { oldDoc = JSON.parse(existingFile.metadata || "{}"); } catch(e){}
+          try { oldDoc = JSON.parse(existingFile.metadata || "{}"); } catch {}
           await prisma.treeNode.update({
             where: { id: existingFile.id },
             data: { 
