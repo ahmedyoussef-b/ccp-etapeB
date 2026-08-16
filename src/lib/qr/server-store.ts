@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import os from "os";
 import { rankResults, computeWordScore, type QAResult } from "./scoring";
 
 export interface QARegistryRecord {
@@ -48,20 +49,61 @@ interface ParsedQAFile {
 }
 
 const DB_DIR = path.join(process.cwd(), ".local-db", "qr");
-const PAIRS_FILE = path.join(DB_DIR, "pairs.json");
 const ITEMS_DIR = path.join(process.cwd(), ".data", "registry", "items");
+const TMP_DB_DIR = path.join(os.tmpdir(), ".local-db", "qr");
+const TMP_ITEMS_DIR = path.join(os.tmpdir(), ".data", "registry", "items");
+
+let resolvedDbDir: string | null = null;
+let resolvedItemsDir: string | null = null;
+
+function getDbDir(): string {
+  if (resolvedDbDir) return resolvedDbDir;
+  resolvedDbDir = resolveWritableDir(DB_DIR, TMP_DB_DIR);
+  return resolvedDbDir;
+}
+
+function getItemsDir(): string {
+  if (resolvedItemsDir) return resolvedItemsDir;
+  resolvedItemsDir = resolveWritableDir(ITEMS_DIR, TMP_ITEMS_DIR);
+  return resolvedItemsDir;
+}
+
+function resolveWritableDir(preferred: string, fallback: string): string {
+  try {
+    if (!fs.existsSync(preferred)) {
+      fs.mkdirSync(preferred, { recursive: true });
+    }
+    fs.accessSync(preferred, fs.constants.W_OK);
+    return preferred;
+  } catch {
+    try {
+      if (!fs.existsSync(fallback)) {
+        fs.mkdirSync(fallback, { recursive: true });
+      }
+      return fallback;
+    } catch {
+      return preferred;
+    }
+  }
+}
 
 function ensureDir(): void {
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
+  const dir = getDbDir();
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
+}
+
+function pairsFile(): string {
+  return path.join(getDbDir(), "pairs.json");
 }
 
 function readPairs(): QAPairDoc[] {
   ensureDir();
-  if (!fs.existsSync(PAIRS_FILE)) return [];
+  const file = pairsFile();
+  if (!fs.existsSync(file)) return [];
   try {
-    const raw = fs.readFileSync(PAIRS_FILE, "utf-8");
+    const raw = fs.readFileSync(file, "utf-8");
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
   } catch {
@@ -71,7 +113,7 @@ function readPairs(): QAPairDoc[] {
 
 function writePairs(pairs: QAPairDoc[]): void {
   ensureDir();
-  fs.writeFileSync(PAIRS_FILE, JSON.stringify(pairs, null, 2), "utf-8");
+  fs.writeFileSync(pairsFile(), JSON.stringify(pairs, null, 2), "utf-8");
 }
 
 function generateId(): number {
@@ -202,13 +244,13 @@ export async function exportPairAsJson(
   pair: { question: string; answer: string },
   title?: string
 ): Promise<string> {
-  if (!fs.existsSync(ITEMS_DIR)) {
-    fs.mkdirSync(ITEMS_DIR, { recursive: true });
+  if (!fs.existsSync(getItemsDir())) {
+    fs.mkdirSync(getItemsDir(), { recursive: true });
   }
 
   const ts = new Date().toISOString().replace(/:/g, "-").replace(/\.\d{3}Z$/, "");
   const filename = `qa_${ts}.json`;
-  const filepath = path.join(ITEMS_DIR, filename);
+  const filepath = path.join(getItemsDir(), filename);
 
   const registryTitle = title || slugify(pair.question);
 
@@ -276,16 +318,17 @@ export async function importRegistryFiles(): Promise<ImportResult> {
   let imported = 0;
   let skipped = 0;
 
-  if (!fs.existsSync(ITEMS_DIR)) {
+  const itemsDir = getItemsDir();
+  if (!fs.existsSync(itemsDir)) {
     return { imported, skipped };
   }
 
   const existing = readPairs();
   const existingIds = new Set(existing.map((p) => p.id));
 
-  const entries = fs.readdirSync(ITEMS_DIR);
+  const entries = fs.readdirSync(itemsDir);
   for (const entry of entries) {
-    const fullPath = path.join(ITEMS_DIR, entry);
+    const fullPath = path.join(itemsDir, entry);
     if (!fs.statSync(fullPath).isFile() || !entry.endsWith(".json")) continue;
 
     try {
