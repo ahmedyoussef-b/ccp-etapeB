@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { NexaFlowLogo } from "@/components/brand/nexaflow-logo";
 import { useSpeech } from "@/lib/speech/use-speech";
+import { qrService } from "@/lib/qr/mock-service";
 import {
   Send,
   Mic,
@@ -98,13 +99,59 @@ export default function ChatIAPage() {
     }
   }, [transcript, voiceMode]);
 
+  const finishResponse = useCallback(
+    (response: string) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: response,
+          timestamp: new Date(),
+        },
+      ]);
+      setIsTyping(false);
+
+      if (voiceMode) {
+        speak(response);
+      }
+    },
+    [setMessages, setIsTyping, voiceMode, speak]
+  );
+
   const simulateResponse = useCallback(
     (userMessage: string) => {
       setIsTyping(true);
 
-      setTimeout(() => {
-        let response = "";
+      setTimeout(async () => {
         const lower = userMessage.toLowerCase();
+
+        if (
+          lower.includes("bonjour") ||
+          lower.includes("salut") ||
+          lower.includes("hello")
+        ) {
+          finishResponse(
+            "Bonjour ! Je suis là pour vous aider. Posez-moi vos questions sur NexaFlow."
+          );
+          return;
+        }
+
+        try {
+          const results = await qrService.search(userMessage);
+          const match = results.find((r) => r.score >= 0.5);
+          if (match) {
+            finishResponse(
+              match.answer +
+                "\n\n*Source : base de connaissances Q/R de NexaFlow*"
+            );
+            return;
+          }
+        } catch {
+          // Q/R search unavailable — fall through to keyword responses
+        }
+
+        let response = "";
 
         if (
           lower.includes("créer") ||
@@ -127,35 +174,15 @@ export default function ChatIAPage() {
         ) {
           response =
             "NexaFlow supporte plus de 200 intégrations natives : Slack, GitHub, Notion, Linear, et bien d'autres. Un SDK est aussi disponible pour vos outils custom.";
-        } else if (
-          lower.includes("bonjour") ||
-          lower.includes("salut") ||
-          lower.includes("hello")
-        ) {
-          response =
-            "Bonjour ! Je suis là pour vous aider. Posez-moi vos questions sur NexaFlow.";
         } else {
           response =
             "Je comprends votre demande. Pour aller plus loin, je vous invite à consulter notre section Q/R ou à contacter notre support.";
         }
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            role: "assistant",
-            content: response,
-            timestamp: new Date(),
-          },
-        ]);
-        setIsTyping(false);
-
-        if (voiceMode) {
-          speak(response);
-        }
+        finishResponse(response);
       }, 1000);
     },
-    [voiceMode, speak]
+    [finishResponse]
   );
 
   const handleSend = useCallback(() => {
