@@ -70,14 +70,21 @@ export type TAlarmConfig = z.infer<typeof AlarmConfigSchema>;
 export type TProcedure = z.infer<typeof ProcedureSchema>;
 
 export function validateProcedure(data: unknown): TProcedure {
-  return ProcedureSchema.parse(data);
+  console.log("[CREER-PROCEDURE] validateProcedure: validation Zod démarrée");
+  const result = ProcedureSchema.parse(data);
+  console.log("[CREER-PROCEDURE] validateProcedure: validation OK. Code:", result.metadata.code, "| Étapes:", result.steps.length);
+  return result;
 }
 
 export function validateStep(data: unknown): TStep {
-  return StepSchema.parse(data);
+  console.log("[CREER-PROCEDURE] validateStep: validation Zod démarrée");
+  const result = StepSchema.parse(data);
+  console.log("[CREER-PROCEDURE] validateStep: validation OK. StepId:", result.id);
+  return result;
 }
 
 export function hasCircularDependencies(steps: TStep[]): boolean {
+  console.log("[CREER-PROCEDURE] hasCircularDependencies: vérification sur", steps.length, "étapes");
   const adj = new Map<string, string[]>();
   for (const step of steps) {
     adj.set(step.id, step.dependencies);
@@ -94,6 +101,7 @@ export function hasCircularDependencies(steps: TStep[]): boolean {
       if (!visited.has(neighbor)) {
         if (dfs(neighbor)) return true;
       } else if (recStack.has(neighbor)) {
+        console.warn("[CREER-PROCEDURE] hasCircularDependencies: dépendance circulaire détectée sur", neighbor);
         return true;
       }
     }
@@ -106,13 +114,17 @@ export function hasCircularDependencies(steps: TStep[]): boolean {
       if (dfs(step.id)) return true;
     }
   }
+  console.log("[CREER-PROCEDURE] hasCircularDependencies: aucune dépendance circulaire");
   return false;
 }
 
 export function getCompleteness(steps: TStep[]): number {
+  console.log("[CREER-PROCEDURE] getCompleteness: calcul sur", steps.length, "étapes");
   if (steps.length === 0) return 0;
   const filled = steps.filter(
     (s) => s.title.trim() !== "" && s.instructions.trim() !== "" && Boolean(s.type)
   );
-  return Math.round((filled.length / steps.length) * 100);
+  const completeness = Math.round((filled.length / steps.length) * 100);
+  console.log("[CREER-PROCEDURE] getCompleteness:", completeness, "% (", filled.length, "/", steps.length, ")");
+  return completeness;
 }

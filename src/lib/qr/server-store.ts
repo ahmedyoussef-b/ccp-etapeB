@@ -74,14 +74,18 @@ function resolveWritableDir(preferred: string, fallback: string): string {
       fs.mkdirSync(preferred, { recursive: true });
     }
     fs.accessSync(preferred, fs.constants.W_OK);
+    console.log("[Q/R] writable dir: preferred OK:", preferred);
     return preferred;
-  } catch {
+  } catch (err) {
+    console.warn("[Q/R] writable dir: preferred FAILED, trying fallback:", (err as Error)?.message);
     try {
       if (!fs.existsSync(fallback)) {
         fs.mkdirSync(fallback, { recursive: true });
       }
+      console.log("[Q/R] writable dir: fallback OK:", fallback);
       return fallback;
-    } catch {
+    } catch (fallbackErr) {
+      console.warn("[Q/R] writable dir: fallback FAILED:", (fallbackErr as Error)?.message);
       return preferred;
     }
   }
@@ -193,8 +197,8 @@ export async function createPair(input: CreatePairInput): Promise<QAPairWithRegi
   };
 
   pairs.push(doc);
+  console.log("[Q/R server-store] createPair writing to pairs file");
   writePairs(pairs);
-
   syncToWebDb("create", doc).catch(() => {});
 
   return toPairWithRegistry(doc);
@@ -263,7 +267,13 @@ export async function exportPairAsJson(
     registryPath: `items/${filename}`,
   };
 
-  fs.writeFileSync(filepath, JSON.stringify(doc, null, 2), "utf-8");
+  try {
+    fs.writeFileSync(filepath, JSON.stringify(doc, null, 2), "utf-8");
+    console.log("[Q/R server-store] exportPairAsJson written to:", filepath);
+  } catch (err) {
+    console.error("[Q/R server-store] exportPairAsJson FAILED:", err);
+    throw err;
+  }
   return filename;
 }
 

@@ -14,6 +14,14 @@ export async function POST(
     const { event, stepId, stepOrder, title, type, isMandatory, isCompleted, anomaly } =
       body;
 
+    console.log("[API] Step event received", {
+      executionId: params.id,
+      event,
+      stepId,
+      stepTitle: title,
+      stepOrder,
+    });
+
     if (event === "start") {
       await logStepStart({
         executionId: params.id,
@@ -23,13 +31,15 @@ export async function POST(
         type,
         isMandatory,
       });
+      console.log("[API] Step start logged", { executionId: params.id, stepId, stepOrder, title });
     } else if (event === "end") {
       await logStepEnd(params.id, stepId, isCompleted || false, anomaly);
+      console.log("[API] Step end logged", { executionId: params.id, stepId, isCompleted, anomaly });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Failed to log step event:", error);
+    console.error("[API] Failed to log step event:", error);
     return NextResponse.json(
       { error: "Failed to log step event" },
       { status: 500 }

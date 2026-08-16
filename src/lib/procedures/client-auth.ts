@@ -12,5 +12,6 @@ export function getClientUser(): { userId: string; role: string; email?: string 
   const email = cookies["userEmail"];
 
   if (!userId || !role) return null;
+  console.log("[Auth] Utilisateur connecté détecté", { userId, role, email });
   return { userId, role, email };
 }

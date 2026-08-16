@@ -41,6 +41,7 @@ export function MetadataEditor({
   onApprovalAction,
   currentUserRole,
 }: MetadataEditorProps) {
+  console.log("[CREER-PROCEDURE] MetadataEditor monté. Code:", data.code, "| Titre:", data.title);
   const form = useForm({
     resolver: zodResolver(MetadataSchema),
     defaultValues: data,
@@ -51,7 +52,9 @@ export function MetadataEditor({
   const values = watch();
 
   useEffect(() => {
+    console.log("[CREER-PROCEDURE] MetadataEditor abonnement watch");
     const subscription = form.watch((value) => {
+      console.log("[CREER-PROCEDURE] MetadataEditor changement détecté:", value);
       onChange(value as TMetadata);
     });
     return () => subscription.unsubscribe();
@@ -345,7 +348,10 @@ export function MetadataEditor({
                 <Button
                   type="button"
                   size="sm"
-                  onClick={() => onApprovalAction("submit")}
+                  onClick={() => {
+                    console.log("[CREER-PROCEDURE] Action approbation: submit. Code:", data.code);
+                    onApprovalAction("submit");
+                  }}
                   className="gap-1.5"
                 >
                   <Send className="h-3.5 w-3.5" />
@@ -357,7 +363,10 @@ export function MetadataEditor({
                   <Button
                     type="button"
                     size="sm"
-                    onClick={() => onApprovalAction("approve")}
+                    onClick={() => {
+                      console.log("[CREER-PROCEDURE] Action approbation: approve. Code:", data.code);
+                      onApprovalAction("approve");
+                    }}
                     className="gap-1.5"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5" />
@@ -369,6 +378,7 @@ export function MetadataEditor({
                     size="sm"
                     onClick={() => {
                       const comment = prompt(proceduresFR.approval.commentLabel + ":");
+                      console.log("[CREER-PROCEDURE] Action approbation: reject. Code:", data.code, "| Commentaire:", comment);
                       onApprovalAction("reject", comment || undefined);
                     }}
                     className="gap-1.5"

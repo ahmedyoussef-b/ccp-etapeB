@@ -62,14 +62,18 @@ function bumpVersion(version: string): string {
 }
 
 export function getProcedures(): TProcedure[] {
+  console.log("[CREER-PROCEDURE] getProcedures: cache length:", cachedProcedures.length);
   return [...cachedProcedures];
 }
 
 export function getProcedureById(id: string): TProcedure | null {
-  return cachedProcedures.find((p) => p.metadata.code === id) ?? null;
+  const found = cachedProcedures.find((p) => p.metadata.code === id) ?? null;
+  console.log("[CREER-PROCEDURE] getProcedureById:", id, "=>", found ? "trouvé" : "non trouvé");
+  return found;
 }
 
 export function saveProcedure(procedure: TProcedure): void {
+  console.log("[CREER-PROCEDURE] saveProcedure demandé. Code:", procedure.metadata.code, "| Étapes:", procedure.steps.length);
   const validated = ProcedureSchema.parse(procedure);
   const idx = cachedProcedures.findIndex((p) => p.metadata.code === validated.metadata.code);
   if (idx >= 0) {
@@ -81,22 +85,28 @@ export function saveProcedure(procedure: TProcedure): void {
         ...validated.metadata,
         version: bumpVersion(existing.metadata.version || "1.0"),
       };
+      console.log("[CREER-PROCEDURE] saveProcedure: version bumpée vers", validated.metadata.version);
     } else {
       validated.metadata = {
         ...validated.metadata,
         version: existing.metadata.version || "1.0",
       };
+      console.log("[CREER-PROCEDURE] saveProcedure: aucun changement, version conservée", validated.metadata.version);
     }
     cachedProcedures[idx] = validated;
   } else {
+    console.log("[CREER-PROCEDURE] saveProcedure: nouvelle procédure ajoutée au cache");
     cachedProcedures.push(validated);
   }
   saveToStorage(cachedProcedures);
+  console.log("[CREER-PROCEDURE] saveProcedure: sauvegardé dans localStorage. Total cache:", cachedProcedures.length);
 }
 
 export function deleteProcedure(code: string): void {
+  console.log("[CREER-PROCEDURE] deleteProcedure:", code, "| Avant:", cachedProcedures.length);
   cachedProcedures = cachedProcedures.filter((p) => p.metadata.code !== code);
   saveToStorage(cachedProcedures);
+  console.log("[CREER-PROCEDURE] deleteProcedure: après suppression:", cachedProcedures.length);
 }
 
 export function createEmptyProcedure(): TProcedure {
@@ -190,31 +200,42 @@ export function updateMetadata(procedure: TProcedure, metadata: Partial<TProcedu
 }
 
 export function importProcedure(procedure: TProcedure): void {
+  console.log("[CREER-PROCEDURE] importProcedure:", procedure.metadata.code);
   const validated = ProcedureSchema.parse(procedure);
   const idx = cachedProcedures.findIndex((p) => p.metadata.code === validated.metadata.code);
   if (idx >= 0) {
     cachedProcedures[idx] = validated;
+    console.log("[CREER-PROCEDURE] importProcedure: procédure existante remplacée");
   } else {
     cachedProcedures.push(validated);
+    console.log("[CREER-PROCEDURE] importProcedure: nouvelle procédure ajoutée");
   }
   saveToStorage(cachedProcedures);
 }
 
 export async function syncToServer(procedure: TProcedure): Promise<{ success: boolean; offline?: boolean }> {
+  console.log("[CREER-PROCEDURE] syncToServer demandé. Code:", procedure.metadata.code);
   try {
     const res = await csrfFetch("/api/procedures/sync", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(procedure),
     });
-    if (!res.ok) throw new Error(`Sync failed with status ${res.status}`);
-    return res.json();
-  } catch {
+    if (!res.ok) {
+      console.error("[CREER-PROCEDURE] syncToServer échoué:", res.status);
+      throw new Error(`Sync failed with status ${res.status}`);
+    }
+    const data = await res.json();
+    console.log("[CREER-PROCEDURE] syncToServer succès:", data);
+    return data;
+  } catch (e) {
+    console.error("[CREER-PROCEDURE] syncToServer erreur:", e);
     return { success: false };
   }
 }
 
 export function exportToJson(procedure: TProcedure): string {
+  console.log("[CREER-PROCEDURE] exportToJson:", procedure.metadata.code);
   return JSON.stringify(ProcedureSchema.parse(procedure), null, 2);
 }
 
@@ -229,16 +250,23 @@ export function downloadJson(procedure: TProcedure, filename?: string): void {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  console.log("[CREER-PROCEDURE] downloadJson: fichier téléchargé:", filename || `${procedure.metadata.code}.json`);
 }
 
 export function getVersions(code: string): Array<{ version: string; body: TProcedure; createdAt: string; comment?: string }> {
   const history = loadVersionHistory();
-  return history[code] ? [...history[code]].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) : [];
+  const versions = history[code] ? [...history[code]].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) : [];
+  console.log("[CREER-PROCEDURE] getVersions:", code, "=>", versions.length, "versions");
+  return versions;
 }
 
 export function createVersion(code: string, comment?: string): { version: string; body: TProcedure } | null {
+  console.log("[CREER-PROCEDURE] createVersion demandé:", code, "| Commentaire:", comment);
   const procedure = cachedProcedures.find((p) => p.metadata.code === code);
-  if (!procedure) return null;
+  if (!procedure) {
+    console.warn("[CREER-PROCEDURE] createVersion: procédure introuvable:", code);
+    return null;
+  }
 
   const currentVersion = procedure.metadata.version || "1.0";
   const snapshot = {
@@ -269,23 +297,33 @@ export function createVersion(code: string, comment?: string): { version: string
   }
   saveToStorage(cachedProcedures);
 
+  console.log("[CREER-PROCEDURE] createVersion: snapshot créé pour", code, "version:", currentVersion);
   return { version: currentVersion, body: snapshot.body };
 }
 
 export function restoreVersion(code: string, version: string): TProcedure | null {
+  console.log("[CREER-PROCEDURE] restoreVersion demandé:", code, "version:", version);
   const history = loadVersionHistory();
   const versions = history[code];
-  if (!versions) return null;
+  if (!versions) {
+    console.warn("[CREER-PROCEDURE] restoreVersion: aucun historique pour", code);
+    return null;
+  }
 
   const target = versions.find((v) => v.version === version);
-  if (!target) return null;
+  if (!target) {
+    console.warn("[CREER-PROCEDURE] restoreVersion: version introuvable:", version);
+    return null;
+  }
 
   const restored = JSON.parse(JSON.stringify(target.body)) as TProcedure;
   const idx = cachedProcedures.findIndex((p) => p.metadata.code === code);
   if (idx >= 0) {
     cachedProcedures[idx] = restored;
+    console.log("[CREER-PROCEDURE] restoreVersion: procédure existante remplacée");
   } else {
     cachedProcedures.push(restored);
+    console.log("[CREER-PROCEDURE] restoreVersion: procédure ajoutée au cache");
   }
   saveToStorage(cachedProcedures);
   return restored;

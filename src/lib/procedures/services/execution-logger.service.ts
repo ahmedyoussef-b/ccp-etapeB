@@ -42,11 +42,22 @@ export async function logExecutionStart(
   const numericProcedureId =
     typeof procedureId === "string" ? parseInt(procedureId, 10) : procedureId;
 
+  console.log("[ExecutionLogger] Starting execution", {
+    procedureId: numericProcedureId,
+    userId,
+    userRole,
+  });
+
   const record = await executionRepo.create({
     procedureId: Number.isNaN(numericProcedureId) ? 0 : numericProcedureId,
     userId,
     userRole,
     phase: "briefing",
+  });
+
+  console.log("[ExecutionLogger] Execution started", {
+    executionId: record.id,
+    procedureId: numericProcedureId,
   });
 
   return record.id.toString();
@@ -62,6 +73,15 @@ export async function logStepStart({
 }: StepEventPayload): Promise<void> {
   const numericExecutionId = parseInt(executionId);
   if (Number.isNaN(numericExecutionId)) return;
+
+  console.log("[ExecutionLogger] Step start", {
+    executionId: numericExecutionId,
+    stepId,
+    stepOrder,
+    title,
+    type,
+    isMandatory,
+  });
 
   await executionRepo.addStep({
     executionId: numericExecutionId,
@@ -82,6 +102,13 @@ export async function logStepEnd(
 ): Promise<void> {
   const numericExecutionId = parseInt(executionId);
   if (Number.isNaN(numericExecutionId)) return;
+
+  console.log("[ExecutionLogger] Step end", {
+    executionId: numericExecutionId,
+    stepId,
+    isCompleted,
+    anomaly,
+  });
 
   try {
     const { prisma } = await import("@/lib/prisma");
@@ -109,6 +136,15 @@ export async function logMediaCapture(data: MediaPayload): Promise<void> {
   const numericExecutionId = parseInt(data.executionId);
   if (Number.isNaN(numericExecutionId)) return;
 
+  console.log("[ExecutionLogger] Media capture", {
+    executionId: numericExecutionId,
+    stepId: data.stepId,
+    type: data.type,
+    filename: data.filename,
+    mimeType: data.mimeType,
+    size: data.size,
+  });
+
   await executionRepo.addMedia({
     executionId: numericExecutionId,
     stepId: data.stepId,
@@ -129,6 +165,13 @@ export async function logExecutionEnd(
 ): Promise<void> {
   const numericExecutionId = parseInt(executionId);
   if (Number.isNaN(numericExecutionId)) return;
+
+  console.log("[ExecutionLogger] Execution end", {
+    executionId: numericExecutionId,
+    phase,
+    anomalies,
+    globalElapsed,
+  });
 
   await executionRepo.update(numericExecutionId, {
     phase,

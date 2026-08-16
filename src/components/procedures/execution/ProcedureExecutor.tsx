@@ -197,6 +197,10 @@ export function ProcedureExecutor({ procedure, onClose }: ProcedureExecutorProps
   );
 
   if (phase === "briefing") {
+    console.log("[ProcedureExecutor] Rendering BriefingStage", {
+      procedureCode: procedure.metadata.code,
+      procedureTitle: procedure.metadata.title,
+    });
     return (
       <BriefingStage
         procedure={procedure}
@@ -206,10 +210,15 @@ export function ProcedureExecutor({ procedure, onClose }: ProcedureExecutorProps
   }
 
   if (phase === "prerequisites") {
+    console.log("[ProcedureExecutor] Rendering PrerequisitesStage", {
+      procedureCode: procedure.metadata.code,
+      executionId,
+    });
     return (
       <PrerequisitesStage
         procedure={procedure}
         onValidate={() => {
+          console.log("[ProcedureExecutor] Prerequisites validated, starting execution");
           timer.start();
           handlePhaseTransition("executing");
         }}
@@ -218,6 +227,12 @@ export function ProcedureExecutor({ procedure, onClose }: ProcedureExecutorProps
   }
 
   if (phase === "completed") {
+    console.log("[ProcedureExecutor] Rendering CompletedStage", {
+      procedureCode: procedure.metadata.code,
+      executionId,
+      completedSteps: completedSteps.size,
+      totalSteps,
+    });
     return (
       <CompletedStage
         procedure={procedure}
@@ -229,6 +244,11 @@ export function ProcedureExecutor({ procedure, onClose }: ProcedureExecutorProps
   }
 
   if (phase === "aborted") {
+    console.log("[ProcedureExecutor] Rendering AbortedStage", {
+      procedureCode: procedure.metadata.code,
+      reason: context.anomalies[context.anomalies.length - 1] || "Interruption",
+      anomalies: context.anomalies.length,
+    });
     return (
       <AbortedStage
         procedure={procedure}
@@ -238,6 +258,14 @@ export function ProcedureExecutor({ procedure, onClose }: ProcedureExecutorProps
       />
     );
   }
+
+  console.log("[ProcedureExecutor] Rendering RunningStage", {
+    procedureCode: procedure.metadata.code,
+    currentStepIndex,
+    totalSteps,
+    executionId,
+    phase,
+  });
 
   return (
     <RunningStage

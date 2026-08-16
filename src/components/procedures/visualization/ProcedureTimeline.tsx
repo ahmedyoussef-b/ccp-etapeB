@@ -28,8 +28,10 @@ export function ProcedureTimeline({
   onStepClick,
   activeStepId,
 }: ProcedureTimelineProps) {
+  console.log("[CREER-PROCEDURE] ProcedureTimeline rendu. Étapes:", steps.length, "| Active:", activeStepId);
   const handleStepClick = useCallback(
     (stepId: string) => {
+      console.log("[CREER-PROCEDURE] Timeline clic étape:", stepId);
       onStepClick(stepId);
     },
     [onStepClick]

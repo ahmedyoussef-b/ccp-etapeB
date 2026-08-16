@@ -78,6 +78,11 @@ function buildPrerequisites(procedure: TProcedure): ProcedurePrerequisite[] {
 }
 
 export function PrerequisitesStage({ procedure, onValidate }: PrerequisitesStageProps) {
+  console.log("[PrerequisitesStage] Rendered", {
+    code: procedure.metadata.code,
+    title: procedure.metadata.title,
+  });
+
   const [prerequisites, setPrerequisites] = useState<ProcedurePrerequisite[]>(() =>
     buildPrerequisites(procedure)
   );
@@ -85,12 +90,28 @@ export function PrerequisitesStage({ procedure, onValidate }: PrerequisitesStage
   const allChecked = prerequisites.every((p) => p.checked);
 
   const toggle = (id: string) => {
-    setPrerequisites((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, checked: !p.checked } : p))
-    );
+    setPrerequisites((prev) => {
+      const next = prev.map((p) => (p.id === id ? { ...p, checked: !p.checked } : p));
+      console.log("[PrerequisitesStage] Toggle prerequisite", {
+        id,
+        checked: next.find((p) => p.id === id)?.checked,
+        validatedCount: next.filter((p) => p.checked).length,
+        total: next.length,
+      });
+      return next;
+    });
   };
 
   const validatedCount = prerequisites.filter((p) => p.checked).length;
+
+  const handleValidate = () => {
+    console.log("[PrerequisitesStage] Validate clicked", {
+      validatedCount,
+      total: prerequisites.length,
+      allChecked,
+    });
+    onValidate();
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -147,7 +168,7 @@ export function PrerequisitesStage({ procedure, onValidate }: PrerequisitesStage
               <span className="text-xs text-muted-foreground">
                 {validatedCount} / {prerequisites.length} validé(s)
               </span>
-              <Button onClick={onValidate} disabled={!allChecked} className="gap-1.5">
+              <Button onClick={handleValidate} disabled={!allChecked} className="gap-1.5">
                 {allChecked ? (
                   <CheckCircle2 className="h-4 w-4" />
                 ) : (

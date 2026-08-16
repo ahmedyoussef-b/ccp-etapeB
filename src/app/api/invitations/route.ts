@@ -8,6 +8,7 @@ export async function GET() {
   try {
     const user = getClientUser();
     if (!user) {
+      console.log("[Invitations] GET /api/invitations - Utilisateur non connecté");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -25,8 +26,10 @@ export async function GET() {
         };
       });
 
+    console.log("[Invitations] GET /api/invitations - Invitations en attente", { userId: user.userId, count: invitations.length, invitations });
     return NextResponse.json({ invitations });
   } catch (error) {
+    console.error("[Invitations] Erreur GET /api/invitations", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to get invitations" },
       { status: 500 }

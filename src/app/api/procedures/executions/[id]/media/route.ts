@@ -13,6 +13,15 @@ export async function POST(
     const body = await request.json();
     const { stepId, type, url, filename, mimeType, size, geolocation } = body;
 
+    console.log("[API] Media capture received", {
+      executionId: params.id,
+      stepId,
+      type,
+      filename,
+      mimeType,
+      size,
+    });
+
     await logMediaCapture({
       executionId: params.id,
       stepId,
@@ -24,9 +33,15 @@ export async function POST(
       geolocation,
     });
 
+    console.log("[API] Media capture logged successfully", {
+      executionId: params.id,
+      stepId,
+      type,
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Failed to log media capture:", error);
+    console.error("[API] Failed to log media capture:", error);
     return NextResponse.json(
       { error: "Failed to log media capture" },
       { status: 500 }

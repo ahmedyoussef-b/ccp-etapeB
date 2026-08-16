@@ -41,6 +41,15 @@ function formatDuration(seconds: number): string {
 }
 
 export function CompletedStage({ procedure, context, executionId, onClose }: CompletedStageProps) {
+  console.log("[CompletedStage] Rendered", {
+    code: procedure.metadata.code,
+    title: procedure.metadata.title,
+    executionId,
+    completedSteps: context.completedSteps.size,
+    totalSteps: procedure.steps.length,
+    anomalies: context.anomalies.length,
+  });
+
   const [summary, setSummary] = useState<ExecutionSummary | null>(null);
 
   useEffect(() => {
@@ -48,12 +57,23 @@ export function CompletedStage({ procedure, context, executionId, onClose }: Com
     const numericId = parseInt(executionId);
     if (Number.isNaN(numericId)) return;
 
+    console.log("[CompletedStage] Fetching execution summary", { executionId: numericId });
     fetch(`/api/procedures/executions/${numericId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data && data.id) setSummary(data);
+        if (data && data.id) {
+          console.log("[CompletedStage] Execution summary loaded", {
+            id: data.id,
+            phase: data.phase,
+            globalElapsed: data.globalElapsed,
+            anomalies: data.anomalies?.length || 0,
+          });
+          setSummary(data);
+        }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.log("[CompletedStage] Failed to load execution summary", err);
+      });
   }, [executionId]);
 
   const totalDuration = summary?.globalElapsed

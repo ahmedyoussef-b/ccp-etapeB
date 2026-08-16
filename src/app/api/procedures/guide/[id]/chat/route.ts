@@ -70,8 +70,17 @@ export async function POST(request: Request) {
     const body: ChatRequestBody = await request.json();
 
     if (!body.message || !body.step) {
+      console.log("[API] Chat request rejected: missing fields", body);
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
+
+    console.log("[API] Chat request received", {
+      procedureId: (body.procedureContext?.metadata as Record<string, unknown> | undefined)?.code || "unknown",
+      stepId: body.step.id,
+      stepTitle: body.step.title,
+      message: body.message.slice(0, 100),
+      phase: body.phase,
+    });
 
     const systemPrompt = buildSystemPrompt(body);
     const messages: LLMMessage[] = [
@@ -81,9 +90,14 @@ export async function POST(request: Request) {
 
     const response = await chat(messages, { temperature: 0.7, maxTokens: 1024 });
 
+    console.log("[API] Chat response generated", {
+      responseLength: response.length,
+      responsePreview: response.slice(0, 100),
+    });
+
     return NextResponse.json({ response });
   } catch (error) {
-    console.error("Chat API error:", error);
+    console.error("[API] Chat API error:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to process chat" },
       { status: 500 }
