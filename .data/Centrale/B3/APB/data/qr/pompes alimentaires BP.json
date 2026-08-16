@@ -1,8 +1,0 @@
-{
-  "pairs": [
-    {
-      "question": "Quels sont les rôles des pompes alimentaires BP ?",
-      "answer": "Les **pompes alimentaires BP** (Basse Pression), souvent désignées par le code **APB** dans les documents techniques, jouent plusieurs rôles cruciaux pour le fonctionnement et la sécurité de la chaudière :  *   **Alimentation du circuit BP :** Leur rôle principal est d'**alimenter le ballon BP** (réservoir basse pression) de la chaudière en puisant l'eau depuis la **bâche alimentaire**.  *   **Alimentation de l'économiseur BP :** Elles assurent l'envoi de l'eau vers l'**économiseur BP**, qui est le premier échangeur thermique du circuit basse pression. *   **Régulation du débit :** Ces pompes fonctionnent à **vitesse constante**. Le débit d'eau envoyé vers la chaudière est ajusté par les **vannes de régulation alimentaires** situées sur le circuit. *   **Sécurité et armement :** La mise en service d'au moins une pompe alimentaire BP est une **condition impérative pour l'armement des sécurités générales (FSE)** de la chaudière. Si cette condition n'est pas remplie, le démarrage de l'installation ne peut pas se poursuivre. *   **Configuration de secours :** Le système est conçu avec **deux pompes BP** : l'une est normalement en opération tandis que la seconde reste en secours pour garantir la continuité de l'alimentation.  D'un point de vue technique, lors des phases de démarrage, on note qu'une pompe APB peut atteindre un débit de service d'environ **110 t/h**."
-    }
-  ]
-}

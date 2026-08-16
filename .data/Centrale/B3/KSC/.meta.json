@@ -1,7 +1,0 @@
-{
-  "libelle": "Regulation charge de bloc totale",
-  "code": "KSC",
-  "type": "sous_centrale",
-  "parentId": "B3",
-  "syncState": "local-only"
-}

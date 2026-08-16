@@ -1,7 +1,0 @@
-{
-  "libelle": "CLIMATISATION DES BATIMENTS",
-  "code": "DVC",
-  "type": "sous_centrale",
-  "parentId": "B0",
-  "syncState": "local-only"
-}

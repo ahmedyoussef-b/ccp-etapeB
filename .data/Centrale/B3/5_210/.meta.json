@@ -1,7 +1,0 @@
-{
-  "libelle": "DETECTION 1ER DECLENCHEMENT VOIE 2",
-  "code": "5_210",
-  "type": "sous_centrale",
-  "parentId": "B3",
-  "syncState": "local-only"
-}

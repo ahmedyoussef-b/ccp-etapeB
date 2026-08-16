@@ -1,7 +1,0 @@
-{
-  "libelle": "Mesures électriques CMS7003",
-  "code": "ELE",
-  "type": "sous_centrale",
-  "parentId": "B3",
-  "syncState": "local-only"
-}

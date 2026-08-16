@@ -1,7 +1,0 @@
-{
-  "libelle": "VIBRATION ET TEMPERATURE TG 1",
-  "code": "B1TG31",
-  "type": "groupe",
-  "parentId": "TURBINE GAZ 1",
-  "syncState": "local-only"
-}

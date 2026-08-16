@@ -1,7 +1,0 @@
-{
-  "libelle": "TRAITEMENTS DES ALARMES DU BLOC",
-  "code": "KSA",
-  "type": "sous_centrale",
-  "parentId": "B0",
-  "syncState": "local-only"
-}

@@ -1,7 +1,0 @@
-{
-  "libelle": "CTRL CHIM ET ECHANT POSTE D'EAU",
-  "code": "SIT",
-  "type": "sous_centrale",
-  "parentId": "B3",
-  "syncState": "local-only"
-}

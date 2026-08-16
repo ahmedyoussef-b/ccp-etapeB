@@ -1,7 +1,0 @@
-{
-  "libelle": "CALCULATEUR DE SUPERVISION TCI",
-  "code": "KIT",
-  "type": "sous_centrale",
-  "parentId": "B0",
-  "syncState": "local-only"
-}

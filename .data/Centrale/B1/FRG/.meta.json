@@ -1,7 +1,0 @@
-{
-  "libelle": "CONTROL ANALOGIQUE CR 1",
-  "code": "FRG",
-  "type": "sous_centrale",
-  "parentId": "B1",
-  "syncState": "local-only"
-}

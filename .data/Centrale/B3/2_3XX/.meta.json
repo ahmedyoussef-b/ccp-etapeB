@@ -1,7 +1,0 @@
-{
-  "libelle": "CALCULATEUR DE CONTRAINTE",
-  "code": "2_3XX",
-  "type": "sous_centrale",
-  "parentId": "B3",
-  "syncState": "local-only"
-}

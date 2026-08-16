@@ -1,7 +1,0 @@
-{
-  "libelle": "REG DE PRESSION DEVERSE VAPEUR",
-  "code": "3_002",
-  "type": "sous_centrale",
-  "parentId": "B3",
-  "syncState": "local-only"
-}

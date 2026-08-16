@@ -1,8 +1,0 @@
-{
-  "pairs": [
-    {
-      "question": "Quels sont les seuils de vibration pour les pompes alimentaires ?",
-      "answer": "Pour les **pompes alimentaires haute pression (APH)**, les seuils de vibration sont définis pour deux niveaux de gravité, à savoir l'alarme et le déclenchement automatique (trip) :  *   **Seuil de vibration haute (Alarme) :** Une alarme est activée lorsque les vibrations au niveau des paliers ou du palier-butée de la pompe atteignent **4,2 mm/s**. *   **Seuil de vibration très haute (Déclenchement) :** La pompe s'arrête automatiquement (déclenchement par sécurité) si le niveau de vibration atteint ou dépasse **6,3 mm/s**.  Ces mesures sont effectuées sur les paliers de chaque groupe motopompe (repères VSH et VSHH 101, 102, 201, 202, 301 et 302 selon la pompe concernée). Une vibration dépassant ce seuil critique de 6,3 mm/s est l'une des causes majeures de déclenchement de la fonction de pompage pour protéger l'intégrité mécanique de l'équipement."
-    }
-  ]
-}

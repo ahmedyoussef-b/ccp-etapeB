@@ -1,7 +1,0 @@
-{
-  "libelle": "TEMPERATURE ECHAPPEMENT TG 1",
-  "code": "B1TG33",
-  "type": "groupe",
-  "parentId": "TURBINE GAZ 1",
-  "syncState": "local-only"
-}

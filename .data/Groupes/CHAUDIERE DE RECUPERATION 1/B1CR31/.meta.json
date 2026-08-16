@@ -1,7 +1,0 @@
-{
-  "libelle": "TEMPERATURE METAL CHAUDIERE 1",
-  "code": "B1CR31",
-  "type": "groupe",
-  "parentId": "CHAUDIERE DE RECUPERATION 1",
-  "syncState": "local-only"
-}

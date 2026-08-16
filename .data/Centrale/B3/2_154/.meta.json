@@ -1,7 +1,0 @@
-{
-  "libelle": "LIMIT HP DE BAISSE DE PRESSION",
-  "code": "2_154",
-  "type": "sous_centrale",
-  "parentId": "B3",
-  "syncState": "local-only"
-}

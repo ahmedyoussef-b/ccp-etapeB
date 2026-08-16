@@ -1,7 +1,0 @@
-{
-  "libelle": "CTRL CHIM ET ECHANT CMN SITE",
-  "code": "SIT",
-  "type": "sous_centrale",
-  "parentId": "B0",
-  "syncState": "local-only"
-}

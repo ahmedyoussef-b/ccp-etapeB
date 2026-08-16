@@ -1,7 +1,0 @@
-{
-  "libelle": "ARMEMENT VOIE 1",
-  "code": "4_102",
-  "type": "sous_centrale",
-  "parentId": "B3",
-  "syncState": "local-only"
-}

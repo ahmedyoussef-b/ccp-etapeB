@@ -1,7 +1,0 @@
-{
-  "libelle": "LIMIT BP BAISSE PRESSION",
-  "code": "2_155",
-  "type": "sous_centrale",
-  "parentId": "B3",
-  "syncState": "local-only"
-}

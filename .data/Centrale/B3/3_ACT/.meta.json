@@ -1,7 +1,0 @@
-{
-  "libelle": "ACTIONNEURS",
-  "code": "3_ACT",
-  "type": "sous_centrale",
-  "parentId": "B3",
-  "syncState": "local-only"
-}

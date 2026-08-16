@@ -1,7 +1,0 @@
-{
-  "libelle": "PRECHAUFFAGE EAU CONDENSEE CR 2",
-  "code": "FBP",
-  "type": "sous_centrale",
-  "parentId": "B2",
-  "syncState": "local-only"
-}
