@@ -155,13 +155,15 @@ export async function POST(request: Request): Promise<NextResponse<DeployRespons
         ref: `heads/${branch}`
       });
 
+      const recursive = true as unknown as string;
       const { data: treeData } = await octokit.rest.git.getTree({
         owner,
         repo,
         tree_sha: refData.object.sha,
-        recursive: '1'
+        recursive,
       });
 
+      // ✅ Correction : filtre avec vérification des types
       existingFiles = treeData.tree
         .filter((item) => item.type === 'blob' && item.path !== undefined && item.sha !== undefined)
         .map((item) => ({
@@ -183,8 +185,8 @@ export async function POST(request: Request): Promise<NextResponse<DeployRespons
     const appDir = process.cwd();
     const localFiles: LocalFile[] = [];
     
-const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git', '.vercel', '.github'];  
-  const ignoreFiles = ['.env.local', '.env.development', '.env.production', '.env'];
+    const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git'];
+    const ignoreFiles = ['.env.local', '.env.development', '.env.production', '.env'];
     
     function walkDir(dir: string, relativePath = ''): void {
       try {
@@ -338,40 +340,35 @@ const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git', '.vercel',
     // ============================================
     // PHASE 4: COMMIT AUTOMATIQUE
     // ============================================
-    logger.phase('4', 'Commit automatique');
-
+    console.log('');
+    console.log('📝 PHASE 4: Commit automatique...');
     try {
-      // Vérifier l'état du dépôt
       const status = execSync('git status --porcelain', { encoding: 'utf8' });
-      logger.info(`📊 Statut Git: ${status.trim() ? `${status.split('\n').filter(Boolean).length} fichiers modifiés` : 'Propre'}`);
       
       if (status.trim()) {
         const files = status.split('\n').filter(Boolean).length;
-        logger.info(`📝 ${files} fichiers modifiés à commiter`);
+        console.log('  📝 ' + files + ' fichiers modifies a commiter');
         
         // Ajouter tous les fichiers
-        execSync('git add .', { stdio: 'inherit' });
-        logger.success('✅ Fichiers ajoutés au staging');
+        execSync('git add .', { stdio: 'ignore' });
+        console.log('  ✅ Fichiers ajoutes au staging');
         
-        // Créer le commit
-        const commitMessage = `Auto-deploy: ${new Date().toISOString()} [${trigger}]`;
-        execSync(`git commit -m "${commitMessage}"`, { stdio: 'inherit' });
-        logger.success(`✅ Commit créé: ${commitMessage}`);
+        // Créer un commit
+        const commitMessage = 'Auto-commit: Pipeline ' + new Date().toISOString();
+        execSync('git commit -m "' + commitMessage + '"', { stdio: 'ignore' });
+        console.log('  ✅ Commit cree: ' + commitMessage);
         
         // Pousser vers GitHub
-        // Utilisation de --force-with-lease pour éviter les conflits de branches
-        execSync(`git push origin ${branch} --force-with-lease`, { stdio: 'inherit' });
-        logger.success('✅ Push effectué avec succès');
+        execSync('git push origin ' + branch, { stdio: 'ignore' });
+        console.log('  ✅ Push effectue');
+        
+        console.log('  ✅ Commit automatique termine avec succes!');
       } else {
-        logger.info('ℹ️ Aucun fichier à commiter');
+        console.log('  ℹ️ Aucun fichier a commiter');
       }
-
-      logger.success('✅ Pipeline terminé avec succès!');
-      
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      logger.error(`❌ Erreur lors du commit automatique: ${errorMessage}`);
-      logger.info('ℹ️ Vous pouvez faire git add . && git commit manuellement');
+    } catch (error) {
+      console.log('  ⚠️ Erreur lors du commit automatique: ' + (error as Error).message);
+      console.log('  ℹ️ Vous pouvez faire git add . && git commit manuellement');
     }
 
     // ============================================
