@@ -382,7 +382,8 @@ try {
     if (localCommit !== remoteCommit) {
       logger.info(`📥 Changements distants détectés (${remoteCommit.substring(0, 7)} vs ${localCommit.substring(0, 7)})`);
       // 3. Forcer la mise à jour du dépôt local
-      execSync(`git reset --hard origin/${branch}`, { stdio: 'inherit' });
+     execSync(`git fetch origin`, { stdio: 'inherit' });
+execSync(`git pull origin ${branch} --no-rebase`, { stdio: 'inherit' });
       logger.success('✅ Dépôt local synchronisé avec GitHub (reset --hard)');
     } else {
       logger.success('✅ Dépôt local déjà à jour');
