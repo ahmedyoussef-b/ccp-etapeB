@@ -337,37 +337,47 @@ export async function POST(request: Request): Promise<NextResponse<DeployRespons
       }
     }
 
-    // ============================================
-    // PHASE 4: COMMIT AUTOMATIQUE
-    // ============================================
-    logger.phase('4', 'Commit automatique');
-    try {
-      const status = execSync('git status --porcelain', { encoding: 'utf8' });
-      
-      if (status.trim()) {
-        const files = status.split('\n').filter(Boolean).length;
-        logger.info(`📝 ${files} fichiers modifiés à commiter`);
-        
-        execSync('git add .', { stdio: 'ignore' });
-        logger.success('✅ Fichiers ajoutés au staging');
-        
-        const commitMessage = `Auto-deploy: ${new Date().toISOString()} [${trigger}]`;
-        execSync(`git commit -m "${commitMessage}"`, { stdio: 'ignore' });
-        logger.success(`✅ Commit créé: ${commitMessage}`);
-        
-        execSync(`git push origin ${branch}`, { stdio: 'ignore' });
-        logger.success('✅ Push effectué');
-        
-        logger.success('✅ Commit automatique terminé avec succès!');
-      } else {
-        logger.info('ℹ️ Aucun fichier à commiter');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      logger.warn(`Erreur lors du commit automatique: ${errorMessage}`);
-      logger.info('ℹ️ Vous pouvez faire git add . && git commit manuellement');
-    }
+   // ============================================
+// PHASE 4: COMMIT AUTOMATIQUE + SYNC
+// ============================================
+logger.phase('4', 'Commit automatique et synchronisation');
 
+try {
+  const status = execSync('git status --porcelain', { encoding: 'utf8' });
+  
+  if (status.trim()) {
+    const files = status.split('\n').filter(Boolean).length;
+    logger.info(`📝 ${files} fichiers modifiés à commiter`);
+    
+    execSync('git add .', { stdio: 'ignore' });
+    logger.success('✅ Fichiers ajoutés au staging');
+    
+    const commitMessage = `Auto-deploy: ${new Date().toISOString()} [${trigger}]`;
+    execSync(`git commit -m "${commitMessage}"`, { stdio: 'ignore' });
+    logger.success(`✅ Commit créé: ${commitMessage}`);
+    
+    execSync(`git push origin ${branch}`, { stdio: 'ignore' });
+    logger.success('✅ Push effectué');
+    
+    // ✅ AJOUT : Synchroniser le dépôt local après le push
+    try {
+      execSync(`git pull origin ${branch} --rebase`, { stdio: 'ignore' });
+      logger.success('✅ Dépôt local synchronisé avec GitHub');
+    } catch (syncErr) {
+      const syncMessage = syncErr instanceof Error ? syncErr.message : String(syncErr);
+      logger.warn(`⚠️ Erreur de synchronisation: ${syncMessage}`);
+      logger.info('ℹ️ Exécutez "git pull" manuellement');
+    }
+    
+    logger.success('✅ Commit automatique terminé avec succès!');
+  } else {
+    logger.info('ℹ️ Aucun fichier à commiter');
+  }
+} catch (err) {
+  const errorMessage = err instanceof Error ? err.message : String(err);
+  logger.warn(`Erreur lors du commit automatique: ${errorMessage}`);
+  logger.info('ℹ️ Vous pouvez faire git add . && git commit manuellement');
+}
     // ============================================
     // PHASE 5: RAPPORT FINAL
     // ============================================
