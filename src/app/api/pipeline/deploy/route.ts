@@ -359,7 +359,7 @@ export async function POST(request: Request): Promise<NextResponse<DeployRespons
         console.log('  ✅ Commit cree: ' + commitMessage);
         
         // Pousser vers GitHub
-        execSync('git push origin ' + branch, { stdio: 'ignore' });
+execSync(`git push origin ${branch} --force-with-lease`, { stdio: 'inherit' });
         console.log('  ✅ Push effectue');
         
         console.log('  ✅ Commit automatique termine avec succes!');
