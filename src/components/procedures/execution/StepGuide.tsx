@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image"; // ✅ DOIT être présent
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -195,11 +196,14 @@ export function StepGuide({
                         className="rounded-lg border border-border overflow-hidden bg-muted/30"
                       >
                         {media.type === "signature" || media.type === "photo" ? (
-                          <img
-                            src={captured.dataUrl}
-                            alt={media.type}
-                            className="w-full h-24 object-contain bg-white"
-                          />
+                        <Image
+  src={captured.dataUrl}
+  alt={media.type}
+  width={200}
+  height={96}
+  className="w-full h-24 object-contain bg-white"
+  unoptimized // Nécessaire pour les data URLs
+/>
                         ) : media.type === "video" || media.type === "audio" ? (
                           <video
                             src={captured.dataUrl}
