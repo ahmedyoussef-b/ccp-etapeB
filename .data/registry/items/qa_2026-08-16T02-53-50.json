@@ -1,0 +1,13 @@
+{
+  "type": "qa",
+  "title": "quelle-est-la-pression-de-service",
+  "description": "",
+  "pairs": [
+    {
+      "question": "Quelle est la pression de service?",
+      "answer": "1,2 bar"
+    }
+  ],
+  "createdAt": "2026-08-16T02:53:50.411Z",
+  "registryPath": "items/qa_2026-08-16T02-53-50.json"
+}
