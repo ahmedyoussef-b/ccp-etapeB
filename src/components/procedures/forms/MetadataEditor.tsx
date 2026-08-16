@@ -15,16 +15,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Trash2, AlertTriangle, Tag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Trash2, AlertTriangle, Tag, Send, CheckCircle2, XCircle, ShieldAlert } from "lucide-react";
 import { proceduresFR } from "@/lib/i18n/procedures";
 import { MetadataSchema, TMetadata } from "@/lib/procedures/services/validator.service";
 
 interface MetadataEditorProps {
   data: TMetadata;
   onChange: (data: TMetadata) => void;
+  approvalStatus?: string;
+  authorName?: string;
+  approverName?: string;
+  reviewDate?: string;
+  onApprovalAction?: (action: "submit" | "approve" | "reject", comment?: string) => void;
+  currentUserRole?: string;
 }
 
-export function MetadataEditor({ data, onChange }: MetadataEditorProps) {
+export function MetadataEditor({
+  data,
+  onChange,
+  approvalStatus,
+  authorName,
+  approverName,
+  reviewDate,
+  onApprovalAction,
+  currentUserRole,
+}: MetadataEditorProps) {
   const form = useForm({
     resolver: zodResolver(MetadataSchema),
     defaultValues: data,
@@ -280,6 +296,92 @@ export function MetadataEditor({ data, onChange }: MetadataEditorProps) {
           <p className="text-xs text-destructive">{formState.errors.globalSafetyInstructions.message}</p>
         )}
       </div>
+
+      {(approvalStatus || onApprovalAction) && (
+        <div className="space-y-2 pt-4 border-t border-border">
+          <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4" />
+            {proceduresFR.approval.title}
+          </Label>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge
+              variant={
+                approvalStatus === "approved"
+                  ? "default"
+                  : approvalStatus === "rejected"
+                  ? "destructive"
+                  : approvalStatus === "submitted"
+                  ? "secondary"
+                  : "outline"
+              }
+            >
+              {approvalStatus === "approved"
+                ? proceduresFR.approval.statusApproved
+                : approvalStatus === "rejected"
+                ? proceduresFR.approval.statusRejected
+                : approvalStatus === "submitted"
+                ? proceduresFR.approval.statusSubmitted
+                : proceduresFR.approval.statusDraft}
+            </Badge>
+            {authorName && (
+              <span className="text-xs text-muted-foreground">
+                {proceduresFR.approval.authorLabel}: {authorName}
+              </span>
+            )}
+            {approverName && (
+              <span className="text-xs text-muted-foreground">
+                {proceduresFR.approval.approverLabel}: {approverName}
+              </span>
+            )}
+            {reviewDate && (
+              <span className="text-xs text-muted-foreground">
+                {proceduresFR.approval.reviewDateLabel}: {new Date(reviewDate).toLocaleDateString("fr-FR")}
+              </span>
+            )}
+          </div>
+          {onApprovalAction && (
+            <div className="flex flex-wrap gap-2">
+              {approvalStatus === "draft" && currentUserRole === "admin" && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => onApprovalAction("submit")}
+                  className="gap-1.5"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  {proceduresFR.approval.submitButton}
+                </Button>
+              )}
+              {approvalStatus === "submitted" && currentUserRole === "admin" && (
+                <>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => onApprovalAction("approve")}
+                    className="gap-1.5"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    {proceduresFR.approval.approveButton}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      const comment = prompt(proceduresFR.approval.commentLabel + ":");
+                      onApprovalAction("reject", comment || undefined);
+                    }}
+                    className="gap-1.5"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                    {proceduresFR.approval.rejectButton}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </form>
   );
 }
