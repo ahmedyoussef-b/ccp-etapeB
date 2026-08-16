@@ -7,8 +7,36 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Save, Download, RotateCcw, Upload, CheckCircle2, AlertCircle } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  Plus,
+  Save,
+  Download,
+  RotateCcw,
+  Upload,
+  CheckCircle2,
+  AlertCircle,
+  History,
+  GitBranch,
+} from "lucide-react";
 import { proceduresFR } from "@/lib/i18n/procedures";
+import { csrfFetch } from "@/lib/procedures/csrf-fetch";
 import {
   createEmptyProcedure,
   addStep,
@@ -20,6 +48,9 @@ import {
   saveProcedure,
   downloadJson,
   getProcedures,
+  getVersions,
+  restoreVersion,
+  getProcedureById,
 } from "@/lib/procedures/services/procedure-manager.service";
 import {
   hasCircularDependencies,
@@ -40,7 +71,18 @@ export function DynamicProcedureForm() {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const [approvalStatus, setApprovalStatus] = useState<string>("draft");
+  const [approverName, setApproverName] = useState<string>("");
+  const [reviewDate, setReviewDate] = useState<string>("");
+  const [versionHistory, setVersionHistory] = useState<Array<{ version: string; createdAt: string; comment?: string }>>([]);
+  const [isCreatingVersion, setIsCreatingVersion] = useState(false);
+  const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
+  const [previewVersion, setPreviewVersion] = useState<{ version: string; body: TProcedure; createdAt: string; comment?: string } | null>(null);
+  const [versionComment, setVersionComment] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const currentUserRole = typeof window !== "undefined" ? window.sessionStorage.getItem("dashboardRole") || "rondier" : "rondier";
+  const currentUserName = typeof window !== "undefined" ? localStorage.getItem("nexaflow_user_name") || "" : "";
 
   useEffect(() => {
     const existing = getProcedures();
@@ -48,6 +90,13 @@ export function DynamicProcedureForm() {
       setProcedure(existing[existing.length - 1]);
     }
   }, []);
+
+  useEffect(() => {
+    if (procedure.metadata.code) {
+      const history = getVersions(procedure.metadata.code);
+      setVersionHistory(history);
+    }
+  }, [procedure.metadata.code]);
 
   const handleMetadataChange = useCallback((metadata: TProcedure["metadata"]) => {
     setProcedure((prev) => updateMetadata(prev, metadata));
@@ -91,6 +140,12 @@ export function DynamicProcedureForm() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 400));
       saveProcedure(procedure);
+      const updated = getProcedureById(procedure.metadata.code);
+      if (updated) {
+        setProcedure(updated);
+      }
+      const updatedHistory = getVersions(procedure.metadata.code);
+      setVersionHistory(updatedHistory);
       toast.success(proceduresFR.actions.successSaved);
     } catch {
       toast.error("Erreur lors de la sauvegarde");
@@ -143,6 +198,58 @@ export function DynamicProcedureForm() {
     }
   }, []);
 
+  const handleCreateVersion = useCallback(async () => {
+    if (!procedure.metadata.code) {
+      toast.error("Enregistrez d'abord la procédure");
+      return;
+    }
+    try {
+      const res = await csrfFetch("/api/procedures/versions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: procedure.metadata.code,
+          comment: versionComment || `Version ${procedure.metadata.version}`,
+        }),
+      });
+      if (!res.ok) throw new Error("Création de version échouée");
+      const data = await res.json();
+      toast.success(proceduresFR.versioning.versionCreated.replace("{version}", data.version));
+      setVersionComment("");
+      setIsCreatingVersion(false);
+      const updatedHistory = getVersions(procedure.metadata.code);
+      setVersionHistory(updatedHistory);
+      setProcedure((prev) => ({
+        ...prev,
+        metadata: { ...prev.metadata, version: data.version },
+      }));
+    } catch {
+      toast.error("Erreur lors de la création de version");
+    }
+  }, [procedure.metadata.code, procedure.metadata.version, versionComment]);
+
+  const handleRestoreVersion = useCallback(async (version: string) => {
+    if (!procedure.metadata.code) return;
+    const restored = restoreVersion(procedure.metadata.code, version);
+    if (restored) {
+      setProcedure(restored);
+      setPreviewVersion(null);
+      setSelectedVersion(null);
+      toast.success(proceduresFR.versioning.restored.replace("{version}", version));
+    } else {
+      toast.error("Impossible de restaurer cette version");
+    }
+  }, [procedure.metadata.code]);
+
+  const handleVersionSelect = useCallback((version: string) => {
+    setSelectedVersion(version);
+    const history = getVersions(procedure.metadata.code);
+    const found = history.find((v) => v.version === version);
+    if (found) {
+      setPreviewVersion(found);
+    }
+  }, [procedure.metadata.code]);
+
   const validate = useCallback(() => {
     const errs: string[] = [];
 
@@ -177,6 +284,37 @@ export function DynamicProcedureForm() {
     }
   }, [validate, handleExportJson]);
 
+  const handleApprovalAction = useCallback(async (action: "submit" | "approve" | "reject", comment?: string) => {
+    if (!procedure.metadata.code) {
+      toast.error("Enregistrez d'abord la procédure");
+      return;
+    }
+    try {
+      const res = await csrfFetch("/api/procedures/approvals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: procedure.metadata.code,
+          action,
+          approverId: currentUserRole,
+          approverName: currentUserName || currentUserRole,
+          approverRole: currentUserRole,
+          comment,
+        }),
+      });
+      if (!res.ok) throw new Error("Action d'approbation échouée");
+      const data = await res.json();
+      setApprovalStatus(data.status || action === "submit" ? "submitted" : action === "approve" ? "approved" : "rejected");
+      if (action === "approve") {
+        setApproverName(currentUserName || currentUserRole);
+        setReviewDate(new Date().toISOString());
+      }
+      toast.success("Action d'approbation enregistrée");
+    } catch {
+      toast.error("Erreur lors de l'action d'approbation");
+    }
+  }, [procedure.metadata.code, currentUserRole, currentUserName]);
+
   const completeness = getCompleteness(procedure.steps);
 
   return (
@@ -186,6 +324,9 @@ export function DynamicProcedureForm() {
           <h2 className="text-lg font-semibold text-foreground">
             {proceduresFR.metadata.title}
           </h2>
+          <Badge variant="secondary" className="text-xs font-mono">
+            v{procedure.metadata.version || "1.0"}
+          </Badge>
           <Badge variant="secondary" className="text-xs">
             {proceduresFR.actions.completeness}: {completeness}%
           </Badge>
@@ -208,6 +349,43 @@ export function DynamicProcedureForm() {
             {isImporting ? <Skeleton className="h-3.5 w-3.5 rounded-full" /> : <Upload className="h-3.5 w-3.5" />}
             {isImporting ? "Import..." : proceduresFR.actions.importJson}
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsCreatingVersion(true)}
+            disabled={isSaving || isExporting || isImporting || !procedure.metadata.code}
+            className="gap-1.5"
+          >
+            <GitBranch className="h-3.5 w-3.5" />
+            {proceduresFR.versioning.createVersion}
+          </Button>
+            <Select
+              value={selectedVersion || ""}
+              onValueChange={(value) => {
+                const v = value as string;
+                if (v && v !== "none") {
+                  handleVersionSelect(v);
+                }
+              }}
+            >
+              <SelectTrigger className="h-9 w-[140px] gap-1.5 text-xs">
+                <History className="h-3.5 w-3.5" />
+                <SelectValue placeholder={proceduresFR.versioning.versionHistory} />
+              </SelectTrigger>
+              <SelectContent>
+                {versionHistory.length === 0 ? (
+                  <SelectItem value="none" disabled>
+                    {proceduresFR.versioning.noHistory}
+                  </SelectItem>
+                ) : (
+                  versionHistory.map((v) => (
+                    <SelectItem key={v.version} value={v.version}>
+                      v{v.version} {v.comment ? `- ${v.comment}` : ""}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
           <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={isSaving || isExporting || isImporting} className="gap-1.5">
             {isSaving ? <Skeleton className="h-3.5 w-3.5 rounded-full" /> : <Save className="h-3.5 w-3.5" />}
             {isSaving ? "Sauvegarde..." : proceduresFR.actions.saveDraft}
@@ -236,7 +414,16 @@ export function DynamicProcedureForm() {
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          <MetadataEditor key={formKey} data={procedure.metadata} onChange={handleMetadataChange} />
+          <MetadataEditor
+            key={formKey}
+            data={procedure.metadata}
+            onChange={handleMetadataChange}
+            approvalStatus={approvalStatus}
+            approverName={approverName}
+            reviewDate={reviewDate}
+            onApprovalAction={handleApprovalAction}
+            currentUserRole={currentUserRole}
+          />
 
           <Separator />
 
@@ -290,6 +477,98 @@ export function DynamicProcedureForm() {
           </div>
         </div>
       </div>
+
+      <Dialog open={isCreatingVersion} onOpenChange={setIsCreatingVersion}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{proceduresFR.versioning.createVersion}</DialogTitle>
+            <DialogDescription>
+              {proceduresFR.versioning.versionCommentPlaceholder}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              Version actuelle : <span className="font-mono font-semibold">v{procedure.metadata.version || "1.0"}</span>
+            </div>
+            <textarea
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              rows={3}
+              placeholder={proceduresFR.versioning.versionCommentPlaceholder}
+              value={versionComment}
+              onChange={(e) => setVersionComment(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <DialogClose>
+              <Button variant="outline">{proceduresFR.versioning.close}</Button>
+            </DialogClose>
+            <Button onClick={handleCreateVersion}>
+              {proceduresFR.versioning.createVersion}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!previewVersion} onOpenChange={(open) => !open && setPreviewVersion(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {proceduresFR.versioning.preview} v{previewVersion?.version}
+            </DialogTitle>
+            {previewVersion?.comment && (
+              <DialogDescription>{previewVersion.comment}</DialogDescription>
+            )}
+          </DialogHeader>
+          <ScrollArea className="h-[50vh] rounded-md border p-4">
+            {previewVersion && (
+              <div className="space-y-4 text-sm">
+                <div>
+                  <span className="font-semibold">Titre: </span>
+                  {previewVersion.body.metadata.title || <span className="text-muted-foreground">(vide)</span>}
+                </div>
+                <div>
+                  <span className="font-semibold">Code: </span>
+                  {previewVersion.body.metadata.code}
+                </div>
+                <div>
+                  <span className="font-semibold">Description: </span>
+                  {previewVersion.body.metadata.description || <span className="text-muted-foreground">(vide)</span>}
+                </div>
+                <Separator />
+                <div>
+                  <span className="font-semibold">Étapes: </span>
+                  {previewVersion.body.steps.length}
+                </div>
+                <div className="space-y-2">
+                  {previewVersion.body.steps.map((step, idx) => (
+                    <div key={step.id} className="rounded-md border p-3">
+                      <div className="font-medium">
+                        {idx + 1}. {step.title || <span className="text-muted-foreground">(sans titre)</span>}
+                      </div>
+                      <div className="text-muted-foreground mt-1 line-clamp-2">
+                        {step.instructions || "(aucune instruction)"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </ScrollArea>
+          <DialogFooter>
+            <DialogClose>
+              <Button variant="outline">{proceduresFR.versioning.close}</Button>
+            </DialogClose>
+            {previewVersion && (
+              <Button
+                variant="destructive"
+                onClick={() => handleRestoreVersion(previewVersion.version)}
+              >
+                {proceduresFR.versioning.restoreVersion}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
