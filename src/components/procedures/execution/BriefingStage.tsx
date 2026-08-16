@@ -30,6 +30,12 @@ const priorityColors: Record<string, string> = {
 };
 
 export function BriefingStage({ procedure, onStart }: BriefingStageProps) {
+  console.log("[BriefingStage] Rendered", {
+    code: procedure.metadata.code,
+    title: procedure.metadata.title,
+    steps: procedure.steps.length,
+  });
+
   const { metadata } = procedure;
   const stepCount = procedure.steps.length;
 
@@ -37,6 +43,14 @@ export function BriefingStage({ procedure, onStart }: BriefingStageProps) {
     if (!metadata.globalSafetyInstructions || metadata.globalSafetyInstructions.length === 0) return [];
     return metadata.globalSafetyInstructions;
   }, [metadata.globalSafetyInstructions]);
+
+  const handleStart = () => {
+    console.log("[BriefingStage] Start clicked", {
+      code: metadata.code,
+      title: metadata.title,
+    });
+    onStart();
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -141,11 +155,11 @@ export function BriefingStage({ procedure, onStart }: BriefingStageProps) {
               </>
             )}
 
-            <div className="flex items-center gap-3 pt-2">
-              <Button onClick={onStart} className="gap-2">
-                <Play className="h-4 w-4" />
-                {proceduresFR.guide.briefing.startButton}
-              </Button>
+             <div className="flex items-center gap-3 pt-2">
+               <Button onClick={handleStart} className="gap-2">
+                 <Play className="h-4 w-4" />
+                 {proceduresFR.guide.briefing.startButton}
+               </Button>
               <Badge
                 variant="secondary"
                 className={`text-xs ${priorityColors[metadata.priority] || ""}`}
