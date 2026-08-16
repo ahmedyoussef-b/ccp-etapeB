@@ -17,6 +17,16 @@ interface AbortedStageProps {
 }
 
 export function AbortedStage({ procedure, context, reason, onClose }: AbortedStageProps) {
+  console.log("[AbortedStage] Rendered", {
+    code: procedure.metadata.code,
+    title: procedure.metadata.title,
+    reason,
+    anomalies: context.anomalies.length,
+    completedSteps: context.completedSteps.size,
+    totalSteps: procedure.steps.length,
+    startedAt: new Date(context.startedAt).toISOString(),
+  });
+
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-border bg-card/50">
