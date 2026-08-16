@@ -155,15 +155,13 @@ export async function POST(request: Request): Promise<NextResponse<DeployRespons
         ref: `heads/${branch}`
       });
 
-      // ✅ Correction : utiliser `any` pour l'API Octokit qui est complexe
       const { data: treeData } = await octokit.rest.git.getTree({
         owner,
         repo,
         tree_sha: refData.object.sha,
-        recursive: '1' // ✅ Correction : '1' au lieu de true
+        recursive: '1'
       });
 
-      // ✅ Correction : filtre avec vérification des types
       existingFiles = treeData.tree
         .filter((item) => item.type === 'blob' && item.path !== undefined && item.sha !== undefined)
         .map((item) => ({
@@ -185,8 +183,8 @@ export async function POST(request: Request): Promise<NextResponse<DeployRespons
     const appDir = process.cwd();
     const localFiles: LocalFile[] = [];
     
-    const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git', '.vercel'];
-    const ignoreFiles = ['.env.local', '.env.development', '.env.production', '.env'];
+const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git', '.vercel', '.github'];  
+  const ignoreFiles = ['.env.local', '.env.development', '.env.production', '.env'];
     
     function walkDir(dir: string, relativePath = ''): void {
       try {
@@ -337,70 +335,45 @@ export async function POST(request: Request): Promise<NextResponse<DeployRespons
       }
     }
 
- // ============================================
-// PHASE 4: COMMIT AUTOMATIQUE + SYNC FORCÉE
-// ============================================
-logger.phase('4', 'Commit automatique et synchronisation');
+    // ============================================
+    // PHASE 4: COMMIT AUTOMATIQUE
+    // ============================================
+    logger.phase('4', 'Commit automatique');
 
-try {
-  // Vérifier l'état du dépôt
-  const status = execSync('git status --porcelain', { encoding: 'utf8' });
-  logger.info(`📊 Statut Git: ${status.trim() ? `${status.split('\n').filter(Boolean).length} fichiers modifiés` : 'Propre'}`);
-  
-  if (status.trim()) {
-    const files = status.split('\n').filter(Boolean).length;
-    logger.info(`📝 ${files} fichiers modifiés à commiter`);
-    
-    // Ajouter tous les fichiers
-    execSync('git add .', { stdio: 'inherit' });
-    logger.success('✅ Fichiers ajoutés au staging');
-    
-    // Créer le commit
-    const commitMessage = `Auto-deploy: ${new Date().toISOString()} [${trigger}]`;
-    execSync(`git commit -m "${commitMessage}"`, { stdio: 'inherit' });
-    logger.success(`✅ Commit créé: ${commitMessage}`);
-    
-    // Pousser vers GitHub
-    execSync(`git push origin ${branch}`, { stdio: 'inherit' });
-    logger.success('✅ Push effectué');
-  } else {
-    logger.info('ℹ️ Aucun fichier à commiter');
-  }
-  
-  // ✅ FORCER la synchronisation du dépôt local
-  logger.info('🔄 Synchronisation du dépôt local avec GitHub...');
-  
-  try {
-    // 1. Récupérer les derniers changements
-    execSync(`git fetch origin ${branch}`, { stdio: 'inherit' });
-    logger.success('✅ Fetch effectué');
-    
-    // 2. Vérifier si des changements distants existent
-    const localCommit = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
-    const remoteCommit = execSync(`git rev-parse origin/${branch}`, { encoding: 'utf8' }).trim();
-    
-    if (localCommit !== remoteCommit) {
-      logger.info(`📥 Changements distants détectés (${remoteCommit.substring(0, 7)} vs ${localCommit.substring(0, 7)})`);
-      // 3. Forcer la mise à jour du dépôt local
-     execSync(`git fetch origin`, { stdio: 'inherit' });
-execSync(`git pull origin ${branch} --no-rebase`, { stdio: 'inherit' });
-      logger.success('✅ Dépôt local synchronisé avec GitHub (reset --hard)');
-    } else {
-      logger.success('✅ Dépôt local déjà à jour');
+    try {
+      // Vérifier l'état du dépôt
+      const status = execSync('git status --porcelain', { encoding: 'utf8' });
+      logger.info(`📊 Statut Git: ${status.trim() ? `${status.split('\n').filter(Boolean).length} fichiers modifiés` : 'Propre'}`);
+      
+      if (status.trim()) {
+        const files = status.split('\n').filter(Boolean).length;
+        logger.info(`📝 ${files} fichiers modifiés à commiter`);
+        
+        // Ajouter tous les fichiers
+        execSync('git add .', { stdio: 'inherit' });
+        logger.success('✅ Fichiers ajoutés au staging');
+        
+        // Créer le commit
+        const commitMessage = `Auto-deploy: ${new Date().toISOString()} [${trigger}]`;
+        execSync(`git commit -m "${commitMessage}"`, { stdio: 'inherit' });
+        logger.success(`✅ Commit créé: ${commitMessage}`);
+        
+        // Pousser vers GitHub
+        // Utilisation de --force-with-lease pour éviter les conflits de branches
+        execSync(`git push origin ${branch} --force-with-lease`, { stdio: 'inherit' });
+        logger.success('✅ Push effectué avec succès');
+      } else {
+        logger.info('ℹ️ Aucun fichier à commiter');
+      }
+
+      logger.success('✅ Pipeline terminé avec succès!');
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logger.error(`❌ Erreur lors du commit automatique: ${errorMessage}`);
+      logger.info('ℹ️ Vous pouvez faire git add . && git commit manuellement');
     }
-  } catch (syncErr) {
-    const syncMessage = syncErr instanceof Error ? syncErr.message : String(syncErr);
-    logger.warn(`⚠️ Erreur de synchronisation: ${syncMessage}`);
-    logger.info('ℹ️ Exécutez "git fetch && git reset --hard origin/main" manuellement');
-  }
-  
-  logger.success('✅ Pipeline terminé avec succès!');
-  
-} catch (err) {
-  const errorMessage = err instanceof Error ? err.message : String(err);
-  logger.error(`❌ Erreur lors du commit automatique: ${errorMessage}`);
-  logger.info('ℹ️ Vous pouvez faire git add . && git commit manuellement');
-}
+
     // ============================================
     // PHASE 5: RAPPORT FINAL
     // ============================================
