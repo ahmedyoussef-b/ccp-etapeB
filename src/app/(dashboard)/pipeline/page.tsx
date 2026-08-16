@@ -1,3 +1,4 @@
+//src/app/(dashboard)/pipeline/page.tsx
 import { redirect } from 'next/navigation';
 import PipelineClient from './PipelineClient';
 
