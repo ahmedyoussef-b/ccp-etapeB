@@ -1,0 +1,13 @@
+{
+  "type": "qa",
+  "title": "quelle-est-la-temprature-ambiante-recommande",
+  "description": "",
+  "pairs": [
+    {
+      "question": "Quelle est la temp�rature ambiante recommand�e?",
+      "answer": "22 degr�s Celsius"
+    }
+  ],
+  "createdAt": "2026-08-16T03:21:13.919Z",
+  "registryPath": "items/qa_2026-08-16T03-21-13.json"
+}
