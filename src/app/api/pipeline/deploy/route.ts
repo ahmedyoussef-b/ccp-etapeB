@@ -337,45 +337,67 @@ export async function POST(request: Request): Promise<NextResponse<DeployRespons
       }
     }
 
-   // ============================================
-// PHASE 4: COMMIT AUTOMATIQUE + SYNC
+ // ============================================
+// PHASE 4: COMMIT AUTOMATIQUE + SYNC FORCÉE
 // ============================================
 logger.phase('4', 'Commit automatique et synchronisation');
 
 try {
+  // Vérifier l'état du dépôt
   const status = execSync('git status --porcelain', { encoding: 'utf8' });
+  logger.info(`📊 Statut Git: ${status.trim() ? `${status.split('\n').filter(Boolean).length} fichiers modifiés` : 'Propre'}`);
   
   if (status.trim()) {
     const files = status.split('\n').filter(Boolean).length;
     logger.info(`📝 ${files} fichiers modifiés à commiter`);
     
-    execSync('git add .', { stdio: 'ignore' });
+    // Ajouter tous les fichiers
+    execSync('git add .', { stdio: 'inherit' });
     logger.success('✅ Fichiers ajoutés au staging');
     
+    // Créer le commit
     const commitMessage = `Auto-deploy: ${new Date().toISOString()} [${trigger}]`;
-    execSync(`git commit -m "${commitMessage}"`, { stdio: 'ignore' });
+    execSync(`git commit -m "${commitMessage}"`, { stdio: 'inherit' });
     logger.success(`✅ Commit créé: ${commitMessage}`);
     
-    execSync(`git push origin ${branch}`, { stdio: 'ignore' });
+    // Pousser vers GitHub
+    execSync(`git push origin ${branch}`, { stdio: 'inherit' });
     logger.success('✅ Push effectué');
-    
-    // ✅ AJOUT : Synchroniser le dépôt local après le push
-    try {
-      execSync(`git pull origin ${branch} --rebase`, { stdio: 'ignore' });
-      logger.success('✅ Dépôt local synchronisé avec GitHub');
-    } catch (syncErr) {
-      const syncMessage = syncErr instanceof Error ? syncErr.message : String(syncErr);
-      logger.warn(`⚠️ Erreur de synchronisation: ${syncMessage}`);
-      logger.info('ℹ️ Exécutez "git pull" manuellement');
-    }
-    
-    logger.success('✅ Commit automatique terminé avec succès!');
   } else {
     logger.info('ℹ️ Aucun fichier à commiter');
   }
+  
+  // ✅ FORCER la synchronisation du dépôt local
+  logger.info('🔄 Synchronisation du dépôt local avec GitHub...');
+  
+  try {
+    // 1. Récupérer les derniers changements
+    execSync(`git fetch origin ${branch}`, { stdio: 'inherit' });
+    logger.success('✅ Fetch effectué');
+    
+    // 2. Vérifier si des changements distants existent
+    const localCommit = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+    const remoteCommit = execSync(`git rev-parse origin/${branch}`, { encoding: 'utf8' }).trim();
+    
+    if (localCommit !== remoteCommit) {
+      logger.info(`📥 Changements distants détectés (${remoteCommit.substring(0, 7)} vs ${localCommit.substring(0, 7)})`);
+      // 3. Forcer la mise à jour du dépôt local
+      execSync(`git reset --hard origin/${branch}`, { stdio: 'inherit' });
+      logger.success('✅ Dépôt local synchronisé avec GitHub (reset --hard)');
+    } else {
+      logger.success('✅ Dépôt local déjà à jour');
+    }
+  } catch (syncErr) {
+    const syncMessage = syncErr instanceof Error ? syncErr.message : String(syncErr);
+    logger.warn(`⚠️ Erreur de synchronisation: ${syncMessage}`);
+    logger.info('ℹ️ Exécutez "git fetch && git reset --hard origin/main" manuellement');
+  }
+  
+  logger.success('✅ Pipeline terminé avec succès!');
+  
 } catch (err) {
   const errorMessage = err instanceof Error ? err.message : String(err);
-  logger.warn(`Erreur lors du commit automatique: ${errorMessage}`);
+  logger.error(`❌ Erreur lors du commit automatique: ${errorMessage}`);
   logger.info('ℹ️ Vous pouvez faire git add . && git commit manuellement');
 }
     // ============================================
