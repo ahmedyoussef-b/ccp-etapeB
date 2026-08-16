@@ -1,57 +1,149 @@
-﻿import { Octokit } from '@octokit/rest';
+﻿// src/app/api/pipeline/deploy/route.ts
+import { Octokit } from '@octokit/rest';
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { execSync } from 'child_process';
 
-export async function POST() {
+// ============================================
+// TYPES
+// ============================================
+interface DeployRequestBody {
+  trigger?: 'api' | 'webhook' | 'manual';
+}
+
+interface LocalFile {
+  path: string;
+  sha?: string;
+  content: Buffer;
+}
+
+interface UploadFile extends LocalFile {
+  action: 'nouveau' | 'modifié';
+}
+
+interface DeployStats {
+  total: number;
+  uploaded: number;
+  deleted: number;
+  errors: number;
+  unchanged: number;
+  new: number;
+  modified: number;
+}
+
+interface DeployResponse {
+  success: boolean;
+  message: string;
+  duration?: string;
+  trigger?: string;
+  stats?: DeployStats;
+  error?: string;
+}
+
+// ============================================
+// LOGGER
+// ============================================
+const logger = {
+  info: (msg: string, data?: unknown) => {
+    console.log(`[${new Date().toISOString()}] ℹ️ ${msg}`, data || '');
+  },
+  success: (msg: string, data?: unknown) => {
+    console.log(`[${new Date().toISOString()}] ✅ ${msg}`, data || '');
+  },
+  warn: (msg: string, data?: unknown) => {
+    console.log(`[${new Date().toISOString()}] ⚠️ ${msg}`, data || '');
+  },
+  error: (msg: string, data?: unknown) => {
+    console.log(`[${new Date().toISOString()}] ❌ ${msg}`, data || '');
+  },
+  phase: (phase: string, msg: string) => {
+    console.log('');
+    console.log(`[${new Date().toISOString()}] 🚀 === PHASE ${phase} : ${msg} ===`);
+  }
+};
+
+// ============================================
+// HELPERS
+// ============================================
+function computeFileSha(content: Buffer): string {
+  const blobHeader = `blob ${content.length}\0`;
+  const blobData = Buffer.concat([Buffer.from(blobHeader), content]);
+  const hash = crypto.createHash('sha1');
+  hash.update(blobData);
+  return hash.digest('hex');
+}
+
+// ============================================
+// MAIN HANDLER
+// ============================================
+export async function POST(request: Request): Promise<NextResponse<DeployResponse>> {
+  const startTime = Date.now();
+  logger.info('Déploiement démarré');
+  
+  // 🔒 Protection production
   if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Not available in production' }, { status: 403 });
+    logger.warn('Tentative de déploiement en production - Refusé');
+    return NextResponse.json(
+      { 
+        success: false, 
+        message: 'Not available in production' 
+      },
+      { status: 403 }
+    );
   }
 
   try {
+    const body = (await request.json().catch((): DeployRequestBody => ({}))) as DeployRequestBody;
+    const trigger = body.trigger || 'api';
+    logger.info(`Déclenché par: ${trigger}`);
+
     const token = process.env.GITHUB_TOKEN;
     const owner = process.env.GITHUB_OWNER || 'ahmedyoussef-b';
     const repo = process.env.GITHUB_REPO || 'ccp-etapeB';
     const branch = process.env.GITHUB_BRANCH || 'main';
 
     if (!token) {
+      logger.error('GITHUB_TOKEN non configuré');
       return NextResponse.json(
-        { error: 'GITHUB_TOKEN not configured' },
+        { 
+          success: false, 
+          message: 'GITHUB_TOKEN not configured' 
+        },
         { status: 500 }
       );
     }
 
     const octokit = new Octokit({ auth: token });
-    console.log('🚀 Deploiement sur ' + owner + '/' + repo + ' (branche: ' + branch + ')');
+    logger.success(`Authentifié sur ${owner}/${repo} (branche: ${branch})`);
 
     // ============================================
     // PHASE 1: TEST - Vérification
     // ============================================
-    console.log('🔍 PHASE 1: Test de verification...');
+    logger.phase('1', 'Test de vérification');
 
     try {
       await octokit.rest.repos.get({ owner, repo });
-      console.log('  ✅ Acces au depot OK');
-    } catch (error) {
-      throw new Error('Impossible d\'acceder au depot: ' + (error as Error).message);
+      logger.success('Accès au dépôt OK');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      throw new Error(`Impossible d'accéder au dépôt: ${errorMessage}`);
     }
 
     try {
-      await octokit.rest.git.getRef({ owner, repo, ref: 'heads/' + branch });
-      console.log('  ✅ Branche ' + branch + ' OK');
+      await octokit.rest.git.getRef({ owner, repo, ref: `heads/${branch}` });
+      logger.success(`Branche ${branch} OK`);
     } catch {
-      throw new Error('Branche ' + branch + ' introuvable');
+      throw new Error(`Branche ${branch} introuvable`);
     }
 
-    console.log('✅ Tests passes avec succes!');
-    console.log('');
+    logger.success('✅ Tests passés avec succès!');
 
     // ============================================
     // PHASE 2: ANALYSE - Récupération des fichiers
     // ============================================
-    console.log('📂 PHASE 2: Analyse des fichiers...');
+    logger.phase('2', 'Analyse des fichiers');
 
     // Récupérer les fichiers existants sur GitHub
     let existingFilesMap: Record<string, string> = {};
@@ -60,39 +152,43 @@ export async function POST() {
       const { data: refData } = await octokit.rest.git.getRef({
         owner,
         repo,
-        ref: 'heads/' + branch
+        ref: `heads/${branch}`
       });
 
-      const recursive = true as unknown as string;
+      // ✅ Correction : utiliser `any` pour l'API Octokit qui est complexe
       const { data: treeData } = await octokit.rest.git.getTree({
         owner,
         repo,
         tree_sha: refData.object.sha,
-        recursive,
+        recursive: '1' // ✅ Correction : '1' au lieu de true
       });
 
+      // ✅ Correction : filtre avec vérification des types
       existingFiles = treeData.tree
-        .filter(item => item.type === 'blob')
-        .map(item => ({ path: item.path, sha: item.sha }));
+        .filter((item) => item.type === 'blob' && item.path !== undefined && item.sha !== undefined)
+        .map((item) => ({
+          path: item.path as string,
+          sha: item.sha as string
+        }));
       
-      existingFilesMap = existingFiles.reduce((acc: Record<string, string>, f: { path: string; sha: string }) => {
+      existingFilesMap = existingFiles.reduce<Record<string, string>>((acc, f) => {
         acc[f.path] = f.sha;
         return acc;
       }, {});
       
-      console.log('  📁 ' + existingFiles.length + ' fichiers existants sur GitHub');
+      logger.info(`${existingFiles.length} fichiers existants sur GitHub`);
     } catch {
-      console.log('  ℹ️ Aucun fichier existant (depot vide)');
+      logger.warn('Aucun fichier existant (dépôt vide)');
     }
 
     // Scanner les fichiers locaux
     const appDir = process.cwd();
-    const localFiles: Array<{ path: string; sha?: string; content: Buffer }> = [];
+    const localFiles: LocalFile[] = [];
     
-    const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git'];
+    const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git', '.vercel'];
     const ignoreFiles = ['.env.local', '.env.development', '.env.production', '.env'];
     
-    const walkDir = (dir: string, relativePath = '') => {
+    function walkDir(dir: string, relativePath = ''): void {
       try {
         const items = fs.readdirSync(dir);
         for (const item of items) {
@@ -107,18 +203,13 @@ export async function POST() {
               walkDir(fullPath, relPath);
             } else {
               if (ignoreFiles.includes(item)) {
-                console.log('  ⏭️ Ignore: ' + relPath + ' (fichier sensible)');
+                logger.info(`⏭️ Ignoré: ${relPath} (fichier sensible)`);
                 continue;
               }
               if (relPath.startsWith('.git')) continue;
               
               const content = fs.readFileSync(fullPath);
-              
-              const blobHeader = 'blob ' + content.length + '\0';
-              const blobData = Buffer.concat([Buffer.from(blobHeader), content]);
-              const hash = crypto.createHash('sha1');
-              hash.update(blobData);
-              const localSha = hash.digest('hex');
+              const localSha = computeFileSha(content);
               
               localFiles.push({
                 path: relPath.replace(/\\/g, '/'),
@@ -126,22 +217,23 @@ export async function POST() {
                 content
               });
             }
-          } catch (error) {
-            console.log('  ⚠️ Erreur sur ' + fullPath + ': ' + (error as Error).message);
+          } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            logger.warn(`Erreur sur ${fullPath}: ${errorMessage}`);
           }
         }
-      } catch (error) {
-        console.log('  ⚠️ Erreur de lecture de ' + dir + ': ' + (error as Error).message);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.warn(`Erreur de lecture de ${dir}: ${errorMessage}`);
       }
-    };
+    }
     
     walkDir(appDir);
-    console.log('  📁 ' + localFiles.length + ' fichiers locaux trouves');
+    logger.info(`${localFiles.length} fichiers locaux trouvés`);
 
     // Identifier les fichiers modifiés
-    const toUpload = [];
-    const toDelete = [];
-    const unchanged = [];
+    const toUpload: UploadFile[] = [];
+    const toDelete: string[] = [];
 
     const localPaths = new Set(localFiles.map(f => f.path));
     const remotePaths = new Set(Object.keys(existingFilesMap));
@@ -151,9 +243,7 @@ export async function POST() {
       if (!remoteSha) {
         toUpload.push({ ...file, action: 'nouveau' });
       } else if (remoteSha !== file.sha) {
-        toUpload.push({ ...file, action: 'modifie' });
-      } else {
-        unchanged.push(file.path);
+        toUpload.push({ ...file, action: 'modifié' });
       }
     }
 
@@ -163,45 +253,35 @@ export async function POST() {
       }
     }
 
-    console.log('');
-    console.log('📊 Resume des changements:');
-    console.log('  ✅ Nouveaux fichiers: ' + toUpload.filter(f => f.action === 'nouveau').length);
-    console.log('  📝 Fichiers modifies: ' + toUpload.filter(f => f.action === 'modifie').length);
-    console.log('  ⏭️ Fichiers inchanges: ' + unchanged.length);
-    console.log('  🗑️ A supprimer: ' + toDelete.length);
-    console.log('');
+    const unchanged = localFiles.length - toUpload.length;
 
-    // Afficher les fichiers modifiés
-    if (toUpload.length > 0) {
-      console.log('📤 Fichiers a uploader:');
-      const displayFiles = toUpload.slice(0, 10);
-      displayFiles.forEach(f => {
-        console.log('  ' + (f.action === 'nouveau' ? '➕' : '📝') + ' ' + f.path);
-      });
-      if (toUpload.length > 10) {
-        console.log('  ... et ' + (toUpload.length - 10) + ' autres');
-      }
-      console.log('');
-    }
+    logger.info('📊 Résumé des changements:');
+    logger.info(`  ✅ Nouveaux: ${toUpload.filter(f => f.action === 'nouveau').length}`);
+    logger.info(`  📝 Modifiés: ${toUpload.filter(f => f.action === 'modifié').length}`);
+    logger.info(`  ⏭️ Inchangés: ${unchanged}`);
+    logger.info(`  🗑️ Supprimés: ${toDelete.length}`);
 
     if (toUpload.length === 0 && toDelete.length === 0) {
-      console.log('✅ Aucun changement detecte!');
-      return NextResponse.json({ 
+      logger.success('Aucun changement détecté!');
+      return NextResponse.json({
         success: true,
-        message: 'Aucun changement detecte',
+        message: 'Aucun changement détecté',
         stats: {
           total: localFiles.length,
           uploaded: 0,
           deleted: 0,
-          unchanged: unchanged.length
+          errors: 0,
+          unchanged,
+          new: 0,
+          modified: 0
         }
       });
     }
 
     // ============================================
-    // PHASE 3: EXECUTION - Déploiement sur GitHub
+    // PHASE 3: EXÉCUTION - Déploiement sur GitHub
     // ============================================
-    console.log('🚀 PHASE 3: Execution du deploiement...');
+    logger.phase('3', 'Exécution du déploiement');
 
     let uploaded = 0;
     let deleted = 0;
@@ -209,30 +289,30 @@ export async function POST() {
 
     // 1. Supprimer les fichiers
     if (toDelete.length > 0) {
-      console.log('🗑️ Suppression des fichiers...');
+      logger.info(`🗑️ Suppression de ${toDelete.length} fichiers...`);
       for (const filePath of toDelete) {
         try {
           await octokit.rest.repos.deleteFile({
             owner,
             repo,
             path: filePath,
-            message: 'Suppression: ' + filePath,
+            message: `Suppression: ${filePath}`,
             sha: existingFilesMap[filePath],
             branch
           });
           deleted++;
-          console.log('  ✅ Supprime: ' + filePath);
-        } catch (error) {
+          logger.success(`  ✅ Supprimé: ${filePath}`);
+        } catch (err) {
           errors++;
-          console.log('  ❌ Erreur pour ' + filePath + ': ' + (error as Error).message);
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          logger.error(`  ❌ Erreur pour ${filePath}: ${errorMessage}`);
         }
       }
-      console.log('');
     }
 
-    // 2. Uploader les fichiers modifiés ou nouveaux
+    // 2. Uploader les fichiers
     if (toUpload.length > 0) {
-      console.log('📤 Upload des fichiers modifies/nouveaux...');
+      logger.info(`📤 Upload de ${toUpload.length} fichiers...`);
       for (const file of toUpload) {
         try {
           const contentBase64 = file.content.toString('base64');
@@ -242,17 +322,17 @@ export async function POST() {
             owner,
             repo,
             path: file.path,
-            message: 'Upload: ' + file.path,
+            message: `Upload: ${file.path}`,
             content: contentBase64,
             branch,
             sha: sha
           });
           uploaded++;
-          const action = file.action === 'nouveau' ? 'nouveau' : 'mis a jour';
-          console.log('  ✅ Upload: ' + file.path + ' (' + action + ')');
-        } catch (error) {
+          logger.success(`  ✅ Upload: ${file.path} (${file.action})`);
+        } catch (err) {
           errors++;
-          console.log('  ❌ Erreur pour ' + file.path + ': ' + (error as Error).message);
+          const errorMessage = err instanceof Error ? err.message : String(err);
+          logger.error(`  ❌ Erreur pour ${file.path}: ${errorMessage}`);
         }
       }
     }
@@ -260,76 +340,85 @@ export async function POST() {
     // ============================================
     // PHASE 4: COMMIT AUTOMATIQUE
     // ============================================
-    console.log('');
-    console.log('📝 PHASE 4: Commit automatique...');
+    logger.phase('4', 'Commit automatique');
     try {
       const status = execSync('git status --porcelain', { encoding: 'utf8' });
       
       if (status.trim()) {
         const files = status.split('\n').filter(Boolean).length;
-        console.log('  📝 ' + files + ' fichiers modifies a commiter');
+        logger.info(`📝 ${files} fichiers modifiés à commiter`);
         
-        // Ajouter tous les fichiers
         execSync('git add .', { stdio: 'ignore' });
-        console.log('  ✅ Fichiers ajoutes au staging');
+        logger.success('✅ Fichiers ajoutés au staging');
         
-        // Créer un commit
-        const commitMessage = 'Auto-commit: Pipeline ' + new Date().toISOString();
-        execSync('git commit -m "' + commitMessage + '"', { stdio: 'ignore' });
-        console.log('  ✅ Commit cree: ' + commitMessage);
+        const commitMessage = `Auto-deploy: ${new Date().toISOString()} [${trigger}]`;
+        execSync(`git commit -m "${commitMessage}"`, { stdio: 'ignore' });
+        logger.success(`✅ Commit créé: ${commitMessage}`);
         
-        // Pousser vers GitHub
-        execSync('git push origin ' + branch, { stdio: 'ignore' });
-        console.log('  ✅ Push effectue');
+        execSync(`git push origin ${branch}`, { stdio: 'ignore' });
+        logger.success('✅ Push effectué');
         
-        console.log('  ✅ Commit automatique termine avec succes!');
+        logger.success('✅ Commit automatique terminé avec succès!');
       } else {
-        console.log('  ℹ️ Aucun fichier a commiter');
+        logger.info('ℹ️ Aucun fichier à commiter');
       }
-    } catch (error) {
-      console.log('  ⚠️ Erreur lors du commit automatique: ' + (error as Error).message);
-      console.log('  ℹ️ Vous pouvez faire git add . && git commit manuellement');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logger.warn(`Erreur lors du commit automatique: ${errorMessage}`);
+      logger.info('ℹ️ Vous pouvez faire git add . && git commit manuellement');
     }
 
     // ============================================
     // PHASE 5: RAPPORT FINAL
     // ============================================
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    
     console.log('');
     console.log('========================================');
-    console.log('📊 RAPPORT FINAL DE DEPLOIEMENT');
+    console.log('📊 RAPPORT FINAL DE DÉPLOIEMENT');
     console.log('========================================');
-    console.log('  ✅ Tests: PASSES');
-    console.log('  📤 Uploades: ' + uploaded + ' fichiers');
-    console.log('  🗑️ Supprimes: ' + deleted + ' fichiers');
-    console.log('  ⏭️ Inchanges: ' + unchanged.length + ' fichiers');
-    console.log('  ❌ Erreurs: ' + errors);
-    console.log('  📝 Commit automatique: EFFECTUE');
+    console.log(`  ✅ Tests: PASSÉS`);
+    console.log(`  📤 Uploadés: ${uploaded} fichiers`);
+    console.log(`  🗑️ Supprimés: ${deleted} fichiers`);
+    console.log(`  ⏭️ Inchangés: ${unchanged} fichiers`);
+    console.log(`  ❌ Erreurs: ${errors}`);
+    console.log(`  📝 Commit automatique: EFFECTUÉ`);
+    console.log(`  ⏱️ Durée: ${duration}s`);
+    console.log(`  🔄 Déclenché par: ${trigger}`);
     console.log('========================================');
 
     if (errors === 0) {
-      console.log('🎉 Deploiement termine avec succes!');
+      logger.success('🎉 Déploiement terminé avec succès!');
     } else {
-      console.log('⚠️ Deploiement termine avec ' + errors + ' erreurs');
+      logger.warn(`⚠️ Déploiement terminé avec ${errors} erreurs`);
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: errors === 0,
-      message: errors === 0 ? 'Deploiement termine avec succes' : 'Deploiement avec erreurs',
+      message: errors === 0 ? 'Déploiement terminé avec succès' : 'Déploiement avec erreurs',
+      duration,
+      trigger,
       stats: {
         total: localFiles.length,
-        uploaded: uploaded,
-        deleted: deleted,
-        errors: errors,
-        unchanged: unchanged.length,
+        uploaded,
+        deleted,
+        errors,
+        unchanged,
         new: toUpload.filter(f => f.action === 'nouveau').length,
-        modified: toUpload.filter(f => f.action === 'modifie').length
+        modified: toUpload.filter(f => f.action === 'modifié').length
       }
     });
 
-  } catch (error) {
-    console.error('❌ Erreur:', error);
+  } catch (err) {
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    logger.error(`Erreur générale après ${duration}s: ${errorMessage}`);
     return NextResponse.json(
-      { error: (error as Error).message },
+      {
+        success: false,
+        message: errorMessage,
+        duration
+      },
       { status: 500 }
     );
   }
