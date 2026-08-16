@@ -99,6 +99,12 @@ export default function QAPage() {
     }
     setSending(true);
     try {
+      const created = await qrService.create({
+        question: question.trim(),
+        answer: answer.trim(),
+      });
+      setItems([created, ...items]);
+
       const data = await qrService.send({
         question: question.trim(),
         answer: answer.trim(),
