@@ -13,20 +13,26 @@ function ensureDir(): void {
 function readItems(): MediaItem[] {
   ensureDir();
   if (!fs.existsSync(DB_FILE)) {
+    console.log(`[ServerStore] readItems() - file not found at ${DB_FILE}, returning empty array`);
     return [];
   }
   try {
     const raw = fs.readFileSync(DB_FILE, "utf-8");
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
+    const items = Array.isArray(parsed) ? parsed : [];
+    console.log(`[ServerStore] readItems() - loaded ${items.length} items from ${DB_FILE}`);
+    return items;
+  } catch (error) {
+    console.log(`[ServerStore] readItems() - error reading file: ${(error as Error).message}`);
     return [];
   }
 }
 
 function writeItems(items: MediaItem[]): void {
   ensureDir();
-  fs.writeFileSync(DB_FILE, JSON.stringify(items, null, 2), "utf-8");
+  const json = JSON.stringify(items, null, 2);
+  fs.writeFileSync(DB_FILE, json, "utf-8");
+  console.log(`[ServerStore] writeItems() - wrote ${items.length} items to ${DB_FILE} (${Buffer.byteLength(json, "utf-8")} bytes)`);
 }
 
 export interface MediaItem {
@@ -80,14 +86,19 @@ function sortItems(items: MediaItem[], sortBy: string, sortOrder: "asc" | "desc"
 }
 
 function searchItems(items: MediaItem[], query: string): MediaItem[] {
-  if (!query.trim()) return items;
+  if (!query.trim()) {
+    console.log(`[ServerStore] searchItems() - empty query, returning all ${items.length} items`);
+    return items;
+  }
   const q = query.toLowerCase().trim();
-  return items.filter(
+  const filtered = items.filter(
     (item) =>
       item.title.toLowerCase().includes(q) ||
       item.description.toLowerCase().includes(q) ||
       item.tags.some((tag) => tag.toLowerCase().includes(q))
   );
+  console.log(`[ServerStore] searchItems() - query="${q}" matched ${filtered.length}/${items.length} items`);
+  return filtered;
 }
 
 export function generateId(): string {
@@ -95,16 +106,21 @@ export function generateId(): string {
 }
 
 export async function getAll(): Promise<MediaItem[]> {
+  console.log(`[ServerStore] getAll()`);
   await delay(50);
-  return readItems();
+  const items = readItems();
+  return items;
 }
 
 export async function getAllPaginated(params?: { limit?: number; offset?: number; sortBy?: string; sortOrder?: string; q?: string; category?: string }): Promise<{ items: MediaItem[]; total: number }> {
+  console.log(`[ServerStore] getAllPaginated()`, params);
   await delay(50);
   let items = readItems();
 
   if (params?.category && params.category !== "Tous") {
+    const beforeCount = items.length;
     items = items.filter((item) => item.category === params.category);
+    console.log(`[ServerStore] getAllPaginated() - category filter "${params.category}": ${items.length}/${beforeCount} items`);
   }
 
   if (params?.q?.trim()) {
@@ -114,23 +130,30 @@ export async function getAllPaginated(params?: { limit?: number; offset?: number
   const total = items.length;
   const sortOrder = (params?.sortOrder === "asc" ? "asc" : "desc") as "asc" | "desc";
   items = sortItems(items, params?.sortBy || "createdAt", sortOrder);
+  console.log(`[ServerStore] getAllPaginated() - sorted by ${params?.sortBy || "createdAt"} ${sortOrder}`);
 
   const limit = params?.limit || items.length;
   const offset = params?.offset || 0;
   const paginated = items.slice(offset, offset + limit);
+  console.log(`[ServerStore] getAllPaginated() - returning ${paginated.length}/${total} items (offset=${offset}, limit=${limit})`);
 
   return { items: paginated, total };
 }
 
 export async function getById(id: string): Promise<MediaItem | undefined> {
+  console.log(`[ServerStore] getById() - id=${id}`);
   await delay(30);
   const items = readItems();
-  return items.find((item) => item.id === id);
+  const item = items.find((item) => item.id === id);
+  console.log(`[ServerStore] getById() - found=${!!item} title=${item?.title || "null"}`);
+  return item;
 }
 
 export async function create(item: Omit<MediaItem, "id" | "createdAt" | "updatedAt">): Promise<MediaItem> {
+  console.log(`[ServerStore] create() - title="${item.title}" category="${item.category}" kind=${item.kind}`);
   const validationError = validateMediaItem(item);
   if (validationError) {
+    console.log(`[ServerStore] create() - VALIDATION ERROR: ${validationError}`);
     throw new Error(validationError);
   }
   await delay(50);
@@ -144,6 +167,7 @@ export async function create(item: Omit<MediaItem, "id" | "createdAt" | "updated
   const items = readItems();
   items.unshift(newItem);
   writeItems(items);
+  console.log(`[ServerStore] create() - created id=${newItem.id}`);
   return newItem;
 }
 
@@ -151,68 +175,96 @@ export async function update(
   id: string,
   updates: Partial<Omit<MediaItem, "id" | "createdAt">>
 ): Promise<MediaItem | undefined> {
+  console.log(`[ServerStore] update() - id=${id} fields=${Object.keys(updates).join(",")}`);
   const validationError = validateMediaItem(updates);
   if (validationError) {
+    console.log(`[ServerStore] update() - VALIDATION ERROR: ${validationError}`);
     throw new Error(validationError);
   }
   await delay(50);
   const items = readItems();
   const index = items.findIndex((item) => item.id === id);
-  if (index === -1) return undefined;
+  if (index === -1) {
+    console.log(`[ServerStore] update() - item not found id=${id}`);
+    return undefined;
+  }
   items[index] = {
     ...items[index],
     ...updates,
     updatedAt: new Date().toISOString(),
   };
   writeItems(items);
+  console.log(`[ServerStore] update() - updated id=${id}`);
   return items[index];
 }
 
 export async function remove(id: string): Promise<boolean> {
+  console.log(`[ServerStore] remove() - id=${id}`);
   await delay(50);
   const items = readItems();
   const index = items.findIndex((item) => item.id === id);
-  if (index === -1) return false;
+  if (index === -1) {
+    console.log(`[ServerStore] remove() - item not found id=${id}`);
+    return false;
+  }
   items.splice(index, 1);
   writeItems(items);
+  console.log(`[ServerStore] remove() - deleted id=${id}`);
   return true;
 }
 
 export async function bulkDelete(ids: string[]): Promise<boolean> {
+  console.log(`[ServerStore] bulkDelete() - ids=[${ids.join(",")}]`);
   await delay(50);
   if (!ids.length) return false;
   const items = readItems();
+  const beforeCount = items.length;
   const filtered = items.filter((item) => !ids.includes(item.id));
-  if (filtered.length === items.length) return false;
+  const deletedCount = beforeCount - filtered.length;
+  if (filtered.length === items.length) {
+    console.log(`[ServerStore] bulkDelete() - no items matched`);
+    return false;
+  }
   writeItems(filtered);
+  console.log(`[ServerStore] bulkDelete() - deleted ${deletedCount} items`);
   return true;
 }
 
 export async function bulkTag(ids: string[], tagsToAdd: string[]): Promise<boolean> {
+  console.log(`[ServerStore] bulkTag() - ids=[${ids.length} items] tags=[${tagsToAdd.join(",")}]`);
   await delay(50);
   if (!ids.length || !tagsToAdd.length) return false;
   const items = readItems();
   let changed = false;
+  let affectedCount = 0;
   items.forEach((item) => {
     if (ids.includes(item.id)) {
       const newTags = Array.from(new Set([...item.tags, ...tagsToAdd]));
       if (newTags.length !== item.tags.length) {
         item.tags = newTags;
         changed = true;
+        affectedCount++;
       }
     }
   });
-  if (!changed) return false;
+  if (!changed) {
+    console.log(`[ServerStore] bulkTag() - no changes needed`);
+    return false;
+  }
   writeItems(items);
+  console.log(`[ServerStore] bulkTag() - tagged ${affectedCount} items`);
   return true;
 }
 
 export async function getCategories(): Promise<string[]> {
+  console.log(`[ServerStore] getCategories()`);
   await delay(30);
   const items = readItems();
   const cats = new Set<string>();
   items.forEach((item) => cats.add(item.category));
-  return ["Tous", ...Array.from(cats).sort()];
+  const categories = ["Tous", ...Array.from(cats).sort()];
+  console.log(`[ServerStore] getCategories() - categories=[${categories.join(", ")}]`);
+  return categories;
 }
 
 function delay(ms = 30): Promise<void> {
