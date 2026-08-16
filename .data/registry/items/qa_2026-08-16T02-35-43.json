@@ -1,0 +1,13 @@
+{
+  "type": "qa",
+  "title": "test-question",
+  "description": "",
+  "pairs": [
+    {
+      "question": "test question",
+      "answer": "test answer"
+    }
+  ],
+  "createdAt": "2026-08-16T02:35:43.832Z",
+  "registryPath": "items/qa_2026-08-16T02-35-43.json"
+}
