@@ -62,6 +62,14 @@ export function RunningStage({
   onCheckAlarms,
   executionId,
 }: RunningStageProps) {
+  console.log("[RunningStage] Rendered", {
+    currentStepIndex,
+    totalSteps: steps.length,
+    progress,
+    executionId,
+    activeAlarms: activeAlarms.length,
+  });
+
   const currentStep = steps[currentStepIndex];
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === steps.length - 1;
@@ -110,9 +118,14 @@ export function RunningStage({
 
   const handleMediaCapture = useCallback(
     async (mediaReq: TMediaRequirement) => {
+      console.log("[RunningStage] Media capture requested", {
+        type: mediaReq.type,
+        mandatory: mediaReq.mandatory,
+        stepId: currentStep?.id,
+      });
       await capture(mediaReq.type);
     },
-    [capture]
+    [capture, currentStep]
   );
 
   const scrollToBottom = () => {
@@ -125,6 +138,11 @@ export function RunningStage({
 
   useEffect(() => {
     if (currentStep && messages.length === 0) {
+      console.log("[RunningStage] Initial AI greeting for step", {
+        stepIndex: currentStepIndex,
+        stepId: currentStep.id,
+        stepTitle: currentStep.title,
+      });
       const aiContent = `Bonjour ! Je suis votre guide technique pour cette procédure. Je vais vous accompagner étape par étape.\n\nÉtape ${currentStepIndex + 1}/${steps.length} : ${currentStep.title || "Sans titre"}.\n${currentStep.instructions || "Suivez les consignes affichées."}`;
       setMessages([
         { id: Date.now().toString(), role: "assistant", content: aiContent },
@@ -138,12 +156,14 @@ export function RunningStage({
     if (alarmCheckRef.current) {
       clearInterval(alarmCheckRef.current);
     }
+    console.log("[RunningStage] Alarm check interval started (3s)");
     alarmCheckRef.current = window.setInterval(() => {
       onCheckAlarms(sensorData as unknown as Record<string, unknown>);
     }, 3000);
     return () => {
       if (alarmCheckRef.current) {
         clearInterval(alarmCheckRef.current);
+        console.log("[RunningStage] Alarm check interval cleared");
       }
     };
   }, [onCheckAlarms, sensorData]);
@@ -178,6 +198,11 @@ export function RunningStage({
   const handleSend = async () => {
     const trimmed = input.trim();
     if (!trimmed || isSending) return;
+    console.log("[RunningStage] User chat message", {
+      message: trimmed,
+      stepIndex: currentStepIndex,
+      stepId: currentStep?.id,
+    });
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
@@ -205,6 +230,33 @@ export function RunningStage({
     } finally {
       setIsSending(false);
     }
+  };
+
+  const handlePreviousClick = () => {
+    console.log("[RunningStage] Previous step clicked", {
+      from: currentStepIndex,
+      to: currentStepIndex - 1,
+    });
+    onPrevious();
+  };
+
+  const handleNextClick = () => {
+    console.log("[RunningStage] Next step clicked", {
+      from: currentStepIndex,
+      to: currentStepIndex + 1,
+      isLastStep,
+    });
+    onNext();
+  };
+
+  const handleToggleCompleteClick = () => {
+    const newState = !completedSteps.has(currentStep?.id || "");
+    console.log("[RunningStage] Toggle complete clicked", {
+      stepId: currentStep?.id,
+      stepTitle: currentStep?.title,
+      newState,
+    });
+    onToggleComplete(currentStep?.id || "");
   };
 
   return (
@@ -346,7 +398,7 @@ export function RunningStage({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={onPrevious}
+                  onClick={handlePreviousClick}
                   disabled={isFirstStep}
                   className="gap-1.5"
                 >
@@ -357,19 +409,19 @@ export function RunningStage({
                   <Button
                     variant={isStepCompleted ? "default" : "outline"}
                     size="sm"
-                    onClick={() => onToggleComplete(currentStep?.id || "")}
+                    onClick={handleToggleCompleteClick}
                     className="gap-1.5"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     {isStepCompleted ? "Effectuée" : "Marquer effectuée"}
                   </Button>
                   {isLastStep ? (
-                    <Button size="sm" onClick={onNext} className="gap-1.5">
+                    <Button size="sm" onClick={handleNextClick} className="gap-1.5">
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       {proceduresFR.guide.executing.finishProcedure}
                     </Button>
                   ) : (
-                    <Button size="sm" onClick={onNext} className="gap-1.5">
+                    <Button size="sm" onClick={handleNextClick} className="gap-1.5">
                       {proceduresFR.guide.executing.nextStep}
                       <SkipForward className="h-3.5 w-3.5" />
                     </Button>
