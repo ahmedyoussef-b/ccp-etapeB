@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image"; // ✅ DOIT être présent
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -481,17 +482,23 @@ export function MediaCapturePreview({
         </div>
         <div className="rounded-lg border border-border overflow-hidden bg-muted/30">
           {type === "signature" ? (
-            <img
-              src={capturedUrl}
-              alt="Signature"
-              className="w-full h-32 object-contain bg-white"
-            />
+          <Image
+  src={capturedUrl}
+  alt="Signature"
+  width={300}
+  height={128}
+  className="w-full h-32 object-contain bg-white"
+  unoptimized // Nécessaire pour les data URLs
+/>
           ) : type === "photo" ? (
-            <img
-              src={capturedUrl}
-              alt="Photo"
-              className="w-full h-40 object-cover"
-            />
+            <Image
+  src={capturedUrl}
+  alt="Photo"
+  width={300}
+  height={160}
+  className="w-full h-40 object-cover"
+  unoptimized // Nécessaire pour les data URLs
+/>
           ) : type === "video" || type === "audio" ? (
             <video
               src={capturedUrl}
