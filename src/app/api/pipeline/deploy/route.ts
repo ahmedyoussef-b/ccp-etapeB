@@ -185,8 +185,8 @@ export async function POST(request: Request): Promise<NextResponse<DeployRespons
     const appDir = process.cwd();
     const localFiles: LocalFile[] = [];
     
-    const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git'];
-    const ignoreFiles = ['.env.local', '.env.development', '.env.production', '.env'];
+const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git', '.vercel', '.github'];  
+  const ignoreFiles = ['.env.local', '.env.development', '.env.production', '.env'];
     
     function walkDir(dir: string, relativePath = ''): void {
       try {
