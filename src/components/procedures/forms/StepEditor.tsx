@@ -64,6 +64,7 @@ function SortableStepContent({
   onDelete: (stepId: string) => void;
   onDuplicate: (stepId: string) => void;
 }) {
+  console.log("[CREER-PROCEDURE] StepEditor rendu. StepId:", step.id, "| Ordre:", step.order, "| Titre:", step.title);
   const {
     attributes,
     listeners,
@@ -370,6 +371,7 @@ export function StepDndWrapper({
       const fromIndex = steps.findIndex((s) => s.id === active.id);
       const toIndex = steps.findIndex((s) => s.id === over.id);
       if (fromIndex >= 0 && toIndex >= 0) {
+        console.log("[CREER-PROCEDURE] Drag&Drop terminé:", fromIndex, "->", toIndex);
         onDragEnd(fromIndex, toIndex);
       }
     }
