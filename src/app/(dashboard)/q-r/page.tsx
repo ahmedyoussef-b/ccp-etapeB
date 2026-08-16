@@ -1,55 +1,134 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2 } from "lucide-react";
-
-interface QAItem {
-  question: string;
-  answer: string;
-}
+import { toast } from "sonner";
+import { Pencil, Trash2, RefreshCw, Upload } from "lucide-react";
+import { qrService } from "@/lib/qr/mock-service";
+import type { QAPairWithRegistry } from "@/lib/qr/server-store";
 
 export default function QAPage() {
-  const [items, setItems] = useState<QAItem[]>([]);
+  const [items, setItems] = useState<QAPairWithRegistry[]>([]);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  const handleAdd = () => {
-    if (!question.trim() || !answer.trim()) return;
-    if (editingIndex !== null) {
-      const updated = [...items];
-      updated[editingIndex] = { question: question.trim(), answer: answer.trim() };
-      setItems(updated);
-      setEditingIndex(null);
-    } else {
-      setItems([...items, { question: question.trim(), answer: answer.trim() }]);
+  const loadItems = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await qrService.getAll();
+      setItems(data);
+    } catch {
+      toast.error("Erreur lors du chargement des Q/R");
+    } finally {
+      setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    loadItems();
+  }, [loadItems]);
+
+  const handleAdd = async () => {
+    if (!question.trim() || !answer.trim()) return;
+    try {
+      const created = await qrService.create({
+        question: question.trim(),
+        answer: answer.trim(),
+      });
+      setItems([created, ...items]);
+      toast.success("Q/R ajoutée avec succès");
+      resetForm();
+    } catch {
+      toast.error("Erreur lors de l'ajout");
+    }
+  };
+
+  const handleEdit = (item: QAPairWithRegistry) => {
+    setQuestion(item.question);
+    setAnswer(item.answer);
+    setEditingId(item.id);
+  };
+
+  const handleUpdate = async () => {
+    if (editingId === null) return;
+    if (!question.trim() || !answer.trim()) return;
+    try {
+      const updated = await qrService.update(editingId, {
+        question: question.trim(),
+        answer: answer.trim(),
+      });
+      setItems(items.map((i) => (i.id === editingId ? updated : i)));
+      toast.success("Q/R modifiée");
+      resetForm();
+    } catch {
+      toast.error("Erreur lors de la modification");
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Supprimer cette Q/R ?")) return;
+    try {
+      await qrService.delete(id);
+      setItems(items.filter((i) => i.id !== id));
+      toast.success("Q/R supprimée");
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    }
+  };
+
+  const handleClear = async () => {
+    if (!confirm("Tout vider de la base web ?")) return;
+    try {
+      await Promise.all(items.map((i) => qrService.delete(i.id)));
+      setItems([]);
+      toast.success("Toutes les Q/R ont été supprimées");
+    } catch {
+      toast.error("Erreur");
+    }
+  };
+
+  const handleSend = async () => {
+    if (!question.trim() || !answer.trim()) {
+      toast.error("Remplissez la question et la réponse");
+      return;
+    }
+    setSending(true);
+    try {
+      const data = await qrService.send({
+        question: question.trim(),
+        answer: answer.trim(),
+      });
+      toast.success(`Q/R collectée dans ${data.filename}`);
+      resetForm();
+    } catch {
+      toast.error("Erreur d'export");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const resetForm = () => {
     setQuestion("");
     setAnswer("");
-  };
-
-  const handleEdit = (index: number) => {
-    setQuestion(items[index].question);
-    setAnswer(items[index].answer);
-    setEditingIndex(index);
-  };
-
-  const handleDelete = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
-    if (editingIndex === index) {
-      setEditingIndex(null);
-      setQuestion("");
-      setAnswer("");
-    }
+    setEditingId(null);
   };
 
   const cancelEdit = () => {
-    setEditingIndex(null);
-    setQuestion("");
-    setAnswer("");
+    resetForm();
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingId !== null) {
+      handleUpdate();
+    } else {
+      handleAdd();
+    }
   };
 
   return (
@@ -59,14 +138,14 @@ export default function QAPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Questions / Réponses
           </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Collecte et gestion de paires Q/R connectées à la base de données web
+          </p>
         </div>
 
         <div className="mt-8">
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleAdd();
-            }}
+            onSubmit={handleSubmit}
             className="rounded-xl border border-border bg-card p-6 shadow-sm"
           >
             <div className="flex flex-col gap-4">
@@ -102,9 +181,9 @@ export default function QAPage() {
               </div>
               <div className="flex gap-3 pt-1">
                 <Button type="submit" className="flex-1">
-                  {editingIndex !== null ? "Modifier" : "Ajouter"}
+                  {editingId !== null ? "Modifier" : "Ajouter"}
                 </Button>
-                {editingIndex !== null && (
+                {editingId !== null && (
                   <Button
                     type="button"
                     onClick={cancelEdit}
@@ -129,6 +208,29 @@ export default function QAPage() {
                 {items.length}
               </Badge>
             </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="rounded-lg"
+                onClick={loadItems}
+                disabled={loading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
+                Rafraîchir
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="rounded-lg"
+                onClick={handleSend}
+                disabled={sending}
+              >
+                <Upload className="h-4 w-4 mr-1" />
+                {sending ? "Envoi..." : "Envoyer"}
+              </Button>
+            </div>
           </div>
 
           <div className="mt-6">
@@ -139,17 +241,11 @@ export default function QAPage() {
                   size="sm"
                   variant="outline"
                   className="rounded-lg"
-                  onClick={() => {
-                    setItems([]);
-                    setEditingIndex(null);
-                    setQuestion("");
-                    setAnswer("");
-                  }}
+                  onClick={handleClear}
+                  disabled={items.length === 0}
                 >
+                  <Trash2 className="h-4 w-4 mr-1" />
                   vider
-                </Button>
-                <Button size="sm" className="rounded-lg">
-                  envoyer
                 </Button>
               </div>
 
@@ -159,9 +255,9 @@ export default function QAPage() {
                 </div>
               ) : (
                 <div className="space-y-2.5">
-                  {items.map((item, i) => (
+                  {items.map((item) => (
                     <div
-                      key={i}
+                      key={item.id}
                       className="group rounded-xl border border-border bg-card/60 p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/20"
                     >
                       <div className="flex items-center justify-between gap-4">
@@ -171,12 +267,17 @@ export default function QAPage() {
                           <span className="text-foreground">{`; R:`}</span>
                           <span className="mx-1 text-muted-foreground">{item.answer}</span>
                           <span className="font-semibold text-foreground">{`}`}</span>
+                          {item.registry && (
+                            <span className="ml-2 inline-block text-xs text-muted-foreground/60">
+                              — {item.registry.title}
+                            </span>
+                          )}
                         </div>
                         <div className="flex shrink-0 items-center gap-0.5">
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleEdit(i)}
+                            onClick={() => handleEdit(item)}
                             aria-label="Modifier"
                           >
                             <Pencil className="h-4 w-4" />
@@ -184,7 +285,7 @@ export default function QAPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDelete(i)}
+                            onClick={() => handleDelete(item.id)}
                             aria-label="Supprimer"
                           >
                             <Trash2 className="h-4 w-4" />
