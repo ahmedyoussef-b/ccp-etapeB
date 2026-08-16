@@ -20,6 +20,7 @@ export const MediaRequirementSchema = z.object({
       timestamp: z.boolean().default(false),
     })
     .optional(),
+  capturedUrl: z.string().optional(),
 });
 
 export const AlarmConfigSchema = z.object({
@@ -54,6 +55,7 @@ export const MetadataSchema = z.object({
   estimatedTimeMinutes: z.number().min(1, "La durée estimée doit être supérieure à 0"),
   requiredRoles: z.array(z.string()),
   globalSafetyInstructions: z.array(z.string()),
+  version: z.string().default("1.0").optional(),
 });
 
 export const ProcedureSchema = z.object({
