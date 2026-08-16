@@ -1,13 +1,22 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Pencil, Trash2, RefreshCw, Upload } from "lucide-react";
-import { qrService } from "@/lib/qr/mock-service";
 import type { QAPairWithRegistry } from "@/lib/qr/server-store";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogBody,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 export default function QAPage() {
   const [items, setItems] = useState<QAPairWithRegistry[]>([]);
@@ -16,14 +25,20 @@ export default function QAPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [exportFilename, setExportFilename] = useState("");
+  const lastQuestionRef = useRef("");
+  const lastAnswerRef = useRef("");
 
   const loadItems = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await qrService.getAll();
-      setItems(data);
-    } catch {
-      toast.error("Erreur lors du chargement des Q/R");
+      const res = await fetch("/api/qr");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setItems(data.pairs);
+    } catch (err: unknown) {
+      console.error("[Q/R] loadItems error:", err);
     } finally {
       setLoading(false);
     }
@@ -36,47 +51,68 @@ export default function QAPage() {
   const handleAdd = async () => {
     if (!question.trim() || !answer.trim()) return;
     try {
-      const created = await qrService.create({
-        question: question.trim(),
-        answer: answer.trim(),
+      const res = await fetch("/api/qr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: question.trim(), answer: answer.trim() }),
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const created = await res.json();
       setItems([created, ...items]);
       toast.success("Q/R ajoutée avec succès");
       resetForm();
-    } catch {
+    } catch (err: unknown) {
+      console.error("[Q/R] handleAdd error:", err);
       toast.error("Erreur lors de l'ajout");
     }
   };
 
-  const handleEdit = (item: QAPairWithRegistry) => {
+   const handleEdit = (item: QAPairWithRegistry) => {
     setQuestion(item.question);
     setAnswer(item.answer);
+    lastQuestionRef.current = item.question;
+    lastAnswerRef.current = item.answer;
     setEditingId(item.id);
   };
 
   const handleUpdate = async () => {
-    if (editingId === null) return;
-    if (!question.trim() || !answer.trim()) return;
+    if (editingId === null) {
+      toast.error("Aucun élément sélectionné pour l'édition.");
+      return;
+    }
+    if (!question.trim() || !answer.trim()) {
+      toast.error("La question et la réponse ne peuvent pas être vides.");
+      return;
+    }
     try {
-      const updated = await qrService.update(editingId, {
-        question: question.trim(),
-        answer: answer.trim(),
+      const res = await fetch(`/api/qr/${editingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: question.trim(), answer: answer.trim() }),
       });
-      setItems(items.map((i) => (i.id === editingId ? updated : i)));
-      toast.success("Q/R modifiée");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Erreur serveur ${res.status}`);
+      }
+      const updated = await res.json();
+      setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)));
+      toast.success("Q/R modifiée avec succès");
       resetForm();
-    } catch {
-      toast.error("Erreur lors de la modification");
+    } catch (err: unknown) {
+      console.error("[Q/R] handleUpdate error:", err);
+      toast.error(`Erreur: ${err instanceof Error ? err.message : "Échec de la modification"}`);
     }
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("Supprimer cette Q/R ?")) return;
     try {
-      await qrService.delete(id);
+      const res = await fetch(`/api/qr/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setItems(items.filter((i) => i.id !== id));
       toast.success("Q/R supprimée");
-    } catch {
+    } catch (err: unknown) {
+      console.error("[Q/R] handleDelete error:", err);
       toast.error("Erreur lors de la suppression");
     }
   };
@@ -84,40 +120,54 @@ export default function QAPage() {
   const handleClear = async () => {
     if (!confirm("Tout vider de la base web ?")) return;
     try {
-      await Promise.all(items.map((i) => qrService.delete(i.id)));
+      await Promise.all(
+        items.map((i) => fetch(`/api/qr/${i.id}`, { method: "DELETE" }))
+      );
       setItems([]);
       toast.success("Toutes les Q/R ont été supprimées");
-    } catch {
+    } catch (err: unknown) {
+      console.error("[Q/R] handleClear error:", err);
       toast.error("Erreur");
     }
   };
 
-  const handleSend = async () => {
-    if (!question.trim() || !answer.trim()) {
-      toast.error("Remplissez la question et la réponse");
+  const handleSendClick = () => {
+    if (items.length === 0) {
+      toast.error("Aucune Q/R à envoyer");
       return;
     }
+    const defaultName = `export_qr_${new Date().toISOString().split('T')[0]}`;
+    setExportFilename(defaultName);
+    setIsExportDialogOpen(true);
+  };
+
+  const handleSendConfirm = async () => {
+    setIsExportDialogOpen(false);
+    
+    const finalFilename = exportFilename.trim() || `export_qr_${new Date().toISOString().split('T')[0]}`;
+
     setSending(true);
     try {
-      console.log("[Q/R] handleSend: creating pair in BDD...");
-      const created = await qrService.create({
-        question: question.trim(),
-        answer: answer.trim(),
+      console.log("[Q/R Send] calling POST /api/qr/export for all items");
+      const res = await fetch("/api/qr/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          filename: finalFilename,
+          items: items.map(i => ({ question: i.question, answer: i.answer })),
+          title: finalFilename
+        }),
       });
-      console.log("[Q/R] handleSend: pair created, id =", created.id);
-      setItems([created, ...items]);
-
-      console.log("[Q/R] handleSend: exporting JSON to items/...");
-      const data = await qrService.send({
-        question: question.trim(),
-        answer: answer.trim(),
-      });
-      console.log("[Q/R] handleSend: exported as", data.filename);
-      toast.success(`Q/R collectée dans ${data.filename}`);
-      resetForm();
-    } catch (err) {
-      console.error("[Q/R] handleSend error:", err);
-      toast.error(`Erreur d'export: ${err instanceof Error ? err.message : String(err)}`);
+      const data = await res.json();
+      console.log("[Q/R Send] response:", { ok: res.ok, status: res.status, filename: data.filename });
+      if (!res.ok) {
+        throw new Error(data.error || "Export failed");
+      }
+      toast.success(`Q/R collectées dans ${data.filename}`);
+      loadItems();
+    } catch (err: unknown) {
+      console.error("[Q/R Send] ERROR:", err);
+      toast.error(`Erreur: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setSending(false);
     }
@@ -170,7 +220,10 @@ export default function QAPage() {
                 <Input
                   id="question"
                   value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
+                  onChange={(e) => {
+                    setQuestion(e.target.value);
+                    lastQuestionRef.current = e.target.value;
+                  }}
                   placeholder="Tapez votre question ici..."
                   autoComplete="off"
                 />
@@ -185,13 +238,16 @@ export default function QAPage() {
                 <Input
                   id="answer"
                   value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
+                  onChange={(e) => {
+                    setAnswer(e.target.value);
+                    lastAnswerRef.current = e.target.value;
+                  }}
                   placeholder="Tapez la réponse correspondante..."
                   autoComplete="off"
                 />
               </div>
               <div className="flex gap-3 pt-1">
-                <Button type="submit" className="flex-1">
+                <Button type="button" className="flex-1" onClick={handleSubmit}>
                   {editingId !== null ? "Modifier" : "Ajouter"}
                 </Button>
                 {editingId !== null && (
@@ -235,7 +291,7 @@ export default function QAPage() {
                 type="button"
                 size="sm"
                 className="rounded-lg"
-                onClick={handleSend}
+                onClick={handleSendClick}
                 disabled={sending}
               >
                 <Upload className="h-4 w-4 mr-1" />
@@ -311,6 +367,37 @@ export default function QAPage() {
           </div>
         </div>
       </div>
+
+      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nom du fichier JSON</DialogTitle>
+            <DialogDescription>
+              Choisissez un nom pour votre fichier JSON. Si vous laissez ce champ vide, un nom par défaut sera généré.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogBody>
+            <div className="flex flex-col gap-2">
+              <label htmlFor="filename" className="text-sm font-medium">Nom du fichier</label>
+              <Input 
+                id="filename" 
+                value={exportFilename} 
+                onChange={(e) => setExportFilename(e.target.value)} 
+                placeholder="ex: mon_export_qr"
+                autoFocus
+              />
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Annuler</Button>
+            </DialogClose>
+            <Button onClick={handleSendConfirm} disabled={sending}>
+              {sending ? "Envoi..." : "Envoyer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

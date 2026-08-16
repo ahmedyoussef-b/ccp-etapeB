@@ -16,8 +16,18 @@ function DialogPortal({ ...props }: React.ComponentProps<typeof DialogPrimitive.
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
 
-function DialogClose({ ...props }: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
+function DialogClose({
+  asChild,
+  children,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Close> & { asChild?: boolean }) {
+  if (asChild && React.isValidElement(children)) {
+    return (
+      <DialogPrimitive.Close data-slot="dialog-close" render={children} {...props} />
+    );
+  }
+
+  return <DialogPrimitive.Close data-slot="dialog-close" {...props}>{children}</DialogPrimitive.Close>;
 }
 
 interface DialogPopupProps extends React.ComponentProps<typeof DialogPrimitive.Popup> {

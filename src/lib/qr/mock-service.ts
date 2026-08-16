@@ -80,15 +80,12 @@ export const qrService = {
   async send(item: {
     question: string;
     answer: string;
-  }): Promise<{ filename: string }> {
-    const res = await fetch(`${API_BASE}/export`, {
+  }): Promise<{ filename: string; pairId: number }> {
+    await delay();
+    console.log("[Q/R client] send() calling /api/qr/export");
+    return fetchJson<{ filename: string; pairId: number }>(`${API_BASE}/export`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(item),
     });
-    if (!res.ok) {
-      throw new Error(`API error: ${res.status}`);
-    }
-    return res.json();
   },
 };

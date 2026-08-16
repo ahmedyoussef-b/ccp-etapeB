@@ -260,6 +260,24 @@ export async function getPairById(id: number): Promise<QAPairWithRegistry | null
   );
 }
 
+export async function findPairByQuestion(question: string): Promise<QAPairWithRegistry | null> {
+  return prismaOrFallback(
+    async (prisma) => {
+      const row = await prisma.qAPair.findFirst({
+        where: { question },
+        include: { registry: true },
+        orderBy: { createdAt: "desc" },
+      });
+      return row ? toPairWithRegistryFromPrisma(row) : null;
+    },
+    () => {
+      const pairs = readPairs();
+      const doc = pairs.find((p) => p.question === question);
+      return doc ? toPairWithRegistry(doc) : null;
+    }
+  );
+}
+
 export interface CreatePairInput {
   question: string;
   answer: string;
@@ -426,6 +444,71 @@ export async function exportPairAsJson(
     throw err;
   }
   return filename;
+}
+
+export async function exportPairsAsJson(
+  pairs: { question: string; answer: string }[],
+  filename: string,
+  title?: string
+): Promise<string> {
+  const itemsDir = getItemsDir();
+  if (!fs.existsSync(itemsDir)) {
+    fs.mkdirSync(itemsDir, { recursive: true });
+  }
+
+  let baseName = filename.replace(/\.json$/, '').trim();
+  if (!baseName) {
+    baseName = `export_qr_${new Date().toISOString().replace(/[:.]/g, '-')}`;
+  }
+
+  const fileExt = '.json';
+  const directFilePath = path.join(itemsDir, baseName + fileExt);
+  const dirPath = path.join(itemsDir, baseName);
+
+  let targetFilePath = directFilePath;
+  let targetRelativePath = `items/${baseName}${fileExt}`;
+
+  if (fs.existsSync(dirPath) && fs.statSync(dirPath).isDirectory()) {
+    const files = fs.readdirSync(dirPath);
+    let maxIndex = 0;
+    for (const f of files) {
+      const match = f.match(new RegExp(`^${baseName}_(\\d+)\\.json$`));
+      if (match) {
+        const idx = parseInt(match[1], 10);
+        if (idx > maxIndex) maxIndex = idx;
+      }
+    }
+    const nextIndex = maxIndex + 1;
+    targetFilePath = path.join(dirPath, `${baseName}_${nextIndex}${fileExt}`);
+    targetRelativePath = `items/${baseName}/${baseName}_${nextIndex}${fileExt}`;
+  } else if (fs.existsSync(directFilePath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+    
+    const oldFileNewPath = path.join(dirPath, `${baseName}_1${fileExt}`);
+    fs.renameSync(directFilePath, oldFileNewPath);
+
+    targetFilePath = path.join(dirPath, `${baseName}_2${fileExt}`);
+    targetRelativePath = `items/${baseName}/${baseName}_2${fileExt}`;
+  }
+
+  const registryTitle = title || baseName;
+
+  const doc = {
+    type: "qa" as const,
+    title: registryTitle,
+    description: "",
+    pairs: pairs.map(p => ({ question: p.question, answer: p.answer })),
+    createdAt: new Date().toISOString(),
+    registryPath: targetRelativePath,
+  };
+
+  try {
+    fs.writeFileSync(targetFilePath, JSON.stringify(doc, null, 2), "utf-8");
+  } catch (err) {
+    console.error("[Q/R] exportPairsAsJson FAILED:", err);
+    throw err;
+  }
+  return path.basename(targetFilePath);
 }
 
 export interface ImportResult {
