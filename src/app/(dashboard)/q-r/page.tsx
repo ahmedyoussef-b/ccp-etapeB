@@ -1,3 +1,4 @@
+// src/app/(dashboard)/q-r/page.tsx
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Pencil, Trash2, RefreshCw, Upload } from "lucide-react";
 import type { QAPairWithRegistry } from "@/lib/qr/server-store";
+import { csrfFetch } from "@/lib/procedures/csrf-fetch"; // ✅ Ajout de l'import
 import {
   Dialog,
   DialogContent,
@@ -33,6 +35,7 @@ export default function QAPage() {
   const loadItems = useCallback(async () => {
     setLoading(true);
     try {
+      // ✅ GET - pas besoin de CSRF, on garde fetch standard
       const res = await fetch("/api/qr");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
@@ -51,7 +54,8 @@ export default function QAPage() {
   const handleAdd = async () => {
     if (!question.trim() || !answer.trim()) return;
     try {
-      const res = await fetch("/api/qr", {
+      // ✅ REMPLACÉ : fetch → csrfFetch
+      const res = await csrfFetch("/api/qr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: question.trim(), answer: answer.trim() }),
@@ -67,7 +71,7 @@ export default function QAPage() {
     }
   };
 
-   const handleEdit = (item: QAPairWithRegistry) => {
+  const handleEdit = (item: QAPairWithRegistry) => {
     setQuestion(item.question);
     setAnswer(item.answer);
     lastQuestionRef.current = item.question;
@@ -85,7 +89,8 @@ export default function QAPage() {
       return;
     }
     try {
-      const res = await fetch(`/api/qr/${editingId}`, {
+      // ✅ REMPLACÉ : fetch → csrfFetch
+      const res = await csrfFetch(`/api/qr/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: question.trim(), answer: answer.trim() }),
@@ -107,7 +112,8 @@ export default function QAPage() {
   const handleDelete = async (id: number) => {
     if (!confirm("Supprimer cette Q/R ?")) return;
     try {
-      const res = await fetch(`/api/qr/${id}`, { method: "DELETE" });
+      // ✅ REMPLACÉ : fetch → csrfFetch
+      const res = await csrfFetch(`/api/qr/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setItems(items.filter((i) => i.id !== id));
       toast.success("Q/R supprimée");
@@ -120,8 +126,9 @@ export default function QAPage() {
   const handleClear = async () => {
     if (!confirm("Tout vider de la base web ?")) return;
     try {
+      // ✅ REMPLACÉ : fetch → csrfFetch pour chaque suppression
       await Promise.all(
-        items.map((i) => fetch(`/api/qr/${i.id}`, { method: "DELETE" }))
+        items.map((i) => csrfFetch(`/api/qr/${i.id}`, { method: "DELETE" }))
       );
       setItems([]);
       toast.success("Toutes les Q/R ont été supprimées");
@@ -149,7 +156,8 @@ export default function QAPage() {
     setSending(true);
     try {
       console.log("[Q/R Send] calling POST /api/qr/export for all items");
-      const res = await fetch("/api/qr/export", {
+      // ✅ REMPLACÉ : fetch → csrfFetch
+      const res = await csrfFetch("/api/qr/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

@@ -1,3 +1,4 @@
+// src/components/dashboard/sidebar.tsx
 "use client";
 
 import Link from "next/link";
@@ -8,12 +9,16 @@ import { NexaFlowLogo } from "@/components/brand/nexaflow-logo";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 
+// ✅ Détection de l'environnement
+const isProduction = process.env.NODE_ENV === 'production';
+
 const navItems = [
   { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard, roles: ["admin"] },
   { href: "/chef-de-quart", label: "Mon espace", icon: LayoutDashboard, roles: ["chef-de-quart"] },
   { href: "/chef-de-bloc", label: "Mon espace", icon: LayoutDashboard, roles: ["chef-de-bloc"] },
   { href: "/rondier", label: "Mon espace", icon: LayoutDashboard, roles: ["rondier"] },
-  { href: "/pipeline", label: "Pipeline", icon: GitBranch, roles: ["admin"] },
+  // ✅ Pipeline visible UNIQUEMENT en développement
+  { href: "/pipeline", label: "Pipeline", icon: GitBranch, roles: ["admin"], devOnly: true },
   { href: "/q-r", label: "Q/R", icon: HelpCircle, roles: ["admin"] },
   { href: "/actions-ia", label: "Actions IA", icon: Bot, roles: ["admin"] },
   { href: "/creer-procedure", label: "Créer une procédure", icon: FileText, roles: ["admin", "chef-de-quart"] },
@@ -33,7 +38,14 @@ export function DashboardSidebar({ role }: { role: "admin" | "chef-de-quart" | "
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
-  const items = navItems.filter((item) => item.roles.includes(role));
+  // ✅ Filtrer : rôle + masquer les éléments devOnly en production
+  const items = navItems.filter((item) => {
+    // Vérifier le rôle
+    if (!item.roles.includes(role)) return false;
+    // Masquer les éléments devOnly en production
+    if (item.devOnly && isProduction) return false;
+    return true;
+  });
 
   const isActive = (href: string) => pathname === href || (href !== "/admin" && href !== "/chef-de-quart" && href !== "/chef-de-bloc" && href !== "/rondier" && pathname.startsWith(href));
 
@@ -42,6 +54,11 @@ export function DashboardSidebar({ role }: { role: "admin" | "chef-de-quart" | "
       <div className="flex h-16 items-center gap-3 border-b border-border px-5">
         <NexaFlowLogo className="h-9 w-9" />
         <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">NexaFlow</span>
+        {isProduction && (
+          <span className="ml-auto text-xs font-medium text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">
+            Prod
+          </span>
+        )}
       </div>
 
       <nav className="flex-1 space-y-1 p-3">
@@ -62,6 +79,11 @@ export function DashboardSidebar({ role }: { role: "admin" | "chef-de-quart" | "
             >
               <Icon className={cn("h-4 w-4 transition-colors", active ? "text-primary" : "text-sidebar-foreground/60")} />
               {item.label}
+              {item.devOnly && !isProduction && (
+                <span className="ml-auto text-[10px] font-medium text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded-full">
+                  DEV
+                </span>
+              )}
             </Link>
           );
         })}
@@ -77,6 +99,9 @@ export function DashboardSidebar({ role }: { role: "admin" | "chef-de-quart" | "
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           {theme === "dark" ? "Mode clair" : "Mode sombre"}
         </Button>
+        <div className="mt-2 text-xs text-muted-foreground/50 px-2 text-center">
+          {isProduction ? "🔒 Production" : "🔧 Développement"} · v1.0
+        </div>
       </div>
     </aside>
   );

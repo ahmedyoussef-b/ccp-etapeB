@@ -1,3 +1,4 @@
+//src/app/(dashboard)/pipeline/PipelineClient.tsx
 'use client';
 
 import { DeployPipeline } from '@/components/pipeline/DeployPipeline';
