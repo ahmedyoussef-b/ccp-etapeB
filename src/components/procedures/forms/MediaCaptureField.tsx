@@ -7,7 +7,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { proceduresFR } from "@/lib/i18n/procedures";
 import { TStep } from "@/lib/procedures/services/validator.service";
-import { Paperclip, Video, Mic, Hand, Trash2 } from "lucide-react";
+import {
+  Video,
+  Mic,
+  Hand,
+  Trash2,
+  MapPin,
+  Clock,
+  Camera,
+} from "lucide-react";
+import { MediaCapturePreview } from "./MediaCapturePreview";
 
 interface MediaCaptureFieldProps {
   value: TStep["mediaRequirements"];
@@ -15,7 +24,7 @@ interface MediaCaptureFieldProps {
 }
 
 const mediaTypeIcons: Record<string, React.ReactNode> = {
-  photo: <Paperclip className="h-4 w-4" />,
+  photo: <Camera className="h-4 w-4" />,
   video: <Video className="h-4 w-4" />,
   audio: <Mic className="h-4 w-4" />,
   signature: <Hand className="h-4 w-4" />,
@@ -78,31 +87,62 @@ export function MediaCaptureField({ value, onChange }: MediaCaptureFieldProps) {
         })}
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {value.map((media, index) => (
-          <div key={index} className="flex items-center gap-2 rounded-lg border border-border bg-card p-3">
-            <span className="flex-shrink-0">{mediaTypeIcons[media.type]}</span>
-            <span className="text-sm font-medium flex-1">
-              {proceduresFR.media[media.type]}
-            </span>
-            <div className="flex items-center gap-1">
-              <Checkbox
-                id={`media-mandatory-${index}`}
-                checked={media.mandatory}
-                onCheckedChange={(checked) => updateMedia(index, { mandatory: checked as boolean })}
-              />
-              <Label htmlFor={`media-mandatory-${index}`} className="text-xs text-muted-foreground cursor-pointer">
-                {proceduresFR.media.mandatory}
-              </Label>
+          <div
+            key={index}
+            className="rounded-lg border border-border bg-card p-3 space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="flex-shrink-0">{mediaTypeIcons[media.type]}</span>
+                <span className="text-sm font-medium">
+                  {proceduresFR.media[media.type]}
+                </span>
+                {media.capturedUrl && (
+                  <span className="text-[10px] text-emerald-500 font-medium">
+                    Capturé
+                  </span>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => removeMedia(index)}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1">
+                <Checkbox
+                  id={`media-mandatory-${index}`}
+                  checked={media.mandatory}
+                  onCheckedChange={(checked) =>
+                    updateMedia(index, { mandatory: checked as boolean })
+                  }
+                />
+                <Label
+                  htmlFor={`media-mandatory-${index}`}
+                  className="text-xs text-muted-foreground cursor-pointer"
+                >
+                  {proceduresFR.media.mandatory}
+                </Label>
+              </div>
               <div className="flex items-center gap-1">
                 <Checkbox
                   id={`media-geo-${index}`}
-                  checked={(media.options?.geolocation ?? false)}
+                  checked={media.options?.geolocation ?? false}
                   onCheckedChange={(checked) => {
                     const next = [...value];
-                    const opts = { geolocation: false, timestamp: false, ...next[index].options };
+                    const opts = {
+                      geolocation: false,
+                      timestamp: false,
+                      ...next[index].options,
+                    };
                     next[index] = {
                       ...next[index],
                       options: { ...opts, geolocation: checked as boolean },
@@ -110,17 +150,25 @@ export function MediaCaptureField({ value, onChange }: MediaCaptureFieldProps) {
                     onChange(next);
                   }}
                 />
-                <Label htmlFor={`media-geo-${index}`} className="text-xs text-muted-foreground cursor-pointer">
+                <Label
+                  htmlFor={`media-geo-${index}`}
+                  className="text-xs text-muted-foreground cursor-pointer"
+                >
+                  <MapPin className="h-3 w-3 inline mr-1" />
                   {proceduresFR.media.geolocation}
                 </Label>
               </div>
               <div className="flex items-center gap-1">
                 <Checkbox
                   id={`media-ts-${index}`}
-                  checked={(media.options?.timestamp ?? false)}
+                  checked={media.options?.timestamp ?? false}
                   onCheckedChange={(checked) => {
                     const next = [...value];
-                    const opts = { geolocation: false, timestamp: false, ...next[index].options };
+                    const opts = {
+                      geolocation: false,
+                      timestamp: false,
+                      ...next[index].options,
+                    };
                     next[index] = {
                       ...next[index],
                       options: { ...opts, timestamp: checked as boolean },
@@ -128,20 +176,24 @@ export function MediaCaptureField({ value, onChange }: MediaCaptureFieldProps) {
                     onChange(next);
                   }}
                 />
-                <Label htmlFor={`media-ts-${index}`} className="text-xs text-muted-foreground cursor-pointer">
+                <Label
+                  htmlFor={`media-ts-${index}`}
+                  className="text-xs text-muted-foreground cursor-pointer"
+                >
+                  <Clock className="h-3 w-3 inline mr-1" />
                   {proceduresFR.media.timestamp}
                 </Label>
               </div>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={() => removeMedia(index)}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
+
+            <MediaCapturePreview
+              type={media.type}
+              options={media.options}
+              onCapture={(dataUrl) =>
+                updateMedia(index, { capturedUrl: dataUrl })
+              }
+              capturedUrl={media.capturedUrl}
+            />
           </div>
         ))}
       </div>
