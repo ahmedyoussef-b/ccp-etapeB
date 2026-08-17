@@ -1,0 +1,7 @@
+{
+  "libelle": "VAPEUR PRINCIPALE CR 2",
+  "code": "VVP",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}
