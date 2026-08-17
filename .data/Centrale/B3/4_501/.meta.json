@@ -1,0 +1,7 @@
+{
+  "libelle": "CRITERES ARMEMENT TURBINE",
+  "code": "4_501",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
