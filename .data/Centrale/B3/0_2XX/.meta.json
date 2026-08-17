@@ -1,0 +1,7 @@
+{
+  "libelle": "PROTECTION VOIE 2",
+  "code": "0_2XX",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
