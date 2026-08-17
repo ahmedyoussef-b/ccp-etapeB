@@ -1,0 +1,7 @@
+{
+  "libelle": "REFRI ALTERNATEUR TG 2",
+  "code": "TRA",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}
