@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Pencil, Trash2, RefreshCw, Upload } from "lucide-react";
-import type { QAPairWithRegistry } from "@/lib/qr/server-store";
+import type { QAPairWithRegistry } from "@/lib/qr/client-store";
 import { csrfFetch } from "@/lib/procedures/csrf-fetch"; // ✅ Ajout de l'import
 import {
   Dialog,

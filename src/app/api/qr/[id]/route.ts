@@ -1,18 +1,56 @@
 import { NextResponse } from "next/server";
-import * as store from "@/lib/qr/server-store";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+
+function toPairWithRegistry(p: {
+  id: number;
+  question: string;
+  answer: string;
+  registryId: number;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+  registry: { id: number; title: string; description: string | null } | null;
+}): {
+  id: number;
+  question: string;
+  answer: string;
+  registryId: number;
+  registry: { id: number; title: string; description: string | null };
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+} {
+  return {
+    id: p.id,
+    question: p.question,
+    answer: p.answer,
+    registryId: p.registryId,
+    registry: {
+      id: p.registry?.id ?? 0,
+      title: p.registry?.title ?? "unknown",
+      description: p.registry?.description ?? null,
+    },
+    order: p.order ?? 0,
+    createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
+  };
+}
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id, 10);
     if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
-    const pair = await store.getPairById(id);
+    const pair = await prisma.qAPair.findUnique({
+      where: { id },
+      include: { registry: true },
+    });
     if (!pair) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    return NextResponse.json(pair);
+    return NextResponse.json(toPairWithRegistry(pair));
   } catch (error) {
     console.error("Failed to fetch Q/R pair:", error);
     return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
@@ -25,10 +63,16 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
     const body = await request.json();
-    const pair = await store.updatePair(id, body);
-    if (!pair) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-    return NextResponse.json(pair);
+    const pair = await prisma.qAPair.update({
+      where: { id },
+      data: {
+        ...(body.question && { question: body.question }),
+        ...(body.answer && { answer: body.answer }),
+        ...(body.registryId && { registryId: body.registryId }),
+      },
+      include: { registry: true },
+    });
+    return NextResponse.json(toPairWithRegistry(pair));
   } catch (error) {
     console.error("Failed to update Q/R pair:", error);
     return NextResponse.json({ error: "Failed to update" }, { status: 400 });
@@ -40,9 +84,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     const id = parseInt(params.id, 10);
     if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
-    const deleted = await store.deletePair(id);
-    if (!deleted) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
+    await prisma.qAPair.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete Q/R pair:", error);

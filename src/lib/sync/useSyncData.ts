@@ -1,8 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { db } from '@/lib/db/db';
+import {
+  getFolderByRemoteId,
+  addFolder,
+  updateFolder,
+  getFileByNameAndFolder,
+  addFile,
+} from '@/lib/db/db';
 import type { ApiNode, ApiFolderNode, ApiFileNode } from './types';
-import type { File } from '@/lib/db/db';
 
 async function importTree(nodes: ApiNode[], parentId: number | null): Promise<void> {
   for (const node of nodes) {
@@ -15,18 +20,17 @@ async function importTree(nodes: ApiNode[], parentId: number | null): Promise<vo
 }
 
 async function importFolder(node: ApiFolderNode, parentId: number | null): Promise<void> {
-  const localFolder = await db.folders.where('remoteId').equals(node.id).first();
+  const localFolder = await getFolderByRemoteId(node.id);
 
   let targetFolderId: number;
 
   if (localFolder) {
     targetFolderId = localFolder.id!;
-    await db.folders.update(localFolder.id!, {
+    await updateFolder(localFolder.id!, {
       name: node.name,
-      updatedAt: new Date(),
     });
   } else {
-    targetFolderId = await db.folders.add({
+    targetFolderId = await addFolder({
       remoteId: node.id,
       name: node.name,
       parentId,
@@ -41,11 +45,11 @@ async function importFolder(node: ApiFolderNode, parentId: number | null): Promi
 }
 
 async function importFile(node: ApiFileNode, parentId: number | null): Promise<void> {
-  const existingFile = await findExistingFile(parentId, node.name);
+  const existingFile = await getFileByNameAndFolder(node.name, parentId);
 
   if (existingFile) {
     const { newName } = await generateNextFilename(parentId, node.name);
-    await db.files.add({
+    await addFile({
       remoteId: node.id,
       name: newName,
       folderId: parentId,
@@ -54,7 +58,7 @@ async function importFile(node: ApiFileNode, parentId: number | null): Promise<v
       updatedAt: new Date(),
     });
   } else {
-    await db.files.add({
+    await addFile({
       remoteId: node.id,
       name: node.name,
       folderId: parentId,
@@ -63,11 +67,6 @@ async function importFile(node: ApiFileNode, parentId: number | null): Promise<v
       updatedAt: new Date(),
     });
   }
-}
-
-async function findExistingFile(folderId: number | null, name: string): Promise<File | undefined> {
-  const candidates = await db.files.where('name').equals(name).toArray();
-  return candidates.find(f => f.folderId === folderId);
 }
 
 async function generateNextFilename(folderId: number | null, originalName: string): Promise<{ newName: string }> {
@@ -94,9 +93,8 @@ async function generateNextFilename(folderId: number | null, originalName: strin
     }
     index++;
 
-    const allWithName = await db.files.where('name').equals(candidate).toArray();
-    const conflict = allWithName.some(f => f.folderId === folderId);
-    if (!conflict) break;
+    const existing = await getFileByNameAndFolder(candidate, folderId);
+    if (!existing) break;
   } while (true);
 
   return { newName: candidate };
@@ -115,9 +113,7 @@ export function useSyncData() {
       return data.tree;
     },
     onSuccess: async (tree) => {
-      await db.transaction('rw', [db.folders, db.files], async () => {
-        await importTree(tree, null);
-      });
+      await importTree(tree, null);
       toast.success('Synchronisation terminée avec succès');
       queryClient.invalidateQueries({ queryKey: ['sync'] });
     },

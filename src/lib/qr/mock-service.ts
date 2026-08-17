@@ -1,4 +1,4 @@
-import type { QAPairWithRegistry, QARegistryRecord } from "@/lib/qr/server-store";
+import type { QAPairWithRegistry, QARegistryRecord } from "@/lib/qr/client-store";
 import type { QAResult } from "@/lib/qr/scoring";
 
 const API_BASE = "/api/qr";

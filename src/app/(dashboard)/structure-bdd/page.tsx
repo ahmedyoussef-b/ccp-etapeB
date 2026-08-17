@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 
 import { useSyncData } from "@/lib/sync/useSyncData";
+import { getLocalTree, deleteLocalTreeNode, addFolder, updateFolder, addFile } from "@/lib/db/tree";
+import { clientEngine } from "@/lib/client-engine";
 import { toast } from "sonner";
 
 type LocalNode = {
@@ -267,13 +269,9 @@ export default function StructureBDDPage() {
         setWebTree([]);
       });
 
-    const localPromise = fetch("/api/local-tree")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch local tree");
-        return res.json();
-      })
-      .then((data) => {
-        setLocalTree((data as { tree: LocalNode[] }).tree);
+    const localPromise = getLocalTree()
+      .then((tree) => {
+        setLocalTree(tree);
       })
       .catch((err) => {
         setLocalError(err instanceof Error ? err.message : "Unknown error");
@@ -321,8 +319,8 @@ export default function StructureBDDPage() {
 
     setResettingLocal(true);
     try {
-      const res = await fetch("/api/local-tree/reset", { method: "POST" });
-      if (!res.ok) throw new Error("Failed to reset local tree");
+      await clientEngine.init();
+      await clientEngine.clearAllData();
       await loadTrees();
       toast.success("BDD Locale remise à zéro avec succès");
     } catch (err) {
@@ -341,8 +339,8 @@ export default function StructureBDDPage() {
 
     setClearingData(true);
     try {
-      const res = await fetch("/api/local-tree/clear", { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to clear .data");
+      await clientEngine.init();
+      await clientEngine.clearAllData();
       await loadTrees();
       toast.success("Contenu de .data supprimé");
     } catch (err) {
@@ -398,10 +396,13 @@ export default function StructureBDDPage() {
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`/api/local-tree/nodes/${encodeURIComponent(node.id as string)}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete node");
-      await loadTrees();
-      toast.success("Nœud supprimé");
+      const idStr = node.id as string;
+      const numericId = parseInt(idStr.replace(/^(folder|file)-/, ""), 10);
+      if (!isNaN(numericId)) {
+        await deleteLocalTreeNode(numericId);
+        await loadTrees();
+        toast.success("Nœud supprimé");
+      }
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : "Delete failed");
       toast.error("Erreur lors de la suppression");
@@ -434,12 +435,29 @@ export default function StructureBDDPage() {
         });
         if (!res.ok) throw new Error("Failed to add node");
       } else {
-        const res = await fetch(`/api/local-tree/nodes/${encodeURIComponent(addingNode.parentId as string)}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: newNodeName, type: newNodeType }),
-        });
-        if (!res.ok) throw new Error("Failed to add node");
+        const parentIdStr = addingNode.parentId as string;
+        const parentId = parseInt(parentIdStr.replace(/^(folder|file)-/, ""), 10);
+        if (isNaN(parentId)) {
+          throw new Error("Invalid parent ID");
+        }
+        if (newNodeType === "directory") {
+          await addFolder({
+            remoteId: `local-${Date.now()}`,
+            name: newNodeName,
+            parentId,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        } else {
+          await addFile({
+            remoteId: `local-${Date.now()}`,
+            name: newNodeName,
+            folderId: parentId,
+            size: 0,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+        }
       }
 
       setAddingNode(null);
@@ -479,12 +497,11 @@ export default function StructureBDDPage() {
         });
         if (!res.ok) throw new Error("Failed to rename node");
       } else {
-        const res = await fetch(`/api/local-tree/nodes/${encodeURIComponent(renamingNode.id as string)}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ newName: renameValue }),
-        });
-        if (!res.ok) throw new Error("Failed to rename node");
+        const idStr = renamingNode.id as string;
+        const numericId = parseInt(idStr.replace(/^(folder|file)-/, ""), 10);
+        if (!isNaN(numericId) && idStr.startsWith("folder-")) {
+          await updateFolder(numericId, { name: renameValue });
+        }
       }
 
       setRenamingNode(null);
@@ -511,10 +528,16 @@ export default function StructureBDDPage() {
     if (!editingFile) return;
 
     try {
-      const res = await fetch(`/api/local-tree/edit/${encodeURIComponent(editingFile.path)}`, {
+      if (editingFile.tree === "local") {
+        toast.message("Édition locale désactivée", { description: "L'édition de fichiers locaux n'est plus disponible via l'API." });
+        setEditingFile(null);
+        setEditContent("");
+        return;
+      }
+      const res = await fetch(`/api/tree/nodes/${editingFile.path}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: editContent }),
+        body: JSON.stringify({ metadata: editContent }),
       });
       if (!res.ok) throw new Error("Failed to edit file");
 
@@ -599,23 +622,12 @@ export default function StructureBDDPage() {
       return;
     }
 
-    // BDD Locale: read the physical file
-    const localPath = node.path;
-    setPreviewingFile({ path: localPath, name: node.name, tree: "local" });
+    // BDD Locale: preview disabled (no server API)
+    toast.message("Aperçu local désactivé", { description: "L'aperçu de fichiers locaux n'est plus disponible via l'API." });
+    setPreviewingFile(null);
     setPreviewData(null);
-    setPreviewLoading(true);
-
-    try {
-      const res = await fetch(`/api/local-tree/view/${encodeURIComponent(localPath)}`);
-      if (!res.ok) throw new Error("Failed to load file");
-      const data = await res.json();
-      setPreviewData(data);
-    } catch {
-      toast.error("Erreur lors du chargement du fichier");
-      setPreviewingFile(null);
-    } finally {
-      setPreviewLoading(false);
-    }
+    setPreviewLoading(false);
+    return;
   };
 
   const visibleWebTree = filterWebTree(webTree);
@@ -899,14 +911,14 @@ export default function StructureBDDPage() {
                           link.click();
                           document.body.removeChild(link);
                           URL.revokeObjectURL(url);
-                        } else {
-                          const link = document.createElement("a");
-                          link.href = previewData.dataUrl || `/api/local-tree/view/${encodeURIComponent(previewingFile?.path || "")}`;
-                          link.download = previewingFile?.name || "file";
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }
+                         } else {
+                           const link = document.createElement("a");
+                           link.href = previewData.dataUrl || "#";
+                           link.download = previewingFile?.name || "file";
+                           document.body.appendChild(link);
+                           link.click();
+                           document.body.removeChild(link);
+                         }
                       }}
                     >
                       <Download className="h-4 w-4 mr-2" />
@@ -940,14 +952,14 @@ export default function StructureBDDPage() {
                            variant="outline"
                            size="sm"
                            className="mt-4"
-                           onClick={() => {
-                             const link = document.createElement("a");
-                             link.href = previewData.dataUrl || `/api/local-tree/view/${encodeURIComponent(previewingFile?.path || "")}`;
-                             link.download = previewingFile?.name || "file";
-                             document.body.appendChild(link);
-                             link.click();
-                             document.body.removeChild(link);
-                           }}
+                            onClick={() => {
+                              const link = document.createElement("a");
+                              link.href = previewData.dataUrl || "#";
+                              link.download = previewingFile?.name || "file";
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }}
                          >
                            <Download className="h-4 w-4 mr-2" />
                            Télécharger
@@ -958,19 +970,19 @@ export default function StructureBDDPage() {
                     <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                       <FileText className="h-12 w-12 mb-2" />
                       <p className="text-sm">Aperçu non disponible pour ce type de fichier</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-4"
-                        onClick={() => {
-                          const link = document.createElement("a");
-                          link.href = `/api/local-tree/view/${encodeURIComponent(previewingFile?.path || "")}`;
-                          link.download = previewingFile?.name || "file";
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }}
-                      >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-4"
+                          onClick={() => {
+                            const link = document.createElement("a");
+                            link.href = "#";
+                            link.download = previewingFile?.name || "file";
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                        >
                         <Download className="h-4 w-4 mr-2" />
                         Télécharger
                       </Button>

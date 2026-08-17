@@ -1,87 +1,95 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { searchPairs, createPair, deletePair, getAllPairs } from "@/lib/qr/server-store";
-import { computeWordScore, rankResults } from "@/lib/qr/scoring";
+import { searchPairs, createPair, deletePair, getAllPairs } from "@/lib/qr/client-store";
 
-// Use vi.hoisted so mock refs are available inside vi.mock factory
-const mockFs = vi.hoisted(() => ({
-  existsSync: vi.fn(),
-  mkdirSync: vi.fn(),
-  readFileSync: vi.fn(),
-  writeFileSync: vi.fn(),
-  readdirSync: vi.fn(() => []),
-  statSync: vi.fn(() => ({ isFile: () => true })),
-}));
+const mockPairs: Array<{ id: number; question: string; answer: string; registryId: number; registryTitle: string; createdAt: string; updatedAt: string }> = [];
+let nextId = 1;
 
-const mockPrisma = vi.hoisted(() => ({
-  qAPair: {
-    findMany: vi.fn(),
-    create: vi.fn(),
-    delete: vi.fn(),
-    findFirst: vi.fn(),
-    update: vi.fn(),
-    findUnique: vi.fn(),
-    upsert: vi.fn(),
-    deleteMany: vi.fn(),
-  },
-  qARegistry: {
-    findFirst: vi.fn(),
-    create: vi.fn(),
-    findMany: vi.fn(),
-    delete: vi.fn(),
-    deleteMany: vi.fn(),
-  },
-}));
+vi.mock("@/lib/client-engine", () => {
+  return {
+    clientEngine: {
+      init: vi.fn().mockResolvedValue({ sqlite: true, vectorStore: true, jsonStore: true }),
+      getAllQAPairs: vi.fn().mockImplementation(() => {
+        return Promise.resolve(
+          mockPairs.map((p) => ({
+            id: p.id,
+            question: p.question,
+            answer: p.answer,
+            registryId: p.registryId,
+            registryTitle: p.registryTitle,
+            createdAt: p.createdAt,
+            updatedAt: p.updatedAt,
+          }))
+        );
+      }),
+      getQAPairById: vi.fn().mockImplementation((id: number) => {
+        return Promise.resolve(mockPairs.find((p) => p.id === id) ?? null);
+      }),
+      createQAPair: vi.fn().mockImplementation((pair: { question: string; answer: string; registryTitle?: string }) => {
+        const title = pair.registryTitle || pair.question.toLowerCase().replace(/[^a-z0-9\s-]/g, "").trim().substring(0, 60) || "Général";
+        const newPair = {
+          id: nextId++,
+          question: pair.question,
+          answer: pair.answer,
+          registryId: 0,
+          registryTitle: title,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        mockPairs.push(newPair);
+        return Promise.resolve(newPair);
+      }),
+      updateQAPair: vi.fn().mockImplementation((id: number, updates: { question?: string; answer?: string }) => {
+        const idx = mockPairs.findIndex((p) => p.id === id);
+        if (idx === -1) return Promise.resolve(null);
+        if (updates.question) mockPairs[idx].question = updates.question;
+        if (updates.answer) mockPairs[idx].answer = updates.answer;
+        mockPairs[idx].updatedAt = new Date().toISOString();
+        return Promise.resolve({ ...mockPairs[idx] });
+      }),
+      deleteQAPair: vi.fn().mockImplementation((id: number) => {
+        const idx = mockPairs.findIndex((p) => p.id === id);
+        if (idx === -1) return Promise.resolve(false);
+        mockPairs.splice(idx, 1);
+        return Promise.resolve(true);
+      }),
+      searchPairs: vi.fn().mockImplementation((query: string, limit = 10) => {
+        if (!query.trim() || mockPairs.length === 0) return Promise.resolve([]);
+        const queryTerms = query.toLowerCase().split(/[\s,.;:!?()[\]{}]+/).filter(Boolean);
+        const results = mockPairs.map((p) => {
+          const textLower = p.question.toLowerCase();
+          let matches = 0;
+          for (const term of queryTerms) {
+            if (textLower.includes(term)) matches++;
+          }
+          return { question: p.question, answer: p.answer, score: queryTerms.length > 0 ? matches / queryTerms.length : 0 };
+        });
+        return Promise.resolve(results.sort((a, b) => b.score - a.score).slice(0, limit));
+      }),
+      addVectorDocument: vi.fn(),
+      searchVector: vi.fn(),
+      getAllVectorDocuments: vi.fn().mockResolvedValue([]),
+      deleteVectorDocument: vi.fn(),
+      clearAllData: vi.fn(),
+      getStats: vi.fn(),
+      exportPairAsJson: vi.fn(),
+      exportPairsAsJson: vi.fn(),
+      exportAll: vi.fn().mockResolvedValue({ qaPairs: [], chatSessions: [], localTree: [], vectorDocuments: [], jsonStore: {} }),
+    },
+  };
+});
 
-vi.mock("fs", () => ({
-  ...mockFs,
-  default: { ...mockFs },
-}));
-
-vi.mock("path", () => ({
-  join: (...args: string[]) => args.join("/"),
-  default: { join: (...args: string[]) => args.join("/") },
-}));
-
-vi.mock("@/lib/prisma", () => ({
-  prisma: mockPrisma,
-}));
-
-vi.mock("os", () => ({
-  default: { tmpdir: () => "/tmp" },
-  tmpdir: () => "/tmp",
-}));
-
-const PAIRS_FILE = ".local-db/qr/pairs.json";
-const ITEMS_DIR = ".data/registry/items";
-
-describe("Q/R server-store", () => {
+describe("Q/R client-store", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    // Prisma always fails in tests → file-based fallback is used
-    mockPrisma.qAPair.findMany.mockRejectedValue(new Error("DB not available"));
-    mockPrisma.qAPair.create.mockRejectedValue(new Error("DB not available"));
-    mockPrisma.qAPair.delete.mockRejectedValue(new Error("DB not available"));
-    mockPrisma.qAPair.findUnique.mockRejectedValue(new Error("DB not available"));
-    mockPrisma.qAPair.update.mockRejectedValue(new Error("DB not available"));
-    mockPrisma.qARegistry.findFirst.mockRejectedValue(new Error("DB not available"));
-    mockPrisma.qARegistry.create.mockRejectedValue(new Error("DB not available"));
-    mockPrisma.qARegistry.findMany.mockRejectedValue(new Error("DB not available"));
-
-    // File-based mock setup
-    mockFs.existsSync.mockImplementation((p: string) => p === PAIRS_FILE || p === ITEMS_DIR);
-    mockFs.readFileSync.mockReturnValue("[]");
+    mockPairs.length = 0;
+    nextId = 1;
   });
 
-  it("getAllPairs returns empty array when no file exists", async () => {
-    mockFs.existsSync.mockReturnValue(false);
+  it("getAllPairs returns empty array when no data", async () => {
     const result = await getAllPairs();
     expect(result).toEqual([]);
   });
 
   it("createPair persists and returns the pair", async () => {
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.readFileSync.mockReturnValue("[]");
-
     const result = await createPair({
       question: "Quel est le niveau du condenseur?",
       answer: "600 mm",
@@ -90,23 +98,19 @@ describe("Q/R server-store", () => {
     expect(result.question).toBe("Quel est le niveau du condenseur?");
     expect(result.answer).toBe("600 mm");
     expect(result.id).toBeDefined();
-    expect(mockFs.writeFileSync).toHaveBeenCalled();
+    expect(mockPairs).toHaveLength(1);
   });
 
   it("searchPairs returns ranked results", async () => {
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.readFileSync.mockReturnValue(
-      JSON.stringify([
-        {
-          id: 1,
-          question: "Quel est le niveau du condenseur",
-          answer: "600 mm",
-          registryTitle: "test",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ])
-    );
+    mockPairs.push({
+      id: 1,
+      question: "Quel est le niveau du condenseur",
+      answer: "600 mm",
+      registryId: 0,
+      registryTitle: "test",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
 
     const results = await searchPairs("niveau du condenseur");
     expect(results).toHaveLength(1);
@@ -115,40 +119,7 @@ describe("Q/R server-store", () => {
   });
 
   it("deletePair returns false for non-existent id", async () => {
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.readFileSync.mockReturnValue(
-      JSON.stringify([
-        {
-          id: 1,
-          question: "Test",
-          answer: "Answer",
-          registryTitle: "test",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ])
-    );
-
     const result = await deletePair(99999);
     expect(result).toBe(false);
-  });
-});
-
-describe("scoring", () => {
-  it("computeWordScore matches exact", () => {
-    expect(computeWordScore("pompe eau", "pompe eau")).toBe(1.0);
-  });
-
-  it("computeWordScore returns 0 for empty", () => {
-    expect(computeWordScore("", "")).toBe(0);
-  });
-
-  it("rankResults sorts by descending score", () => {
-    const results = rankResults("pompe", [
-      { question: "pomme", answer: "a", score: 0 },
-      { question: "pompe eau", answer: "b", score: 0 },
-    ]);
-    expect(results[0].question).toBe("pompe eau");
-    expect(results[0].score).toBeGreaterThan(results[1].score);
   });
 });

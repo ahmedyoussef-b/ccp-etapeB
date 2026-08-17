@@ -376,6 +376,104 @@ export class ClientEngine {
     return { pairs, sessions, documents: vectorStats.documentCount, chunks: vectorStats.chunkCount };
   }
 
+  async exportAll(): Promise<{
+    qaPairs: Array<{ id: number; question: string; answer: string; registryId: number; registryTitle: string; createdAt: string; updatedAt: string }>;
+    chatSessions: Array<{ id: string; title: string | null; messages: Array<{ role: string; content: string }>; createdAt: string; updatedAt: string }>;
+    localTree: Array<{ id: number; remoteId: string; name: string; type: string; parentId: number | null; path: string; size: number | undefined; createdAt: string; updatedAt: string }>;
+    vectorDocuments: Array<{ id: string; name: string; originalPath: string; relativePath: string; chunks: Array<{ documentId: string; documentName: string; chunkIndex: number; content: string; embedding: number[]; metadata?: Record<string, unknown> }>; metadata: Record<string, unknown> }>;
+    jsonStore: Record<string, unknown>;
+  }> {
+    const db = getDb();
+    let qaPairs: Array<{ id: number; question: string; answer: string; registryId: number; registryTitle: string; createdAt: string; updatedAt: string }> = [];
+    let chatSessions: Array<{ id: string; title: string | null; messages: Array<{ role: string; content: string }>; createdAt: string; updatedAt: string }> = [];
+    let localTree: Array<{ id: number; remoteId: string; name: string; type: string; parentId: number | null; path: string; size: number | undefined; createdAt: string; updatedAt: string }> = [];
+
+    if (db) {
+      try {
+        const qaRows = await query<QAPairRow & { registry_title: string }>(`
+          SELECT qa_pairs.*, qa_registries.title as registry_title
+          FROM qa_pairs
+          LEFT JOIN qa_registries ON qa_pairs.registry_id = qa_registries.id
+          ORDER BY qa_pairs.created_at DESC
+        `);
+        qaPairs = qaRows.map((row) => ({
+          id: row.id,
+          question: row.question,
+          answer: row.answer,
+          registryId: row.registry_id,
+          registryTitle: row.registry_title || 'Général',
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        }));
+      } catch {
+        // ignore
+      }
+
+      try {
+        const sessionRows = await query<ChatSessionRow>('SELECT * FROM chat_sessions ORDER BY updated_at DESC');
+        chatSessions = sessionRows.map((row) => ({
+          id: row.id,
+          title: row.title,
+          messages: JSON.parse(row.messages || '[]'),
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        }));
+      } catch {
+        // ignore
+      }
+
+      try {
+        const treeRows = await query<{ id: number; remote_id: string; name: string; type: string; parent_id: number | null; path: string; size: number | null; created_at: string; updated_at: string }>(`
+          SELECT * FROM local_tree ORDER BY created_at DESC
+        `);
+        localTree = treeRows.map((row) => ({
+          id: row.id,
+          remoteId: row.remote_id,
+          name: row.name,
+          type: row.type,
+          parentId: row.parent_id,
+          path: row.path,
+          size: row.size ?? undefined,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        }));
+      } catch {
+        // ignore
+      }
+    }
+
+    let vectorDocuments: Array<{ id: string; name: string; originalPath: string; relativePath: string; chunks: Array<{ documentId: string; documentName: string; chunkIndex: number; content: string; embedding: number[]; metadata?: Record<string, unknown> }>; metadata: Record<string, unknown> }> = [];
+    try {
+      const docs = await getAllDocuments();
+      vectorDocuments = docs.map((doc) => ({
+        id: doc.id,
+        name: doc.name,
+        originalPath: doc.originalPath,
+        relativePath: doc.relativePath,
+        chunks: doc.chunks.map((chunk) => ({
+          documentId: chunk.documentId,
+          documentName: chunk.documentName,
+          chunkIndex: chunk.chunkIndex,
+          content: chunk.content,
+          embedding: chunk.embedding,
+          metadata: chunk.metadata,
+        })),
+        metadata: doc.metadata,
+      }));
+    } catch {
+      // ignore
+    }
+
+    let jsonStore: Record<string, unknown> = {};
+    try {
+      jsonStore = await jsonGetAll();
+    } catch {
+      // ignore
+    }
+
+    return { qaPairs, chatSessions, localTree, vectorDocuments, jsonStore };
+  }
+
   async exportPairAsJson(pair: { question: string; answer: string }, title?: string): Promise<string> {
     const documents = await getAllDocuments();
     const existingNames = new Set(documents.map((d) => d.name));

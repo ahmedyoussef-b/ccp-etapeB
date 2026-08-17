@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createPair } from "@/lib/qr/server-store";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -10,7 +10,6 @@ export async function POST(request: Request) {
 
     if (body.items && body.filename) {
       console.log(`[Q/R export] exporting ${body.items.length} items to ${body.filename} (Web DB)`);
-      const { prisma } = await import("@/lib/prisma");
 
       const baseName = body.filename.replace(/\.json$/, '').trim() || `export_qr_${new Date().toISOString().replace(/[:.]/g, '-')}`;
       const fileExt = '.json';
@@ -25,7 +24,6 @@ export async function POST(request: Request) {
         registryPath: `items/${finalName}`,
       };
 
-      // Ensure "registry" and "items" folders exist in Web DB under the root node
       const rootNode = await prisma.treeNode.findFirst({ where: { type: "root" } });
       const rootId = rootNode ? rootNode.id : null;
 
@@ -43,13 +41,11 @@ export async function POST(request: Request) {
       finalName = baseName + fileExt;
       let registryPath = `items/${finalName}`;
 
-      // Check if a directory for this name already exists
       let groupFolder = await prisma.treeNode.findFirst({
         where: { name: baseName, type: "directory", parentId: itemsFolder.id }
       });
 
       if (groupFolder) {
-        // Third time or more: directory already exists
         targetParentId = groupFolder.id;
         let counter = 1;
         while (await prisma.treeNode.findFirst({ where: { name: `${baseName}_${counter}${fileExt}`, type: "file", parentId: targetParentId } })) {
@@ -58,32 +54,27 @@ export async function POST(request: Request) {
         finalName = `${baseName}_${counter}${fileExt}`;
         registryPath = `items/${baseName}/${finalName}`;
       } else {
-        // Check if a file with this name already exists in the root itemsFolder
         const existingFile = await prisma.treeNode.findFirst({
           where: { name: finalName, type: "file", parentId: itemsFolder.id }
         });
 
         if (existingFile) {
-          // Second time: duplication!
-          // 1. Create the group folder
           groupFolder = await prisma.treeNode.create({
             data: { name: baseName, type: "directory", parentId: itemsFolder.id }
           });
-          
-          // 2. Move and rename the existing file to index 1
+
           const oldName = `${baseName}_1${fileExt}`;
           let oldDoc = {};
           try { oldDoc = JSON.parse(existingFile.metadata || "{}"); } catch {}
           await prisma.treeNode.update({
             where: { id: existingFile.id },
-            data: { 
-              name: oldName, 
+            data: {
+              name: oldName,
               parentId: groupFolder.id,
               metadata: JSON.stringify({ ...oldDoc, registryPath: `items/${baseName}/${oldName}` })
             }
           });
 
-          // 3. Set target for the new file to index 2
           targetParentId = groupFolder.id;
           finalName = `${baseName}_2${fileExt}`;
           registryPath = `items/${baseName}/${finalName}`;
@@ -104,13 +95,25 @@ export async function POST(request: Request) {
 
     console.log("[Q/R export] received:", { q: body.question?.slice(0, 30), a: body.answer?.slice(0, 30) });
 
-    // 1. Save to web DB (Prisma or file fallback)
-    const pair = await createPair({
-      question: body.question,
-      answer: body.answer,
-    });
-    console.log("[Q/R export] pair created in DB, id =", pair.id);
+    const title = body.registryTitle || body.question?.toLowerCase().replace(/[^a-z0-9\s-]/g, "").trim().substring(0, 60) || "Général";
+    let registry = await prisma.qARegistry.findFirst({ where: { title } });
+    if (!registry) {
+      registry = await prisma.qARegistry.create({
+        data: { title, description: body.registryDescription ?? null },
+      });
+    }
 
+    const pair = await prisma.qAPair.create({
+      data: {
+        question: body.question.trim(),
+        answer: body.answer.trim(),
+        order: 0,
+        registryId: registry.id,
+      },
+      include: { registry: true },
+    });
+
+    console.log("[Q/R export] pair created in DB, id =", pair.id);
     return NextResponse.json({ success: true, pairId: pair.id }, { status: 201 });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);

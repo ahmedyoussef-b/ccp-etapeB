@@ -3,20 +3,39 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
-import { useSyncData } from '@/lib/sync/useSyncData';
+import { clientEngine } from '@/lib/client-engine';
 
 export function SyncButton() {
-  const { sync, isSyncing, error } = useSyncData();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSync = async () => {
     setShowSuccess(false);
+    setError(null);
+    setIsSyncing(true);
+
     try {
-      await sync();
+      await clientEngine.init();
+      const payload = await clientEngine.exportAll();
+
+      const response = await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || `Sync failed: ${response.status}`);
+      }
+
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-    } catch {
-      // Error is handled by the hook via toast
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sync failed');
+    } finally {
+      setIsSyncing(false);
     }
   };
 

@@ -1,5 +1,4 @@
-import { db } from '@/lib/db/db';
-import type { Folder, File } from '@/lib/db/db';
+import { getAllFolders, getAllFiles, deleteLocalTreeNode, addFolder, updateFolder, addFile } from '@/lib/db/db';
 
 export interface LocalTreeNode {
   id: string;
@@ -9,18 +8,12 @@ export interface LocalTreeNode {
   createdAt: string;
   updatedAt: string;
   size?: number;
-}
-
-async function getLocalFolders(): Promise<Folder[]> {
-  return db.folders.orderBy('updatedAt').reverse().toArray();
-}
-
-async function getLocalFiles(): Promise<File[]> {
-  return db.files.orderBy('updatedAt').reverse().toArray();
+  path: string;
 }
 
 export async function getLocalTree(): Promise<LocalTreeNode[]> {
-  const [folders, files] = await Promise.all([getLocalFolders(), getLocalFiles()]);
+  const folders = await getAllFolders();
+  const files = await getAllFiles();
 
   const folderMap = new Map<number, LocalTreeNode>();
   const roots: LocalTreeNode[] = [];
@@ -33,6 +26,7 @@ export async function getLocalTree(): Promise<LocalTreeNode[]> {
       children: [],
       createdAt: folder.createdAt.toISOString(),
       updatedAt: folder.updatedAt.toISOString(),
+      path: folder.path ?? "",
     });
   }
 
@@ -45,6 +39,7 @@ export async function getLocalTree(): Promise<LocalTreeNode[]> {
       createdAt: file.createdAt.toISOString(),
       updatedAt: file.updatedAt.toISOString(),
       size: file.size,
+      path: file.path ?? "",
     };
 
     if (file.folderId && folderMap.has(file.folderId)) {
@@ -66,3 +61,5 @@ export async function getLocalTree(): Promise<LocalTreeNode[]> {
 
   return roots;
 }
+
+export { deleteLocalTreeNode, addFolder, updateFolder, addFile };
