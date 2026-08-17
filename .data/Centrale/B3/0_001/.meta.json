@@ -1,0 +1,7 @@
+{
+  "libelle": "TEMPERATURES",
+  "code": "0_001",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
