@@ -1,0 +1,7 @@
+{
+  "libelle": "EVACUATION ENERGIE ALTR TV",
+  "code": "GEV",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
