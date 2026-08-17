@@ -1,0 +1,7 @@
+{
+  "libelle": "CONTROL ANALOGIQUE POSTE D'EAU",
+  "code": "ARG",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
