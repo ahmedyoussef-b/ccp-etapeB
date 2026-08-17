@@ -34,30 +34,11 @@ export function middleware(request: NextRequest): NextResponse {
   const method = request.method;
   const isProduction = process.env.NODE_ENV === 'production';
 
-  // ============================================
-  // RÈGLE 1 : Pipeline - Bloquer en production
-  // ============================================
-  if (pathname.startsWith("/api/pipeline") || pathname.startsWith("/pipeline")) {
-    if (isProduction) {
-      logger.warn(`Pipeline bloqué en production: ${method} ${pathname}`);
-      // Rediriger vers la page d'accueil
-      if (pathname.startsWith("/pipeline")) {
-        return NextResponse.redirect(new URL("/", request.url));
-      }
-      return NextResponse.json(
-        { error: "Pipeline non disponible en production" },
-        { status: 403 }
-      );
-    }
-    
-    // En développement, autoriser avec log
-    logger.info(`Pipeline autorisé en développement: ${method} ${pathname}`);
-    return NextResponse.next();
-  }
-
-  // ============================================
-  // RÈGLE 2 : Routes protégées par CSRF
-  // ============================================
+  // ============================================================
+  // RÈGLE 1 : Routes protégées par CSRF
+  // (le pipeline reste accessible en production — il sert
+  //  d'interface de contrôle pour le déploiement)
+  // ============================================================
   const isProcedures = pathname.startsWith("/api/procedures");
   const isImages = pathname.startsWith("/api/images");
   const isQr = pathname.startsWith("/api/qr");
@@ -71,7 +52,7 @@ export function middleware(request: NextRequest): NextResponse {
   }
 
   // ============================================
-  // RÈGLE 3 : Images - Auth par rôle
+  // RÈGLE 2 : Images - Auth par rôle
   // ============================================
   if (isImages && method !== "GET") {
     const role = request.cookies.get("role")?.value;
@@ -87,7 +68,7 @@ export function middleware(request: NextRequest): NextResponse {
   }
 
   // ============================================
-  // RÈGLE 4 : Procédures, QR, Réunions - Auth + CSRF
+  // RÈGLE 3 : Procédures, QR, Réunions - Auth + CSRF
   // ============================================
   if (method !== "GET") {
     const role = request.cookies.get("role")?.value;
@@ -124,7 +105,7 @@ export function middleware(request: NextRequest): NextResponse {
   }
 
   // ============================================
-  // RÈGLE 5 : GET - Génération du token CSRF
+  // RÈGLE 4 : GET - Génération du token CSRF
   // ============================================
   if (method === "GET") {
     logger.info(`[GET] ${pathname} - Génération du token CSRF`);
@@ -157,7 +138,5 @@ export const config = {
     "/api/qr/:path*",
     "/api/meetings/:path*",
     "/api/presence/:path*",
-    "/api/pipeline/:path*",
-    "/pipeline/:path*",
   ],
 };

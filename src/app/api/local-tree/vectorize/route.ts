@@ -348,10 +348,49 @@ async function vectorizeLocalTree(): Promise<{
   return { mirrored, stats };
 }
 
+export async function GET() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      return NextResponse.json(
+        { status: "no-local-data", message: "Local data directory not found on this environment" },
+        { status: 200 }
+      );
+    }
+
+    const metadataPath = path.join(DATA_DIR, "vector-metadata.json");
+    if (fs.existsSync(metadataPath)) {
+      const metadata = JSON.parse(fs.readFileSync(metadataPath, "utf-8"));
+      return NextResponse.json({ status: "ok", ...metadata });
+    }
+
+    return NextResponse.json({ status: "not-vectorized", message: "Vectorization has not been run yet" });
+  } catch (error) {
+    console.error("Failed to check vectorize status:", error);
+    return NextResponse.json(
+      { status: "error", error: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST() {
   try {
     if (!fs.existsSync(DATA_DIR)) {
-      return NextResponse.json({ error: "Local data directory not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Local data directory not found", status: "no-local-data" },
+        { status: 200 }
+      );
+    }
+
+    const apiKey = process.env.GOOGLE_GENAI_API_KEY;
+    if (isPlaceholderKey(apiKey)) {
+      return NextResponse.json(
+        {
+          error: "GOOGLE_GENAI_API_KEY is not configured or is a placeholder. Please set a real API key in .env.local.",
+          status: "no-api-key",
+        },
+        { status: 200 }
+      );
     }
 
     const startTime = Date.now();
@@ -365,6 +404,12 @@ export async function POST() {
       status: stats.errors.length === 0 ? "completed" : "completed_with_errors",
     };
     fs.writeFileSync(METADATA_FILE, JSON.stringify(metadata, null, 2));
+    const vectorMetadataPath = path.join(DATA_DIR, "vector-metadata.json");
+    try {
+      fs.writeFileSync(vectorMetadataPath, JSON.stringify({ ...metadata, duration: `${duration}s` }, null, 2));
+    } catch {
+      // ignore write errors for status file
+    }
 
     let existingIndex: { version: string; documents: unknown[]; embeddings: unknown[]; lastIndexed?: string };
     if (fs.existsSync(INDEX_FILE)) {
