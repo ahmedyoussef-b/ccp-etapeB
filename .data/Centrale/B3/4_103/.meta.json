@@ -1,0 +1,7 @@
+{
+  "libelle": "DECLENCHEMENT PROTECTION 1",
+  "code": "4_103",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
