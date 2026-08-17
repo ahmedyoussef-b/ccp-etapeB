@@ -1,0 +1,7 @@
+{
+  "libelle": "GRAISSAGE ALTERNATEUR ET TG 2",
+  "code": "TGR",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}
