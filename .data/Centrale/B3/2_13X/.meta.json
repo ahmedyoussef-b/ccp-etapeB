@@ -1,0 +1,7 @@
+{
+  "libelle": "CTRL CHARGE",
+  "code": "2_13X",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
