@@ -1,0 +1,50 @@
+[
+  {
+    "id": "doc-welcome",
+    "name": "welcome.txt",
+    "originalPath": "welcome.txt",
+    "relativePath": "welcome.txt",
+    "metadata": {
+      "title": "Bienvenue",
+      "description": "Guide de bienvenue NexaFlow"
+    },
+    "chunks": [
+      {
+        "index": 0,
+        "content": "Bienvenue sur NexaFlow. Cette plateforme vous permet de gérer des procédures, de collaborer en équipe et d'utiliser un assistant IA pour répondre à vos questions.",
+        "embedding": [],
+        "metadata": {}
+      },
+      {
+        "index": 1,
+        "content": "Pour commencer, créez votre première procédure depuis l'onglet dédié, ou explorez la section Q/R pour ajouter des paires questions/réponses.",
+        "embedding": [],
+        "metadata": {}
+      }
+    ]
+  },
+  {
+    "id": "doc-procedure-overview",
+    "name": "procedure-overview.txt",
+    "originalPath": "procedure-overview.txt",
+    "relativePath": "procedure-overview.txt",
+    "metadata": {
+      "title": "Vue d'ensemble des procédures",
+      "description": "Comprendre le cycle de vie d'une procédure"
+    },
+    "chunks": [
+      {
+        "index": 0,
+        "content": "Une procédure est un ensemble d'étapes structurées pour accomplir une tâche donnée. Elle peut être assignée à des rôles spécifiques et inclut des consignes de sécurité.",
+        "embedding": [],
+        "metadata": {}
+      },
+      {
+        "index": 1,
+        "content": "Les statuts possibles sont : draft, published, archived. Une procédure publiée peut être exécutée par les utilisateurs autorisés.",
+        "embedding": [],
+        "metadata": {}
+      }
+    ]
+  }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "question": "Qu'est-ce que NexaFlow ?",
+    "answer": "NexaFlow est une plateforme de gestion de procédures et d'assistant IA pour les équipes industrielles."
+  },
+  {
+    "question": "Comment créer une procédure ?",
+    "answer": "Rendez-vous sur la page dédiée et suivez les 3 étapes : définir le déclencheur, ajouter des actions, puis tester et publier."
+  },
+  {
+    "question": "Quels sont les tarifs ?",
+    "answer": "Nos tarifs : Starter gratuit, Pro à 49$/mois, Enterprise sur mesure. Plus d'infos sur la page Pricing."
+  },
+  {
+    "question": "Comment connecter un outil ?",
+    "answer": "NexaFlow supporte plus de 200 intégrations natives : Slack, GitHub, Notion, Linear, et bien d'autres. Un SDK est aussi disponible pour vos outils custom."
+  }
+]
