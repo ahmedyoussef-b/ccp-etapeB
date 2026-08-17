@@ -1,0 +1,7 @@
+{
+  "libelle": "APPOINT ET REJET CONDENSEUR",
+  "code": "CAP",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
