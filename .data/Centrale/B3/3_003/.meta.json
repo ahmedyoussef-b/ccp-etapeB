@@ -1,0 +1,7 @@
+{
+  "libelle": "REG DE TEMP DESURCHAUFFE EAU",
+  "code": "3_003",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
