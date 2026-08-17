@@ -1,0 +1,7 @@
+{
+  "libelle": "REGROUPEMENT ANALOGIQUE CR 2",
+  "code": "KBS",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}

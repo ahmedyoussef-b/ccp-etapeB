@@ -1,0 +1,7 @@
+{
+  "libelle": "DISTRIBUTION MT NORMALE TG 1",
+  "code": "LGA",
+  "type": "sous_centrale",
+  "parentId": "B1",
+  "syncState": "local-only"
+}

@@ -1,0 +1,7 @@
+{
+  "libelle": "DISTRIBUTION ECLAIRAGE NORMAL",
+  "code": "LKN",
+  "type": "sous_centrale",
+  "parentId": "B0",
+  "syncState": "local-only"
+}

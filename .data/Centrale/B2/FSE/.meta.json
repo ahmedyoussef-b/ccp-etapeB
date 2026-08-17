@@ -1,0 +1,7 @@
+{
+  "libelle": "SYSTEME SECURITE GENERALE CR 2",
+  "code": "FSE",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}

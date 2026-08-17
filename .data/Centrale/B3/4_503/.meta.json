@@ -1,0 +1,7 @@
+{
+  "libelle": "SEQUENCE ARMEMENT NORMAL",
+  "code": "4_503",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

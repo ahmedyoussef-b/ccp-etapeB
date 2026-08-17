@@ -1,0 +1,7 @@
+{
+  "libelle": "ETAT THERMIQUE",
+  "code": "2_222",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

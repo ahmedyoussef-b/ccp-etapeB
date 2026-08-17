@@ -1,0 +1,7 @@
+{
+  "libelle": "FILTRATION EAU DE REFRIGERATION",
+  "code": "CFI",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

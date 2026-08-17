@@ -1,0 +1,7 @@
+{
+  "libelle": "REGULATION DE PUISSANCE (AUTO)",
+  "code": "2_231",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

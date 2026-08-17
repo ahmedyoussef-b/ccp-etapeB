@@ -1,0 +1,7 @@
+{
+  "libelle": "EXCITATION ALTERNATEUR TG 1",
+  "code": "TEX",
+  "type": "sous_centrale",
+  "parentId": "B1",
+  "syncState": "local-only"
+}

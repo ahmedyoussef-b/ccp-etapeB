@@ -1,0 +1,7 @@
+{
+  "libelle": "AUTOMATISME DE COORDINATION BLOC",
+  "code": "KCZ",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

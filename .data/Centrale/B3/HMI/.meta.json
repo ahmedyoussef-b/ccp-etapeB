@@ -1,0 +1,7 @@
+{
+  "libelle": "TRAITEMENT H-LUB GROUPE TURGEN",
+  "code": "HMI",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

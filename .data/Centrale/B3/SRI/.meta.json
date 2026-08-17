@@ -1,0 +1,7 @@
+{
+  "libelle": "REFRI EAU DEM NORIA BLOC 3",
+  "code": "SRI",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

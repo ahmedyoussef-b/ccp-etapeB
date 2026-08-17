@@ -1,0 +1,7 @@
+{
+  "libelle": "Unité de traitement 101",
+  "code": "A0LJPUS101",
+  "type": "equipement",
+  "parentId": "A0",
+  "syncState": "local-only"
+}

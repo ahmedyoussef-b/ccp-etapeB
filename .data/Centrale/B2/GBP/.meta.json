@@ -1,0 +1,7 @@
+{
+  "libelle": "CONTOURNEMENT BP CR 2",
+  "code": "GBP",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}

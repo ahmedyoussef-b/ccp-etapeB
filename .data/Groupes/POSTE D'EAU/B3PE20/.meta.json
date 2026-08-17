@@ -1,0 +1,7 @@
+{
+  "libelle": "Stockage d'eau déminé",
+  "code": "B3PE20",
+  "type": "groupe",
+  "parentId": "POSTE D'EAU",
+  "syncState": "local-only"
+}
