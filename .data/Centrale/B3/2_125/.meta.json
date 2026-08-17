@@ -1,0 +1,7 @@
+{
+  "libelle": "RETOUR A LA VITESSE NOMINALE",
+  "code": "2_125",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
