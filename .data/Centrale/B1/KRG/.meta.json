@@ -1,0 +1,7 @@
+{
+  "libelle": "Regulation charge de bloc TG1",
+  "code": "KRG",
+  "type": "sous_centrale",
+  "parentId": "B1",
+  "syncState": "local-only"
+}
