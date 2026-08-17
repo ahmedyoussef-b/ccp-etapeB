@@ -1,0 +1,7 @@
+{
+  "libelle": "REFRI DES AUXILIAIRES TG 1",
+  "code": "TRI",
+  "type": "sous_centrale",
+  "parentId": "B1",
+  "syncState": "local-only"
+}
