@@ -1,0 +1,7 @@
+{
+  "libelle": "PROD ET DISTR AIR DE TRAVAIL",
+  "code": "SAP",
+  "type": "sous_centrale",
+  "parentId": "B0",
+  "syncState": "local-only"
+}
