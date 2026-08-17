@@ -1,0 +1,7 @@
+{
+  "libelle": "PROD ET DISTR 48V CC PE/TV",
+  "code": "LCA",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
