@@ -1,0 +1,7 @@
+{
+  "libelle": "PRODUCTION BT SECOURS BLOC",
+  "code": "LLP",
+  "type": "sous_centrale",
+  "parentId": "B0",
+  "syncState": "local-only"
+}
