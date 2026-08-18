@@ -235,7 +235,7 @@ export default function StructureBDDPage() {
   const [webError, setWebError] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [vectorError, setVectorError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
+  const [search] = useState("");
   const [resettingWeb, setResettingWeb] = useState(false);
   const [resettingLocal, setResettingLocal] = useState(false);
   const [clearingData, setClearingData] = useState(false);
@@ -253,7 +253,7 @@ export default function StructureBDDPage() {
   const { sync, isSyncing } = useSyncData();
   const [activeView, setActiveView] = useState<"web" | "local" | "vector">("web");
 
-  const loadTrees = async () => {
+  const loadTrees = useCallback(async () => {
     console.log("[StructureBDD] loadTrees start");
     setLoading(true);
     setWebError(null);
@@ -304,18 +304,13 @@ export default function StructureBDDPage() {
       });
 
     await Promise.all([webPromise, localPromise, vectorPromise]);
-    console.log("[StructureBDD] loadTrees done", {
-      web: webTree.length,
-      local: localTree.length,
-      vector: vectorDocs.length,
-    });
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     console.log("[StructureBDD] mount");
     loadTrees();
-  }, []);
+  }, [loadTrees]);
 
   const handleSync = async () => {
     console.log("[StructureBDD] sync start");
@@ -868,7 +863,7 @@ export default function StructureBDDPage() {
           <div className="p-4 max-h-[600px] overflow-y-auto">
             {!previewingFile ? (
               <p className="text-sm text-muted-foreground text-center py-8">
-                Sélectionnez un nœud dans l'arborescence pour afficher son contenu.
+                Sélectionnez un nœud dans l&apos;arborescence pour afficher son contenu.
               </p>
             ) : previewLoading ? (
               <p className="text-sm text-muted-foreground text-center py-8">Chargement...</p>
