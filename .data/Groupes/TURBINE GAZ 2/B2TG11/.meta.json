@@ -1,0 +1,7 @@
+{
+  "libelle": "VUE GENERALE TG 2",
+  "code": "B2TG11",
+  "type": "groupe",
+  "parentId": "TURBINE GAZ 2",
+  "syncState": "local-only"
+}
