@@ -239,7 +239,6 @@ export default function StructureBDDPage() {
   const [resettingWeb, setResettingWeb] = useState(false);
   const [resettingLocal, setResettingLocal] = useState(false);
   const [clearingData, setClearingData] = useState(false);
-  const [syncingAndResetting, setSyncingAndResetting] = useState(false);
   const [addingNode, setAddingNode] = useState<{ tree: "web" | "local"; parentId: number | string } | null>(null);
   const [newNodeName, setNewNodeName] = useState("");
   const [newNodeType, setNewNodeType] = useState<"file" | "directory">("directory");
@@ -251,6 +250,7 @@ export default function StructureBDDPage() {
   const [previewData, setPreviewData] = useState<{ content?: string; dataUrl?: string; mimeType: string; name: string; size: number; isText: boolean } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const { sync, isSyncing } = useSyncData();
+  const [syncing, setSyncing] = useState(false);
   const [activeView, setActiveView] = useState<"web" | "local" | "vector">("web");
 
   const loadTrees = useCallback(async () => {
@@ -391,14 +391,14 @@ export default function StructureBDDPage() {
     }
   };
 
-  const handleSyncAndReset = async () => {
+  const handleSyncToLocal = async () => {
     const confirmed = window.confirm(
-      "Synchroniser la BDD Web vers la BDD Locale puis remettre à zéro la BDD Web ?"
+      "Synchroniser la BDD Web vers la BDD Locale ?"
     );
     if (!confirmed) return;
-    console.log("[StructureBDD] sync and reset start");
+    console.log("[StructureBDD] sync to local start");
 
-    setSyncingAndResetting(true);
+    setSyncing(true);
     try {
       const res = await fetch("/api/tree");
       console.log("[StructureBDD] fetch web tree status", res.status);
@@ -406,7 +406,7 @@ export default function StructureBDDPage() {
       const { roots } = (await res.json()) as { roots: WebTreeNode[] };
 
       await initSqlite();
-      
+
       await run(`
         CREATE TABLE IF NOT EXISTS local_tree (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -435,7 +435,7 @@ export default function StructureBDDPage() {
       };
 
       const flatNodes = flatten(roots);
-      
+
       for (const node of flatNodes) {
         await run(
           "INSERT INTO local_tree (remote_id, name, type, parent_id, size, created_at, updated_at) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))",
@@ -444,20 +444,15 @@ export default function StructureBDDPage() {
       }
 
       console.log("[StructureBDD] sync to local done", { count: flatNodes.length });
-
-      const resetRes = await fetch("/api/tree/reset", { method: "POST" });
-      console.log("[StructureBDD] reset web status", resetRes.status);
-      if (!resetRes.ok) throw new Error("Failed to reset web tree");
-
       await loadTrees();
-      toast.success("Synchronisation terminée et BDD Web remise à zéro");
+      toast.success("Synchronisation terminée");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Sync and reset failed";
-      console.error("[StructureBDD] sync and reset error", msg);
-      setWebError(msg);
+      const msg = err instanceof Error ? err.message : "Sync to local failed";
+      console.error("[StructureBDD] sync to local error", msg);
+      setLocalError(msg);
       toast.error("Erreur lors de la synchronisation");
     } finally {
-      setSyncingAndResetting(false);
+      setSyncing(false);
     }
   };
 
@@ -866,11 +861,11 @@ export default function StructureBDDPage() {
               <Button
                 variant="default"
                 size="sm"
-                onClick={handleSyncAndReset}
-                disabled={syncingAndResetting}
+                onClick={handleSyncToLocal}
+                disabled={syncing}
                 className="w-full"
               >
-                <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncingAndResetting ? "animate-spin" : ""}`} />
+                <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
                 Sync Web → Local
               </Button>
             )}
