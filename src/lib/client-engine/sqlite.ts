@@ -76,7 +76,11 @@ export async function run(sql: string, params: unknown[] | Record<string, unknow
       }
       stmt.step();
       const changes = database.changes();
-      const lastInsertRowid = db ? Number(db.selectObject('SELECT last_insert_rowid()')?.last_insert_rowid ?? 0) : 0;
+      const idStmt = database.prepare('SELECT last_insert_rowid() as rid');
+      idStmt.step();
+      const ridRow = idStmt.get({}) as { rid: number };
+      const lastInsertRowid = Number(ridRow?.rid ?? 0);
+      idStmt.finalize();
       stmt.finalize();
       resolve({ changes, lastInsertRowid });
     } catch (error) {
