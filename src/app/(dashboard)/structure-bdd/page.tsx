@@ -423,10 +423,10 @@ export default function StructureBDDPage() {
 
       await run("DELETE FROM local_tree");
 
-      const flatten = (nodes: WebTreeNode[], parentId: number | null = null): Array<{ id: number; name: string; type: string; parentId: number | null; metadata: string | null }> => {
-        const result: Array<{ id: number; name: string; type: string; parentId: number | null; metadata: string | null }> = [];
+      const flatten = (nodes: WebTreeNode[], parentId: number | null = null): Array<{ id: number; name: string; type: string; parentId: number | null }> => {
+        const result: Array<{ id: number; name: string; type: string; parentId: number | null }> = [];
         for (const node of nodes) {
-          result.push({ id: node.id, name: node.name, type: node.type, parentId, metadata: node.metadata });
+          result.push({ id: node.id, name: node.name, type: node.type, parentId });
           if (node.children?.length) {
             result.push(...flatten(node.children, node.id));
           }
@@ -437,9 +437,17 @@ export default function StructureBDDPage() {
       const flatNodes = flatten(roots);
 
       for (const node of flatNodes) {
+        const params = {
+          remote_id: String(node.id),
+          name: node.name,
+          type: node.type,
+          parent_id: node.parentId ?? null,
+          size: 0,
+        };
+
         await run(
-          "INSERT INTO local_tree (remote_id, name, type, parent_id, size, created_at, updated_at) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))",
-          [String(node.id), node.name, node.type, node.parentId, 0]
+          "INSERT INTO local_tree (remote_id, name, type, parent_id, size, created_at, updated_at) VALUES (:remote_id, :name, :type, :parent_id, :size, datetime('now'), datetime('now'))",
+          params
         );
       }
 

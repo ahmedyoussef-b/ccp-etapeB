@@ -65,7 +65,7 @@ export async function queryOne<T = Record<string, unknown>>(sql: string, params:
   return results.length > 0 ? results[0] : null;
 }
 
-export async function run(sql: string, params: unknown[] = []): Promise<{ changes: number; lastInsertRowid: number }> {
+export async function run(sql: string, params: unknown[] | Record<string, unknown> = []): Promise<{ changes: number; lastInsertRowid: number }> {
   const database = await initSqlite();
   return new Promise((resolve, reject) => {
     try {
