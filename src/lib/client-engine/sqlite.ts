@@ -46,7 +46,9 @@ export async function query<T = Record<string, unknown>>(sql: string, params: un
   const database = await initSqlite();
   const stmt = database.prepare(sql);
   try {
-    stmt.bind(params as BindingSpec);
+    if (params.length > 0) {
+      stmt.bind(params as BindingSpec);
+    }
     const results: T[] = [];
     while (stmt.step()) {
       const row = stmt.get({}) as Record<string, unknown>;
