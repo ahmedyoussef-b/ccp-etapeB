@@ -1,0 +1,7 @@
+{
+  "libelle": "CONTOURNEMENT HP CR 1",
+  "code": "B1TV21",
+  "type": "groupe",
+  "parentId": "TURBINE VAPEUR",
+  "syncState": "local-only"
+}
