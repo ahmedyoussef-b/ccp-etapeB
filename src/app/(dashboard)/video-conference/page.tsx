@@ -328,8 +328,8 @@ export default function VideoConferencePage() {
     console.log("[Visioconf] Démarrage heartbeats et polling");
     sendHeartbeat();
     heartbeatRef.current = window.setInterval(sendHeartbeat, 20_000);
-    presenceIntervalRef.current = window.setInterval(fetchOnlineUsers, 15_000);
-    invitationsIntervalRef.current = window.setInterval(fetchInvitations, 15_000);
+    presenceIntervalRef.current = window.setInterval(fetchOnlineUsers, 30_000);
+    invitationsIntervalRef.current = window.setInterval(fetchInvitations, 30_000);
 
     return () => {
       console.log("[Visioconf] Arrêt heartbeats et polling");

@@ -8,10 +8,26 @@ const SyncPayloadSchema = z.object({
   etatDesLieux: z.array(z.any()).optional(),
 });
 
+const MAX_SYNC_MEDIA_BYTES = 4.5 * 1024 * 1024;
+
+function isMediaPayloadTooLarge(media: unknown): boolean {
+  if (!media || typeof media !== 'object') return false;
+  const record = media as Record<string, unknown>;
+  const size = typeof record.size === 'number' ? record.size : 0;
+  return size > MAX_SYNC_MEDIA_BYTES;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const payload = SyncPayloadSchema.parse(body);
+
+    if (payload.mediaCaptured && payload.mediaCaptured.length > 0) {
+      const oversized = payload.mediaCaptured.find(isMediaPayloadTooLarge);
+      if (oversized) {
+        return NextResponse.json({ success: false, error: 'Media payload too large for sync. Use blob storage for media files.' }, { status: 413 });
+      }
+    }
 
     const synced: { executions: number; media: number } = { executions: 0, media: 0 };
 
