@@ -20,7 +20,8 @@ async function importTree(nodes: ApiNode[], parentId: number | null): Promise<vo
 }
 
 async function importFolder(node: ApiFolderNode, parentId: number | null): Promise<void> {
-  const localFolder = await getFolderByRemoteId(node.id);
+  const remoteId = String(node.id);
+  const localFolder = await getFolderByRemoteId(remoteId);
 
   let targetFolderId: number;
 
@@ -32,7 +33,7 @@ async function importFolder(node: ApiFolderNode, parentId: number | null): Promi
     });
   } else {
     targetFolderId = await addFolder({
-      remoteId: node.id,
+      remoteId,
       name: node.name,
       parentId,
       order: node.order ?? 0,
@@ -51,7 +52,7 @@ async function importFile(node: ApiFileNode, parentId: number | null): Promise<v
   if (existingFile) {
     const { newName } = await generateNextFilename(parentId, node.name);
     await addFile({
-      remoteId: node.id,
+      remoteId: String(node.id),
       name: newName,
       folderId: parentId,
       order: node.order ?? 0,
@@ -62,7 +63,7 @@ async function importFile(node: ApiFileNode, parentId: number | null): Promise<v
     });
   } else {
     await addFile({
-      remoteId: node.id,
+      remoteId: String(node.id),
       name: node.name,
       folderId: parentId,
       order: node.order ?? 0,
@@ -128,7 +129,7 @@ export function useSyncData() {
   });
 
   return {
-    sync: syncMutation.mutate,
+    sync: syncMutation.mutateAsync,
     isSyncing: syncMutation.isPending,
     error: syncMutation.error,
     isSuccess: syncMutation.isSuccess,
