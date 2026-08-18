@@ -437,17 +437,9 @@ export default function StructureBDDPage() {
       const flatNodes = flatten(roots);
 
       for (const node of flatNodes) {
-        const params = {
-          remote_id: String(node.id),
-          name: node.name,
-          type: node.type,
-          parent_id: node.parentId ?? null,
-          size: 0,
-        };
-
         await run(
-          "INSERT INTO local_tree (remote_id, name, type, parent_id, size, created_at, updated_at) VALUES (:remote_id, :name, :type, :parent_id, :size, datetime('now'), datetime('now'))",
-          params
+          "INSERT INTO local_tree (remote_id, name, type, parent_id, size, created_at, updated_at) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))",
+          [String(node.id), node.name, node.type, node.parentId ?? null, 0]
         );
       }
 
