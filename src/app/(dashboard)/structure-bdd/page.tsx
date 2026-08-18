@@ -407,6 +407,20 @@ export default function StructureBDDPage() {
 
       await initSqlite();
       
+      await run(`
+        CREATE TABLE IF NOT EXISTS local_tree (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          remote_id TEXT,
+          name TEXT NOT NULL,
+          type TEXT NOT NULL,
+          parent_id INTEGER,
+          path TEXT,
+          size INTEGER,
+          created_at TEXT DEFAULT (datetime('now')),
+          updated_at TEXT DEFAULT (datetime('now'))
+        )
+      `);
+
       await run("DELETE FROM local_tree");
 
       const flatten = (nodes: WebTreeNode[], parentId: number | null = null): Array<{ id: number; name: string; type: string; parentId: number | null; metadata: string | null }> => {
