@@ -11,7 +11,7 @@ import type { ApiNode, ApiFolderNode, ApiFileNode } from './types';
 
 async function importTree(nodes: ApiNode[], parentId: number | null): Promise<void> {
   for (const node of nodes) {
-    if (node.type === 'folder') {
+    if (node.type === 'folder' || node.type === 'root' || node.type === 'directory') {
       await importFolder(node as ApiFolderNode, parentId);
     } else if (node.type === 'file') {
       await importFile(node as ApiFileNode, parentId);

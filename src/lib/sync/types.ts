@@ -1,7 +1,7 @@
 export interface ApiFolderNode {
   id: string;
   name: string;
-  type: 'folder';
+  type: 'folder' | 'root' | 'directory';
   order: number;
   children: ApiNode[];
 }
@@ -28,13 +28,13 @@ export const sampleSyncResponse: SyncApiResponse = {
     {
       id: 'folder-1',
       name: 'Documents',
-      type: 'folder',
+      type: 'directory',
       order: 0,
       children: [
         {
           id: 'folder-2',
           name: 'Reports',
-          type: 'folder',
+          type: 'directory',
           order: 0,
           children: [
             {
