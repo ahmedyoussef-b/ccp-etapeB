@@ -1,0 +1,7 @@
+{
+  "libelle": "SYSTEME DE PURGES TV",
+  "code": "B3TV21",
+  "type": "groupe",
+  "parentId": "TURBINE VAPEUR",
+  "syncState": "local-only"
+}
