@@ -1,0 +1,4547 @@
+[
+  {
+    "id": 1686,
+    "name": ".data",
+    "type": "root",
+    "metadata": null,
+    "parentId": null,
+    "order": 0,
+    "createdAt": "2026-08-16T05:05:57.068Z",
+    "updatedAt": "2026-08-16T05:05:57.068Z",
+    "children": [
+      {
+        "id": 1687,
+        "name": "bank",
+        "type": "directory",
+        "metadata": null,
+        "parentId": 1686,
+        "order": 0,
+        "createdAt": "2026-08-16T05:05:57.217Z",
+        "updatedAt": "2026-08-16T05:05:57.217Z",
+        "children": []
+      },
+      {
+        "id": 1688,
+        "name": "Centrale",
+        "type": "directory",
+        "metadata": null,
+        "parentId": 1686,
+        "order": 1,
+        "createdAt": "2026-08-16T05:05:57.341Z",
+        "updatedAt": "2026-08-16T05:05:57.341Z",
+        "children": [
+          {
+            "id": 1689,
+            "name": "A0",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1688,
+            "order": 0,
+            "createdAt": "2026-08-16T05:05:57.406Z",
+            "updatedAt": "2026-08-16T05:05:57.406Z",
+            "children": [
+              {
+                "id": 1690,
+                "name": "A0LJPUS002",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1689,
+                "order": 1,
+                "createdAt": "2026-08-16T05:05:57.462Z",
+                "updatedAt": "2026-08-16T05:05:57.462Z",
+                "children": []
+              },
+              {
+                "id": 1691,
+                "name": "A0LJPUS101",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1689,
+                "order": 2,
+                "createdAt": "2026-08-16T05:05:57.527Z",
+                "updatedAt": "2026-08-16T05:05:57.527Z",
+                "children": []
+              },
+              {
+                "id": 1692,
+                "name": "LJP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1689,
+                "order": 3,
+                "createdAt": "2026-08-16T05:05:57.591Z",
+                "updatedAt": "2026-08-16T05:05:57.591Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 1693,
+            "name": "B0",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1688,
+            "order": 1,
+            "createdAt": "2026-08-16T05:05:57.654Z",
+            "updatedAt": "2026-08-16T05:05:57.654Z",
+            "children": [
+              {
+                "id": 1694,
+                "name": "CFI",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 1,
+                "createdAt": "2026-08-16T05:05:57.713Z",
+                "updatedAt": "2026-08-16T05:05:57.713Z",
+                "children": []
+              },
+              {
+                "id": 1695,
+                "name": "CRF",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 2,
+                "createdAt": "2026-08-16T05:05:57.773Z",
+                "updatedAt": "2026-08-16T05:05:57.773Z",
+                "children": []
+              },
+              {
+                "id": 1696,
+                "name": "DVC",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 3,
+                "createdAt": "2026-08-16T05:05:57.842Z",
+                "updatedAt": "2026-08-16T05:05:57.842Z",
+                "children": []
+              },
+              {
+                "id": 1697,
+                "name": "GIS",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 4,
+                "createdAt": "2026-08-16T05:05:57.899Z",
+                "updatedAt": "2026-08-16T05:05:57.899Z",
+                "children": []
+              },
+              {
+                "id": 1698,
+                "name": "KBS",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 5,
+                "createdAt": "2026-08-16T05:05:57.975Z",
+                "updatedAt": "2026-08-16T05:05:57.975Z",
+                "children": []
+              },
+              {
+                "id": 1699,
+                "name": "KCZ",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 6,
+                "createdAt": "2026-08-16T05:05:58.034Z",
+                "updatedAt": "2026-08-16T05:05:58.034Z",
+                "children": []
+              },
+              {
+                "id": 1700,
+                "name": "KIT",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 7,
+                "createdAt": "2026-08-16T05:05:58.105Z",
+                "updatedAt": "2026-08-16T05:05:58.105Z",
+                "children": []
+              },
+              {
+                "id": 1701,
+                "name": "KRG",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 8,
+                "createdAt": "2026-08-16T05:05:58.161Z",
+                "updatedAt": "2026-08-16T05:05:58.161Z",
+                "children": []
+              },
+              {
+                "id": 1702,
+                "name": "KSA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 9,
+                "createdAt": "2026-08-16T05:05:58.224Z",
+                "updatedAt": "2026-08-16T05:05:58.224Z",
+                "children": []
+              },
+              {
+                "id": 1703,
+                "name": "KSC",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 10,
+                "createdAt": "2026-08-16T05:05:58.284Z",
+                "updatedAt": "2026-08-16T05:05:58.284Z",
+                "children": []
+              },
+              {
+                "id": 1704,
+                "name": "LBA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 11,
+                "createdAt": "2026-08-16T05:05:58.356Z",
+                "updatedAt": "2026-08-16T05:05:58.356Z",
+                "children": []
+              },
+              {
+                "id": 1705,
+                "name": "LBB",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 12,
+                "createdAt": "2026-08-16T05:05:58.426Z",
+                "updatedAt": "2026-08-16T05:05:58.426Z",
+                "children": []
+              },
+              {
+                "id": 1706,
+                "name": "LCA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 13,
+                "createdAt": "2026-08-16T05:05:58.490Z",
+                "updatedAt": "2026-08-16T05:05:58.490Z",
+                "children": []
+              },
+              {
+                "id": 1707,
+                "name": "LCB",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 14,
+                "createdAt": "2026-08-16T05:05:58.552Z",
+                "updatedAt": "2026-08-16T05:05:58.552Z",
+                "children": []
+              },
+              {
+                "id": 1708,
+                "name": "LGA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 15,
+                "createdAt": "2026-08-16T05:05:58.613Z",
+                "updatedAt": "2026-08-16T05:05:58.613Z",
+                "children": []
+              },
+              {
+                "id": 1709,
+                "name": "LJP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 16,
+                "createdAt": "2026-08-16T05:05:58.672Z",
+                "updatedAt": "2026-08-16T05:05:58.672Z",
+                "children": []
+              },
+              {
+                "id": 1710,
+                "name": "LKA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 17,
+                "createdAt": "2026-08-16T05:05:58.735Z",
+                "updatedAt": "2026-08-16T05:05:58.735Z",
+                "children": []
+              },
+              {
+                "id": 1711,
+                "name": "LKB",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 18,
+                "createdAt": "2026-08-16T05:05:58.791Z",
+                "updatedAt": "2026-08-16T05:05:58.791Z",
+                "children": []
+              },
+              {
+                "id": 1712,
+                "name": "LKN",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 19,
+                "createdAt": "2026-08-16T05:05:58.848Z",
+                "updatedAt": "2026-08-16T05:05:58.848Z",
+                "children": []
+              },
+              {
+                "id": 1713,
+                "name": "LLA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 20,
+                "createdAt": "2026-08-16T05:05:58.916Z",
+                "updatedAt": "2026-08-16T05:05:58.916Z",
+                "children": []
+              },
+              {
+                "id": 1714,
+                "name": "LLB",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 21,
+                "createdAt": "2026-08-16T05:05:58.981Z",
+                "updatedAt": "2026-08-16T05:05:58.981Z",
+                "children": []
+              },
+              {
+                "id": 1715,
+                "name": "LLN",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 22,
+                "createdAt": "2026-08-16T05:05:59.048Z",
+                "updatedAt": "2026-08-16T05:05:59.048Z",
+                "children": []
+              },
+              {
+                "id": 1716,
+                "name": "LLP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 23,
+                "createdAt": "2026-08-16T05:05:59.102Z",
+                "updatedAt": "2026-08-16T05:05:59.102Z",
+                "children": []
+              },
+              {
+                "id": 1717,
+                "name": "LNA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 24,
+                "createdAt": "2026-08-16T05:05:59.167Z",
+                "updatedAt": "2026-08-16T05:05:59.167Z",
+                "children": []
+              },
+              {
+                "id": 1718,
+                "name": "LSI",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 25,
+                "createdAt": "2026-08-16T05:05:59.229Z",
+                "updatedAt": "2026-08-16T05:05:59.229Z",
+                "children": []
+              },
+              {
+                "id": 1719,
+                "name": "SAP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 26,
+                "createdAt": "2026-08-16T05:05:59.292Z",
+                "updatedAt": "2026-08-16T05:05:59.292Z",
+                "children": []
+              },
+              {
+                "id": 1720,
+                "name": "SAR",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 27,
+                "createdAt": "2026-08-16T05:05:59.348Z",
+                "updatedAt": "2026-08-16T05:05:59.348Z",
+                "children": []
+              },
+              {
+                "id": 1721,
+                "name": "SER",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 28,
+                "createdAt": "2026-08-16T05:05:59.408Z",
+                "updatedAt": "2026-08-16T05:05:59.408Z",
+                "children": []
+              },
+              {
+                "id": 1722,
+                "name": "SIR",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 29,
+                "createdAt": "2026-08-16T05:05:59.467Z",
+                "updatedAt": "2026-08-16T05:05:59.467Z",
+                "children": []
+              },
+              {
+                "id": 1723,
+                "name": "SIT",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 30,
+                "createdAt": "2026-08-16T05:05:59.540Z",
+                "updatedAt": "2026-08-16T05:05:59.540Z",
+                "children": []
+              },
+              {
+                "id": 1724,
+                "name": "SKD",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 31,
+                "createdAt": "2026-08-16T05:05:59.597Z",
+                "updatedAt": "2026-08-16T05:05:59.597Z",
+                "children": []
+              },
+              {
+                "id": 1725,
+                "name": "TEST_MODBUS",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 32,
+                "createdAt": "2026-08-16T05:05:59.657Z",
+                "updatedAt": "2026-08-16T05:05:59.657Z",
+                "children": []
+              },
+              {
+                "id": 1726,
+                "name": "TKG",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 33,
+                "createdAt": "2026-08-16T05:05:59.717Z",
+                "updatedAt": "2026-08-16T05:05:59.717Z",
+                "children": []
+              },
+              {
+                "id": 1727,
+                "name": "TPF",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 34,
+                "createdAt": "2026-08-16T05:05:59.779Z",
+                "updatedAt": "2026-08-16T05:05:59.779Z",
+                "children": []
+              },
+              {
+                "id": 1728,
+                "name": "TPG",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1693,
+                "order": 35,
+                "createdAt": "2026-08-16T05:05:59.834Z",
+                "updatedAt": "2026-08-16T05:05:59.834Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 1729,
+            "name": "B1",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1688,
+            "order": 2,
+            "createdAt": "2026-08-16T05:05:59.894Z",
+            "updatedAt": "2026-08-16T05:05:59.894Z",
+            "children": [
+              {
+                "id": 1730,
+                "name": "ACO",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 1,
+                "createdAt": "2026-08-16T05:05:59.957Z",
+                "updatedAt": "2026-08-16T05:05:59.957Z",
+                "children": []
+              },
+              {
+                "id": 1731,
+                "name": "CRF",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:00.025Z",
+                "updatedAt": "2026-08-16T05:06:00.025Z",
+                "children": []
+              },
+              {
+                "id": 1732,
+                "name": "ELE",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:00.086Z",
+                "updatedAt": "2026-08-16T05:06:00.086Z",
+                "children": []
+              },
+              {
+                "id": 1733,
+                "name": "FBP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:00.156Z",
+                "updatedAt": "2026-08-16T05:06:00.156Z",
+                "children": []
+              },
+              {
+                "id": 1734,
+                "name": "FLB",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 5,
+                "createdAt": "2026-08-16T05:06:00.220Z",
+                "updatedAt": "2026-08-16T05:06:00.220Z",
+                "children": []
+              },
+              {
+                "id": 1735,
+                "name": "FRG",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 6,
+                "createdAt": "2026-08-16T05:06:00.279Z",
+                "updatedAt": "2026-08-16T05:06:00.279Z",
+                "children": []
+              },
+              {
+                "id": 1736,
+                "name": "FSE",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 7,
+                "createdAt": "2026-08-16T05:06:00.335Z",
+                "updatedAt": "2026-08-16T05:06:00.335Z",
+                "children": []
+              },
+              {
+                "id": 1737,
+                "name": "FSR",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 8,
+                "createdAt": "2026-08-16T05:06:00.395Z",
+                "updatedAt": "2026-08-16T05:06:00.395Z",
+                "children": []
+              },
+              {
+                "id": 1738,
+                "name": "GBP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 9,
+                "createdAt": "2026-08-16T05:06:00.457Z",
+                "updatedAt": "2026-08-16T05:06:00.457Z",
+                "children": []
+              },
+              {
+                "id": 1739,
+                "name": "GHP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 10,
+                "createdAt": "2026-08-16T05:06:00.518Z",
+                "updatedAt": "2026-08-16T05:06:00.518Z",
+                "children": []
+              },
+              {
+                "id": 1740,
+                "name": "GIS",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 11,
+                "createdAt": "2026-08-16T05:06:00.575Z",
+                "updatedAt": "2026-08-16T05:06:00.575Z",
+                "children": []
+              },
+              {
+                "id": 1741,
+                "name": "KBS",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 12,
+                "createdAt": "2026-08-16T05:06:00.635Z",
+                "updatedAt": "2026-08-16T05:06:00.635Z",
+                "children": []
+              },
+              {
+                "id": 1742,
+                "name": "KCZ",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 13,
+                "createdAt": "2026-08-16T05:06:00.696Z",
+                "updatedAt": "2026-08-16T05:06:00.696Z",
+                "children": []
+              },
+              {
+                "id": 1743,
+                "name": "KOS",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 14,
+                "createdAt": "2026-08-16T05:06:00.759Z",
+                "updatedAt": "2026-08-16T05:06:00.759Z",
+                "children": []
+              },
+              {
+                "id": 1744,
+                "name": "KRG",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 15,
+                "createdAt": "2026-08-16T05:06:00.814Z",
+                "updatedAt": "2026-08-16T05:06:00.814Z",
+                "children": []
+              },
+              {
+                "id": 1745,
+                "name": "LGA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 16,
+                "createdAt": "2026-08-16T05:06:00.875Z",
+                "updatedAt": "2026-08-16T05:06:00.875Z",
+                "children": []
+              },
+              {
+                "id": 1746,
+                "name": "LJP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 17,
+                "createdAt": "2026-08-16T05:06:00.937Z",
+                "updatedAt": "2026-08-16T05:06:00.937Z",
+                "children": []
+              },
+              {
+                "id": 1747,
+                "name": "LKA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 18,
+                "createdAt": "2026-08-16T05:06:00.999Z",
+                "updatedAt": "2026-08-16T05:06:00.999Z",
+                "children": []
+              },
+              {
+                "id": 1748,
+                "name": "LLA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 19,
+                "createdAt": "2026-08-16T05:06:01.057Z",
+                "updatedAt": "2026-08-16T05:06:01.057Z",
+                "children": []
+              },
+              {
+                "id": 1749,
+                "name": "SIT",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 20,
+                "createdAt": "2026-08-16T05:06:01.121Z",
+                "updatedAt": "2026-08-16T05:06:01.121Z",
+                "children": []
+              },
+              {
+                "id": 1750,
+                "name": "TCA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 21,
+                "createdAt": "2026-08-16T05:06:01.181Z",
+                "updatedAt": "2026-08-16T05:06:01.181Z",
+                "children": []
+              },
+              {
+                "id": 1751,
+                "name": "TEV",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 22,
+                "createdAt": "2026-08-16T05:06:01.244Z",
+                "updatedAt": "2026-08-16T05:06:01.244Z",
+                "children": []
+              },
+              {
+                "id": 1752,
+                "name": "TEX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 23,
+                "createdAt": "2026-08-16T05:06:01.305Z",
+                "updatedAt": "2026-08-16T05:06:01.305Z",
+                "children": []
+              },
+              {
+                "id": 1753,
+                "name": "TGR",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 24,
+                "createdAt": "2026-08-16T05:06:01.359Z",
+                "updatedAt": "2026-08-16T05:06:01.359Z",
+                "children": []
+              },
+              {
+                "id": 1754,
+                "name": "TGU",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 25,
+                "createdAt": "2026-08-16T05:06:01.414Z",
+                "updatedAt": "2026-08-16T05:06:01.414Z",
+                "children": []
+              },
+              {
+                "id": 1755,
+                "name": "TNT",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 26,
+                "createdAt": "2026-08-16T05:06:01.479Z",
+                "updatedAt": "2026-08-16T05:06:01.479Z",
+                "children": []
+              },
+              {
+                "id": 1756,
+                "name": "TPA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 27,
+                "createdAt": "2026-08-16T05:06:01.540Z",
+                "updatedAt": "2026-08-16T05:06:01.540Z",
+                "children": []
+              },
+              {
+                "id": 1757,
+                "name": "TPF",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 28,
+                "createdAt": "2026-08-16T05:06:01.599Z",
+                "updatedAt": "2026-08-16T05:06:01.599Z",
+                "children": []
+              },
+              {
+                "id": 1758,
+                "name": "TPG",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 29,
+                "createdAt": "2026-08-16T05:06:01.661Z",
+                "updatedAt": "2026-08-16T05:06:01.661Z",
+                "children": []
+              },
+              {
+                "id": 1759,
+                "name": "TPT",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 30,
+                "createdAt": "2026-08-16T05:06:01.714Z",
+                "updatedAt": "2026-08-16T05:06:01.714Z",
+                "children": []
+              },
+              {
+                "id": 1760,
+                "name": "TRA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 31,
+                "createdAt": "2026-08-16T05:06:01.768Z",
+                "updatedAt": "2026-08-16T05:06:01.768Z",
+                "children": []
+              },
+              {
+                "id": 1761,
+                "name": "TRE",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 32,
+                "createdAt": "2026-08-16T05:06:01.829Z",
+                "updatedAt": "2026-08-16T05:06:01.829Z",
+                "children": []
+              },
+              {
+                "id": 1762,
+                "name": "TRI",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 33,
+                "createdAt": "2026-08-16T05:06:01.879Z",
+                "updatedAt": "2026-08-16T05:06:01.879Z",
+                "children": []
+              },
+              {
+                "id": 1763,
+                "name": "TRT",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 34,
+                "createdAt": "2026-08-16T05:06:01.938Z",
+                "updatedAt": "2026-08-16T05:06:01.938Z",
+                "children": []
+              },
+              {
+                "id": 1764,
+                "name": "TTA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 35,
+                "createdAt": "2026-08-16T05:06:01.998Z",
+                "updatedAt": "2026-08-16T05:06:01.998Z",
+                "children": []
+              },
+              {
+                "id": 1765,
+                "name": "TVC",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 36,
+                "createdAt": "2026-08-16T05:06:02.058Z",
+                "updatedAt": "2026-08-16T05:06:02.058Z",
+                "children": []
+              },
+              {
+                "id": 1766,
+                "name": "TVM",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 37,
+                "createdAt": "2026-08-16T05:06:02.117Z",
+                "updatedAt": "2026-08-16T05:06:02.117Z",
+                "children": []
+              },
+              {
+                "id": 1767,
+                "name": "VVP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1729,
+                "order": 38,
+                "createdAt": "2026-08-16T05:06:02.180Z",
+                "updatedAt": "2026-08-16T05:06:02.180Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 1768,
+            "name": "B2",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1688,
+            "order": 3,
+            "createdAt": "2026-08-16T05:06:02.236Z",
+            "updatedAt": "2026-08-16T05:06:02.236Z",
+            "children": [
+              {
+                "id": 1769,
+                "name": "ACO",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:02.295Z",
+                "updatedAt": "2026-08-16T05:06:02.295Z",
+                "children": []
+              },
+              {
+                "id": 1770,
+                "name": "CET",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:02.357Z",
+                "updatedAt": "2026-08-16T05:06:02.357Z",
+                "children": []
+              },
+              {
+                "id": 1771,
+                "name": "CRF",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:02.417Z",
+                "updatedAt": "2026-08-16T05:06:02.417Z",
+                "children": []
+              },
+              {
+                "id": 1772,
+                "name": "ELE",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:02.477Z",
+                "updatedAt": "2026-08-16T05:06:02.477Z",
+                "children": []
+              },
+              {
+                "id": 1773,
+                "name": "FBP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 5,
+                "createdAt": "2026-08-16T05:06:02.545Z",
+                "updatedAt": "2026-08-16T05:06:02.545Z",
+                "children": []
+              },
+              {
+                "id": 1774,
+                "name": "FLB",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 6,
+                "createdAt": "2026-08-16T05:06:02.601Z",
+                "updatedAt": "2026-08-16T05:06:02.601Z",
+                "children": []
+              },
+              {
+                "id": 1775,
+                "name": "FRG",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 7,
+                "createdAt": "2026-08-16T05:06:02.667Z",
+                "updatedAt": "2026-08-16T05:06:02.667Z",
+                "children": []
+              },
+              {
+                "id": 1776,
+                "name": "FSE",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 8,
+                "createdAt": "2026-08-16T05:06:02.729Z",
+                "updatedAt": "2026-08-16T05:06:02.729Z",
+                "children": []
+              },
+              {
+                "id": 1777,
+                "name": "FSR",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 9,
+                "createdAt": "2026-08-16T05:06:02.790Z",
+                "updatedAt": "2026-08-16T05:06:02.790Z",
+                "children": []
+              },
+              {
+                "id": 1778,
+                "name": "GBP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 10,
+                "createdAt": "2026-08-16T05:06:02.868Z",
+                "updatedAt": "2026-08-16T05:06:02.868Z",
+                "children": []
+              },
+              {
+                "id": 1779,
+                "name": "GHP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 11,
+                "createdAt": "2026-08-16T05:06:02.929Z",
+                "updatedAt": "2026-08-16T05:06:02.929Z",
+                "children": []
+              },
+              {
+                "id": 1780,
+                "name": "GIS",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 12,
+                "createdAt": "2026-08-16T05:06:02.985Z",
+                "updatedAt": "2026-08-16T05:06:02.985Z",
+                "children": []
+              },
+              {
+                "id": 1781,
+                "name": "KBS",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 13,
+                "createdAt": "2026-08-16T05:06:03.045Z",
+                "updatedAt": "2026-08-16T05:06:03.045Z",
+                "children": []
+              },
+              {
+                "id": 1782,
+                "name": "KCZ",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 14,
+                "createdAt": "2026-08-16T05:06:03.107Z",
+                "updatedAt": "2026-08-16T05:06:03.107Z",
+                "children": []
+              },
+              {
+                "id": 1783,
+                "name": "KOS",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 15,
+                "createdAt": "2026-08-16T05:06:03.168Z",
+                "updatedAt": "2026-08-16T05:06:03.168Z",
+                "children": []
+              },
+              {
+                "id": 1784,
+                "name": "KRG",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 16,
+                "createdAt": "2026-08-16T05:06:03.233Z",
+                "updatedAt": "2026-08-16T05:06:03.233Z",
+                "children": []
+              },
+              {
+                "id": 1785,
+                "name": "LGA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 17,
+                "createdAt": "2026-08-16T05:06:03.295Z",
+                "updatedAt": "2026-08-16T05:06:03.295Z",
+                "children": []
+              },
+              {
+                "id": 1786,
+                "name": "LJP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 18,
+                "createdAt": "2026-08-16T05:06:03.353Z",
+                "updatedAt": "2026-08-16T05:06:03.353Z",
+                "children": []
+              },
+              {
+                "id": 1787,
+                "name": "LKA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 19,
+                "createdAt": "2026-08-16T05:06:03.431Z",
+                "updatedAt": "2026-08-16T05:06:03.431Z",
+                "children": []
+              },
+              {
+                "id": 1788,
+                "name": "LLA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 20,
+                "createdAt": "2026-08-16T05:06:03.505Z",
+                "updatedAt": "2026-08-16T05:06:03.505Z",
+                "children": []
+              },
+              {
+                "id": 1789,
+                "name": "SIT",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 21,
+                "createdAt": "2026-08-16T05:06:03.559Z",
+                "updatedAt": "2026-08-16T05:06:03.559Z",
+                "children": []
+              },
+              {
+                "id": 1790,
+                "name": "TCA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 22,
+                "createdAt": "2026-08-16T05:06:03.622Z",
+                "updatedAt": "2026-08-16T05:06:03.622Z",
+                "children": []
+              },
+              {
+                "id": 1791,
+                "name": "TEV",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 23,
+                "createdAt": "2026-08-16T05:06:03.682Z",
+                "updatedAt": "2026-08-16T05:06:03.682Z",
+                "children": []
+              },
+              {
+                "id": 1792,
+                "name": "TEX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 24,
+                "createdAt": "2026-08-16T05:06:03.743Z",
+                "updatedAt": "2026-08-16T05:06:03.743Z",
+                "children": []
+              },
+              {
+                "id": 1793,
+                "name": "TGR",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 25,
+                "createdAt": "2026-08-16T05:06:03.805Z",
+                "updatedAt": "2026-08-16T05:06:03.805Z",
+                "children": []
+              },
+              {
+                "id": 1794,
+                "name": "TGU",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 26,
+                "createdAt": "2026-08-16T05:06:03.862Z",
+                "updatedAt": "2026-08-16T05:06:03.862Z",
+                "children": []
+              },
+              {
+                "id": 1795,
+                "name": "TNT",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 27,
+                "createdAt": "2026-08-16T05:06:03.924Z",
+                "updatedAt": "2026-08-16T05:06:03.924Z",
+                "children": []
+              },
+              {
+                "id": 1796,
+                "name": "TPA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 28,
+                "createdAt": "2026-08-16T05:06:03.984Z",
+                "updatedAt": "2026-08-16T05:06:03.984Z",
+                "children": []
+              },
+              {
+                "id": 1797,
+                "name": "TPF",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 29,
+                "createdAt": "2026-08-16T05:06:04.052Z",
+                "updatedAt": "2026-08-16T05:06:04.052Z",
+                "children": []
+              },
+              {
+                "id": 1798,
+                "name": "TPG",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 30,
+                "createdAt": "2026-08-16T05:06:04.109Z",
+                "updatedAt": "2026-08-16T05:06:04.109Z",
+                "children": []
+              },
+              {
+                "id": 1799,
+                "name": "TPT",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 31,
+                "createdAt": "2026-08-16T05:06:04.168Z",
+                "updatedAt": "2026-08-16T05:06:04.168Z",
+                "children": []
+              },
+              {
+                "id": 1800,
+                "name": "TRA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 32,
+                "createdAt": "2026-08-16T05:06:04.228Z",
+                "updatedAt": "2026-08-16T05:06:04.228Z",
+                "children": []
+              },
+              {
+                "id": 1801,
+                "name": "TRE",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 33,
+                "createdAt": "2026-08-16T05:06:04.279Z",
+                "updatedAt": "2026-08-16T05:06:04.279Z",
+                "children": []
+              },
+              {
+                "id": 1802,
+                "name": "TRI",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 34,
+                "createdAt": "2026-08-16T05:06:04.337Z",
+                "updatedAt": "2026-08-16T05:06:04.337Z",
+                "children": []
+              },
+              {
+                "id": 1803,
+                "name": "TRT",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 35,
+                "createdAt": "2026-08-16T05:06:04.397Z",
+                "updatedAt": "2026-08-16T05:06:04.397Z",
+                "children": []
+              },
+              {
+                "id": 1804,
+                "name": "TTA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 36,
+                "createdAt": "2026-08-16T05:06:04.457Z",
+                "updatedAt": "2026-08-16T05:06:04.457Z",
+                "children": []
+              },
+              {
+                "id": 1805,
+                "name": "TVC",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 37,
+                "createdAt": "2026-08-16T05:06:04.517Z",
+                "updatedAt": "2026-08-16T05:06:04.517Z",
+                "children": []
+              },
+              {
+                "id": 1806,
+                "name": "TVM",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 38,
+                "createdAt": "2026-08-16T05:06:04.577Z",
+                "updatedAt": "2026-08-16T05:06:04.577Z",
+                "children": []
+              },
+              {
+                "id": 1807,
+                "name": "VVP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1768,
+                "order": 39,
+                "createdAt": "2026-08-16T05:06:04.638Z",
+                "updatedAt": "2026-08-16T05:06:04.638Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 1808,
+            "name": "B3",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1688,
+            "order": 4,
+            "createdAt": "2026-08-16T05:06:04.697Z",
+            "updatedAt": "2026-08-16T05:06:04.697Z",
+            "children": [
+              {
+                "id": 1809,
+                "name": "0_001",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:04.772Z",
+                "updatedAt": "2026-08-16T05:06:04.772Z",
+                "children": []
+              },
+              {
+                "id": 1810,
+                "name": "0_003",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:04.844Z",
+                "updatedAt": "2026-08-16T05:06:04.844Z",
+                "children": []
+              },
+              {
+                "id": 1811,
+                "name": "0_101",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:04.902Z",
+                "updatedAt": "2026-08-16T05:06:04.902Z",
+                "children": []
+              },
+              {
+                "id": 1812,
+                "name": "0_118",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:04.959Z",
+                "updatedAt": "2026-08-16T05:06:04.959Z",
+                "children": []
+              },
+              {
+                "id": 1813,
+                "name": "0_1XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 5,
+                "createdAt": "2026-08-16T05:06:05.019Z",
+                "updatedAt": "2026-08-16T05:06:05.019Z",
+                "children": []
+              },
+              {
+                "id": 1814,
+                "name": "0_201",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 6,
+                "createdAt": "2026-08-16T05:06:05.079Z",
+                "updatedAt": "2026-08-16T05:06:05.079Z",
+                "children": []
+              },
+              {
+                "id": 1815,
+                "name": "0_218",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 7,
+                "createdAt": "2026-08-16T05:06:05.139Z",
+                "updatedAt": "2026-08-16T05:06:05.139Z",
+                "children": []
+              },
+              {
+                "id": 1816,
+                "name": "0_2XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 8,
+                "createdAt": "2026-08-16T05:06:05.207Z",
+                "updatedAt": "2026-08-16T05:06:05.207Z",
+                "children": []
+              },
+              {
+                "id": 1817,
+                "name": "0_301",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 9,
+                "createdAt": "2026-08-16T05:06:05.261Z",
+                "updatedAt": "2026-08-16T05:06:05.261Z",
+                "children": []
+              },
+              {
+                "id": 1818,
+                "name": "0_318",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 10,
+                "createdAt": "2026-08-16T05:06:05.317Z",
+                "updatedAt": "2026-08-16T05:06:05.317Z",
+                "children": []
+              },
+              {
+                "id": 1819,
+                "name": "0_3XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 11,
+                "createdAt": "2026-08-16T05:06:05.378Z",
+                "updatedAt": "2026-08-16T05:06:05.378Z",
+                "children": []
+              },
+              {
+                "id": 1820,
+                "name": "0_MEA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 12,
+                "createdAt": "2026-08-16T05:06:05.438Z",
+                "updatedAt": "2026-08-16T05:06:05.438Z",
+                "children": []
+              },
+              {
+                "id": 1821,
+                "name": "1_101",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 13,
+                "createdAt": "2026-08-16T05:06:05.498Z",
+                "updatedAt": "2026-08-16T05:06:05.498Z",
+                "children": []
+              },
+              {
+                "id": 1822,
+                "name": "1_102",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 14,
+                "createdAt": "2026-08-16T05:06:05.557Z",
+                "updatedAt": "2026-08-16T05:06:05.557Z",
+                "children": []
+              },
+              {
+                "id": 1823,
+                "name": "1_103",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 15,
+                "createdAt": "2026-08-16T05:06:05.618Z",
+                "updatedAt": "2026-08-16T05:06:05.618Z",
+                "children": []
+              },
+              {
+                "id": 1824,
+                "name": "1_104",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 16,
+                "createdAt": "2026-08-16T05:06:05.681Z",
+                "updatedAt": "2026-08-16T05:06:05.681Z",
+                "children": []
+              },
+              {
+                "id": 1825,
+                "name": "1_105",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 17,
+                "createdAt": "2026-08-16T05:06:05.737Z",
+                "updatedAt": "2026-08-16T05:06:05.737Z",
+                "children": []
+              },
+              {
+                "id": 1826,
+                "name": "1_106",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 18,
+                "createdAt": "2026-08-16T05:06:05.797Z",
+                "updatedAt": "2026-08-16T05:06:05.797Z",
+                "children": []
+              },
+              {
+                "id": 1827,
+                "name": "2_111",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 19,
+                "createdAt": "2026-08-16T05:06:05.857Z",
+                "updatedAt": "2026-08-16T05:06:05.857Z",
+                "children": []
+              },
+              {
+                "id": 1828,
+                "name": "2_112",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 20,
+                "createdAt": "2026-08-16T05:06:05.917Z",
+                "updatedAt": "2026-08-16T05:06:05.917Z",
+                "children": []
+              },
+              {
+                "id": 1829,
+                "name": "2_113",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 21,
+                "createdAt": "2026-08-16T05:06:05.977Z",
+                "updatedAt": "2026-08-16T05:06:05.977Z",
+                "children": []
+              },
+              {
+                "id": 1830,
+                "name": "2_11X",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 22,
+                "createdAt": "2026-08-16T05:06:06.038Z",
+                "updatedAt": "2026-08-16T05:06:06.038Z",
+                "children": []
+              },
+              {
+                "id": 1831,
+                "name": "2_120",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 23,
+                "createdAt": "2026-08-16T05:06:06.098Z",
+                "updatedAt": "2026-08-16T05:06:06.098Z",
+                "children": []
+              },
+              {
+                "id": 1832,
+                "name": "2_121",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 24,
+                "createdAt": "2026-08-16T05:06:06.158Z",
+                "updatedAt": "2026-08-16T05:06:06.158Z",
+                "children": []
+              },
+              {
+                "id": 1833,
+                "name": "2_122",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 25,
+                "createdAt": "2026-08-16T05:06:06.214Z",
+                "updatedAt": "2026-08-16T05:06:06.214Z",
+                "children": []
+              },
+              {
+                "id": 1834,
+                "name": "2_123",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 26,
+                "createdAt": "2026-08-16T05:06:06.279Z",
+                "updatedAt": "2026-08-16T05:06:06.279Z",
+                "children": []
+              },
+              {
+                "id": 1835,
+                "name": "2_125",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 27,
+                "createdAt": "2026-08-16T05:06:06.335Z",
+                "updatedAt": "2026-08-16T05:06:06.335Z",
+                "children": []
+              },
+              {
+                "id": 1836,
+                "name": "2_126",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 28,
+                "createdAt": "2026-08-16T05:06:06.416Z",
+                "updatedAt": "2026-08-16T05:06:06.416Z",
+                "children": []
+              },
+              {
+                "id": 1837,
+                "name": "2_12X",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 29,
+                "createdAt": "2026-08-16T05:06:06.480Z",
+                "updatedAt": "2026-08-16T05:06:06.480Z",
+                "children": []
+              },
+              {
+                "id": 1838,
+                "name": "2_133",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 30,
+                "createdAt": "2026-08-16T05:06:06.537Z",
+                "updatedAt": "2026-08-16T05:06:06.537Z",
+                "children": []
+              },
+              {
+                "id": 1839,
+                "name": "2_135",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 31,
+                "createdAt": "2026-08-16T05:06:06.624Z",
+                "updatedAt": "2026-08-16T05:06:06.624Z",
+                "children": []
+              },
+              {
+                "id": 1840,
+                "name": "2_13X",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 32,
+                "createdAt": "2026-08-16T05:06:06.693Z",
+                "updatedAt": "2026-08-16T05:06:06.693Z",
+                "children": []
+              },
+              {
+                "id": 1841,
+                "name": "2_151",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 33,
+                "createdAt": "2026-08-16T05:06:06.755Z",
+                "updatedAt": "2026-08-16T05:06:06.755Z",
+                "children": []
+              },
+              {
+                "id": 1842,
+                "name": "2_152",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 34,
+                "createdAt": "2026-08-16T05:06:06.826Z",
+                "updatedAt": "2026-08-16T05:06:06.826Z",
+                "children": []
+              },
+              {
+                "id": 1843,
+                "name": "2_153",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 35,
+                "createdAt": "2026-08-16T05:06:06.888Z",
+                "updatedAt": "2026-08-16T05:06:06.888Z",
+                "children": []
+              },
+              {
+                "id": 1844,
+                "name": "2_154",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 36,
+                "createdAt": "2026-08-16T05:06:06.950Z",
+                "updatedAt": "2026-08-16T05:06:06.950Z",
+                "children": []
+              },
+              {
+                "id": 1845,
+                "name": "2_155",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 37,
+                "createdAt": "2026-08-16T05:06:07.005Z",
+                "updatedAt": "2026-08-16T05:06:07.005Z",
+                "children": []
+              },
+              {
+                "id": 1846,
+                "name": "2_15X",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 38,
+                "createdAt": "2026-08-16T05:06:07.063Z",
+                "updatedAt": "2026-08-16T05:06:07.063Z",
+                "children": []
+              },
+              {
+                "id": 1847,
+                "name": "2_161",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 39,
+                "createdAt": "2026-08-16T05:06:07.123Z",
+                "updatedAt": "2026-08-16T05:06:07.123Z",
+                "children": []
+              },
+              {
+                "id": 1848,
+                "name": "2_162",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 40,
+                "createdAt": "2026-08-16T05:06:07.185Z",
+                "updatedAt": "2026-08-16T05:06:07.185Z",
+                "children": []
+              },
+              {
+                "id": 1849,
+                "name": "2_16X",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 41,
+                "createdAt": "2026-08-16T05:06:07.255Z",
+                "updatedAt": "2026-08-16T05:06:07.255Z",
+                "children": []
+              },
+              {
+                "id": 1850,
+                "name": "2_171",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 42,
+                "createdAt": "2026-08-16T05:06:07.317Z",
+                "updatedAt": "2026-08-16T05:06:07.317Z",
+                "children": []
+              },
+              {
+                "id": 1851,
+                "name": "2_172",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 43,
+                "createdAt": "2026-08-16T05:06:07.378Z",
+                "updatedAt": "2026-08-16T05:06:07.378Z",
+                "children": []
+              },
+              {
+                "id": 1852,
+                "name": "2_173",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 44,
+                "createdAt": "2026-08-16T05:06:07.435Z",
+                "updatedAt": "2026-08-16T05:06:07.435Z",
+                "children": []
+              },
+              {
+                "id": 1853,
+                "name": "2_17X",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 45,
+                "createdAt": "2026-08-16T05:06:07.495Z",
+                "updatedAt": "2026-08-16T05:06:07.495Z",
+                "children": []
+              },
+              {
+                "id": 1854,
+                "name": "2_1XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 46,
+                "createdAt": "2026-08-16T05:06:07.552Z",
+                "updatedAt": "2026-08-16T05:06:07.552Z",
+                "children": []
+              },
+              {
+                "id": 1855,
+                "name": "2_221",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 47,
+                "createdAt": "2026-08-16T05:06:07.609Z",
+                "updatedAt": "2026-08-16T05:06:07.609Z",
+                "children": []
+              },
+              {
+                "id": 1856,
+                "name": "2_222",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 48,
+                "createdAt": "2026-08-16T05:06:07.669Z",
+                "updatedAt": "2026-08-16T05:06:07.669Z",
+                "children": []
+              },
+              {
+                "id": 1857,
+                "name": "2_223",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 49,
+                "createdAt": "2026-08-16T05:06:07.729Z",
+                "updatedAt": "2026-08-16T05:06:07.729Z",
+                "children": []
+              },
+              {
+                "id": 1858,
+                "name": "2_224",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 50,
+                "createdAt": "2026-08-16T05:06:07.791Z",
+                "updatedAt": "2026-08-16T05:06:07.791Z",
+                "children": []
+              },
+              {
+                "id": 1859,
+                "name": "2_22X",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 51,
+                "createdAt": "2026-08-16T05:06:07.849Z",
+                "updatedAt": "2026-08-16T05:06:07.849Z",
+                "children": []
+              },
+              {
+                "id": 1860,
+                "name": "2_231",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 52,
+                "createdAt": "2026-08-16T05:06:07.917Z",
+                "updatedAt": "2026-08-16T05:06:07.917Z",
+                "children": []
+              },
+              {
+                "id": 1861,
+                "name": "2_233",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 53,
+                "createdAt": "2026-08-16T05:06:07.977Z",
+                "updatedAt": "2026-08-16T05:06:07.977Z",
+                "children": []
+              },
+              {
+                "id": 1862,
+                "name": "2_234",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 54,
+                "createdAt": "2026-08-16T05:06:08.035Z",
+                "updatedAt": "2026-08-16T05:06:08.035Z",
+                "children": []
+              },
+              {
+                "id": 1863,
+                "name": "2_23X",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 55,
+                "createdAt": "2026-08-16T05:06:08.094Z",
+                "updatedAt": "2026-08-16T05:06:08.094Z",
+                "children": []
+              },
+              {
+                "id": 1864,
+                "name": "2_2XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 56,
+                "createdAt": "2026-08-16T05:06:08.154Z",
+                "updatedAt": "2026-08-16T05:06:08.154Z",
+                "children": []
+              },
+              {
+                "id": 1865,
+                "name": "2_301",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 57,
+                "createdAt": "2026-08-16T05:06:08.951Z",
+                "updatedAt": "2026-08-16T05:06:08.951Z",
+                "children": []
+              },
+              {
+                "id": 1866,
+                "name": "2_302",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 58,
+                "createdAt": "2026-08-16T05:06:09.014Z",
+                "updatedAt": "2026-08-16T05:06:09.014Z",
+                "children": []
+              },
+              {
+                "id": 1867,
+                "name": "2_3XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 59,
+                "createdAt": "2026-08-16T05:06:09.073Z",
+                "updatedAt": "2026-08-16T05:06:09.073Z",
+                "children": []
+              },
+              {
+                "id": 1868,
+                "name": "2_401",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 60,
+                "createdAt": "2026-08-16T05:06:09.124Z",
+                "updatedAt": "2026-08-16T05:06:09.124Z",
+                "children": []
+              },
+              {
+                "id": 1869,
+                "name": "2_4XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 61,
+                "createdAt": "2026-08-16T05:06:09.184Z",
+                "updatedAt": "2026-08-16T05:06:09.184Z",
+                "children": []
+              },
+              {
+                "id": 1870,
+                "name": "2_CLC",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 62,
+                "createdAt": "2026-08-16T05:06:09.246Z",
+                "updatedAt": "2026-08-16T05:06:09.246Z",
+                "children": []
+              },
+              {
+                "id": 1871,
+                "name": "3_001",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 63,
+                "createdAt": "2026-08-16T05:06:09.299Z",
+                "updatedAt": "2026-08-16T05:06:09.299Z",
+                "children": []
+              },
+              {
+                "id": 1872,
+                "name": "3_002",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 64,
+                "createdAt": "2026-08-16T05:06:09.359Z",
+                "updatedAt": "2026-08-16T05:06:09.359Z",
+                "children": []
+              },
+              {
+                "id": 1873,
+                "name": "3_003",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 65,
+                "createdAt": "2026-08-16T05:06:09.419Z",
+                "updatedAt": "2026-08-16T05:06:09.419Z",
+                "children": []
+              },
+              {
+                "id": 1874,
+                "name": "3_ACT",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 66,
+                "createdAt": "2026-08-16T05:06:09.480Z",
+                "updatedAt": "2026-08-16T05:06:09.480Z",
+                "children": []
+              },
+              {
+                "id": 1875,
+                "name": "4_101",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 67,
+                "createdAt": "2026-08-16T05:06:09.538Z",
+                "updatedAt": "2026-08-16T05:06:09.538Z",
+                "children": []
+              },
+              {
+                "id": 1876,
+                "name": "4_102",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 68,
+                "createdAt": "2026-08-16T05:06:09.597Z",
+                "updatedAt": "2026-08-16T05:06:09.597Z",
+                "children": []
+              },
+              {
+                "id": 1877,
+                "name": "4_103",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 69,
+                "createdAt": "2026-08-16T05:06:09.665Z",
+                "updatedAt": "2026-08-16T05:06:09.665Z",
+                "children": []
+              },
+              {
+                "id": 1878,
+                "name": "4_104",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 70,
+                "createdAt": "2026-08-16T05:06:09.724Z",
+                "updatedAt": "2026-08-16T05:06:09.724Z",
+                "children": []
+              },
+              {
+                "id": 1879,
+                "name": "4_1XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 71,
+                "createdAt": "2026-08-16T05:06:09.786Z",
+                "updatedAt": "2026-08-16T05:06:09.786Z",
+                "children": []
+              },
+              {
+                "id": 1880,
+                "name": "4_201",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 72,
+                "createdAt": "2026-08-16T05:06:09.851Z",
+                "updatedAt": "2026-08-16T05:06:09.851Z",
+                "children": []
+              },
+              {
+                "id": 1881,
+                "name": "4_202",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 73,
+                "createdAt": "2026-08-16T05:06:09.915Z",
+                "updatedAt": "2026-08-16T05:06:09.915Z",
+                "children": []
+              },
+              {
+                "id": 1882,
+                "name": "4_203",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 74,
+                "createdAt": "2026-08-16T05:06:09.972Z",
+                "updatedAt": "2026-08-16T05:06:09.972Z",
+                "children": []
+              },
+              {
+                "id": 1883,
+                "name": "4_2XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 75,
+                "createdAt": "2026-08-16T05:06:10.034Z",
+                "updatedAt": "2026-08-16T05:06:10.034Z",
+                "children": []
+              },
+              {
+                "id": 1884,
+                "name": "4_301",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 76,
+                "createdAt": "2026-08-16T05:06:10.092Z",
+                "updatedAt": "2026-08-16T05:06:10.092Z",
+                "children": []
+              },
+              {
+                "id": 1885,
+                "name": "4_302",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 77,
+                "createdAt": "2026-08-16T05:06:10.151Z",
+                "updatedAt": "2026-08-16T05:06:10.151Z",
+                "children": []
+              },
+              {
+                "id": 1886,
+                "name": "4_303",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 78,
+                "createdAt": "2026-08-16T05:06:10.212Z",
+                "updatedAt": "2026-08-16T05:06:10.212Z",
+                "children": []
+              },
+              {
+                "id": 1887,
+                "name": "4_3XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 79,
+                "createdAt": "2026-08-16T05:06:10.269Z",
+                "updatedAt": "2026-08-16T05:06:10.269Z",
+                "children": []
+              },
+              {
+                "id": 1888,
+                "name": "4_501",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 80,
+                "createdAt": "2026-08-16T05:06:10.332Z",
+                "updatedAt": "2026-08-16T05:06:10.332Z",
+                "children": []
+              },
+              {
+                "id": 1889,
+                "name": "4_503",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 81,
+                "createdAt": "2026-08-16T05:06:10.396Z",
+                "updatedAt": "2026-08-16T05:06:10.396Z",
+                "children": []
+              },
+              {
+                "id": 1890,
+                "name": "4_504",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 82,
+                "createdAt": "2026-08-16T05:06:10.454Z",
+                "updatedAt": "2026-08-16T05:06:10.454Z",
+                "children": []
+              },
+              {
+                "id": 1891,
+                "name": "4_5XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 83,
+                "createdAt": "2026-08-16T05:06:10.517Z",
+                "updatedAt": "2026-08-16T05:06:10.517Z",
+                "children": []
+              },
+              {
+                "id": 1892,
+                "name": "4_PRO",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 84,
+                "createdAt": "2026-08-16T05:06:10.578Z",
+                "updatedAt": "2026-08-16T05:06:10.578Z",
+                "children": []
+              },
+              {
+                "id": 1893,
+                "name": "5_110",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 85,
+                "createdAt": "2026-08-16T05:06:10.634Z",
+                "updatedAt": "2026-08-16T05:06:10.634Z",
+                "children": []
+              },
+              {
+                "id": 1894,
+                "name": "5_1XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 86,
+                "createdAt": "2026-08-16T05:06:10.694Z",
+                "updatedAt": "2026-08-16T05:06:10.694Z",
+                "children": []
+              },
+              {
+                "id": 1895,
+                "name": "5_210",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 87,
+                "createdAt": "2026-08-16T05:06:10.757Z",
+                "updatedAt": "2026-08-16T05:06:10.757Z",
+                "children": []
+              },
+              {
+                "id": 1896,
+                "name": "5_2XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 88,
+                "createdAt": "2026-08-16T05:06:10.818Z",
+                "updatedAt": "2026-08-16T05:06:10.818Z",
+                "children": []
+              },
+              {
+                "id": 1897,
+                "name": "5_310",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 89,
+                "createdAt": "2026-08-16T05:06:10.874Z",
+                "updatedAt": "2026-08-16T05:06:10.874Z",
+                "children": []
+              },
+              {
+                "id": 1898,
+                "name": "5_3XX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 90,
+                "createdAt": "2026-08-16T05:06:10.937Z",
+                "updatedAt": "2026-08-16T05:06:10.937Z",
+                "children": []
+              },
+              {
+                "id": 1899,
+                "name": "5_MON",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 91,
+                "createdAt": "2026-08-16T05:06:10.999Z",
+                "updatedAt": "2026-08-16T05:06:10.999Z",
+                "children": []
+              },
+              {
+                "id": 1900,
+                "name": "ACO",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 92,
+                "createdAt": "2026-08-16T05:06:11.054Z",
+                "updatedAt": "2026-08-16T05:06:11.054Z",
+                "children": []
+              },
+              {
+                "id": 1901,
+                "name": "ADG",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 93,
+                "createdAt": "2026-08-16T05:06:11.115Z",
+                "updatedAt": "2026-08-16T05:06:11.115Z",
+                "children": []
+              },
+              {
+                "id": 1902,
+                "name": "APB",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 94,
+                "createdAt": "2026-08-16T05:06:11.180Z",
+                "updatedAt": "2026-08-16T05:06:11.180Z",
+                "children": [
+                  {
+                    "id": 1903,
+                    "name": "data",
+                    "type": "directory",
+                    "metadata": null,
+                    "parentId": 1902,
+                    "order": 1,
+                    "createdAt": "2026-08-16T05:06:11.240Z",
+                    "updatedAt": "2026-08-16T05:06:11.240Z",
+                    "children": [
+                      {
+                        "id": 1904,
+                        "name": "qr",
+                        "type": "directory",
+                        "metadata": null,
+                        "parentId": 1903,
+                        "order": 0,
+                        "createdAt": "2026-08-16T05:06:11.294Z",
+                        "updatedAt": "2026-08-16T05:06:11.294Z",
+                        "children": [
+                          {
+                            "id": 1905,
+                            "name": "pompes alimentaires BP.json",
+                            "type": "file",
+                            "metadata": null,
+                            "parentId": 1904,
+                            "order": 0,
+                            "createdAt": "2026-08-16T05:06:11.355Z",
+                            "updatedAt": "2026-08-16T05:06:11.355Z",
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": 1906,
+                "name": "APH",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 95,
+                "createdAt": "2026-08-16T05:06:11.416Z",
+                "updatedAt": "2026-08-16T05:06:11.416Z",
+                "children": [
+                  {
+                    "id": 1907,
+                    "name": "data",
+                    "type": "directory",
+                    "metadata": null,
+                    "parentId": 1906,
+                    "order": 1,
+                    "createdAt": "2026-08-16T05:06:11.479Z",
+                    "updatedAt": "2026-08-16T05:06:11.479Z",
+                    "children": [
+                      {
+                        "id": 1908,
+                        "name": "qr",
+                        "type": "directory",
+                        "metadata": null,
+                        "parentId": 1907,
+                        "order": 0,
+                        "createdAt": "2026-08-16T05:06:11.534Z",
+                        "updatedAt": "2026-08-16T05:06:11.534Z",
+                        "children": [
+                          {
+                            "id": 1909,
+                            "name": "différence entre les pompes APB et APH.json",
+                            "type": "file",
+                            "metadata": null,
+                            "parentId": 1908,
+                            "order": 0,
+                            "createdAt": "2026-08-16T05:06:11.594Z",
+                            "updatedAt": "2026-08-16T05:06:11.594Z",
+                            "children": []
+                          },
+                          {
+                            "id": 1910,
+                            "name": "vibration.json",
+                            "type": "file",
+                            "metadata": null,
+                            "parentId": 1908,
+                            "order": 1,
+                            "createdAt": "2026-08-16T05:06:11.650Z",
+                            "updatedAt": "2026-08-16T05:06:11.650Z",
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": 1911,
+                "name": "ARG",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 96,
+                "createdAt": "2026-08-16T05:06:11.715Z",
+                "updatedAt": "2026-08-16T05:06:11.715Z",
+                "children": []
+              },
+              {
+                "id": 1912,
+                "name": "CAP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 97,
+                "createdAt": "2026-08-16T05:06:11.781Z",
+                "updatedAt": "2026-08-16T05:06:11.781Z",
+                "children": []
+              },
+              {
+                "id": 1913,
+                "name": "CAR",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 98,
+                "createdAt": "2026-08-16T05:06:11.840Z",
+                "updatedAt": "2026-08-16T05:06:11.840Z",
+                "children": []
+              },
+              {
+                "id": 1914,
+                "name": "CET",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 99,
+                "createdAt": "2026-08-16T05:06:11.899Z",
+                "updatedAt": "2026-08-16T05:06:11.899Z",
+                "children": []
+              },
+              {
+                "id": 1915,
+                "name": "CEX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 100,
+                "createdAt": "2026-08-16T05:06:11.955Z",
+                "updatedAt": "2026-08-16T05:06:11.955Z",
+                "children": []
+              },
+              {
+                "id": 1916,
+                "name": "CFI",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 101,
+                "createdAt": "2026-08-16T05:06:12.068Z",
+                "updatedAt": "2026-08-16T05:06:12.068Z",
+                "children": []
+              },
+              {
+                "id": 1917,
+                "name": "CJK",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 102,
+                "createdAt": "2026-08-16T05:06:12.128Z",
+                "updatedAt": "2026-08-16T05:06:12.128Z",
+                "children": []
+              },
+              {
+                "id": 1918,
+                "name": "CRF",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 103,
+                "createdAt": "2026-08-16T05:06:12.190Z",
+                "updatedAt": "2026-08-16T05:06:12.190Z",
+                "children": []
+              },
+              {
+                "id": 1919,
+                "name": "CTA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 104,
+                "createdAt": "2026-08-16T05:06:12.248Z",
+                "updatedAt": "2026-08-16T05:06:12.248Z",
+                "children": []
+              },
+              {
+                "id": 1920,
+                "name": "CVI",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 105,
+                "createdAt": "2026-08-16T05:06:12.316Z",
+                "updatedAt": "2026-08-16T05:06:12.316Z",
+                "children": []
+              },
+              {
+                "id": 1921,
+                "name": "ELE",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 106,
+                "createdAt": "2026-08-16T05:06:12.374Z",
+                "updatedAt": "2026-08-16T05:06:12.374Z",
+                "children": []
+              },
+              {
+                "id": 1922,
+                "name": "FBP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 107,
+                "createdAt": "2026-08-16T05:06:12.433Z",
+                "updatedAt": "2026-08-16T05:06:12.433Z",
+                "children": []
+              },
+              {
+                "id": 1923,
+                "name": "GBP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 108,
+                "createdAt": "2026-08-16T05:06:12.496Z",
+                "updatedAt": "2026-08-16T05:06:12.496Z",
+                "children": []
+              },
+              {
+                "id": 1924,
+                "name": "GEV",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 109,
+                "createdAt": "2026-08-16T05:06:12.554Z",
+                "updatedAt": "2026-08-16T05:06:12.554Z",
+                "children": []
+              },
+              {
+                "id": 1925,
+                "name": "GEX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 110,
+                "createdAt": "2026-08-16T05:06:12.663Z",
+                "updatedAt": "2026-08-16T05:06:12.663Z",
+                "children": []
+              },
+              {
+                "id": 1926,
+                "name": "GFR",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 111,
+                "createdAt": "2026-08-16T05:06:12.721Z",
+                "updatedAt": "2026-08-16T05:06:12.721Z",
+                "children": []
+              },
+              {
+                "id": 1927,
+                "name": "GGR",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 112,
+                "createdAt": "2026-08-16T05:06:12.784Z",
+                "updatedAt": "2026-08-16T05:06:12.784Z",
+                "children": []
+              },
+              {
+                "id": 1928,
+                "name": "GHP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 113,
+                "createdAt": "2026-08-16T05:06:12.844Z",
+                "updatedAt": "2026-08-16T05:06:12.844Z",
+                "children": []
+              },
+              {
+                "id": 1929,
+                "name": "GMA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 114,
+                "createdAt": "2026-08-16T05:06:12.904Z",
+                "updatedAt": "2026-08-16T05:06:12.904Z",
+                "children": []
+              },
+              {
+                "id": 1930,
+                "name": "GPA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 115,
+                "createdAt": "2026-08-16T05:06:12.963Z",
+                "updatedAt": "2026-08-16T05:06:12.963Z",
+                "children": []
+              },
+              {
+                "id": 1931,
+                "name": "GPV",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 116,
+                "createdAt": "2026-08-16T05:06:13.023Z",
+                "updatedAt": "2026-08-16T05:06:13.023Z",
+                "children": []
+              },
+              {
+                "id": 1932,
+                "name": "GRA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 117,
+                "createdAt": "2026-08-16T05:06:13.083Z",
+                "updatedAt": "2026-08-16T05:06:13.083Z",
+                "children": []
+              },
+              {
+                "id": 1933,
+                "name": "GTH",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 118,
+                "createdAt": "2026-08-16T05:06:13.145Z",
+                "updatedAt": "2026-08-16T05:06:13.145Z",
+                "children": []
+              },
+              {
+                "id": 1934,
+                "name": "HMI",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 119,
+                "createdAt": "2026-08-16T05:06:13.203Z",
+                "updatedAt": "2026-08-16T05:06:13.203Z",
+                "children": []
+              },
+              {
+                "id": 1935,
+                "name": "HSX",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 120,
+                "createdAt": "2026-08-16T05:06:13.263Z",
+                "updatedAt": "2026-08-16T05:06:13.263Z",
+                "children": []
+              },
+              {
+                "id": 1936,
+                "name": "KCA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 121,
+                "createdAt": "2026-08-16T05:06:13.321Z",
+                "updatedAt": "2026-08-16T05:06:13.321Z",
+                "children": []
+              },
+              {
+                "id": 1937,
+                "name": "KCZ",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 122,
+                "createdAt": "2026-08-16T05:06:13.384Z",
+                "updatedAt": "2026-08-16T05:06:13.384Z",
+                "children": []
+              },
+              {
+                "id": 1938,
+                "name": "KOS",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 123,
+                "createdAt": "2026-08-16T05:06:13.443Z",
+                "updatedAt": "2026-08-16T05:06:13.443Z",
+                "children": []
+              },
+              {
+                "id": 1939,
+                "name": "KRG",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 124,
+                "createdAt": "2026-08-16T05:06:13.505Z",
+                "updatedAt": "2026-08-16T05:06:13.505Z",
+                "children": []
+              },
+              {
+                "id": 1940,
+                "name": "KSC",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 125,
+                "createdAt": "2026-08-16T05:06:13.564Z",
+                "updatedAt": "2026-08-16T05:06:13.564Z",
+                "children": []
+              },
+              {
+                "id": 1941,
+                "name": "LBA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 126,
+                "createdAt": "2026-08-16T05:06:13.624Z",
+                "updatedAt": "2026-08-16T05:06:13.624Z",
+                "children": []
+              },
+              {
+                "id": 1942,
+                "name": "LBB",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 127,
+                "createdAt": "2026-08-16T05:06:13.684Z",
+                "updatedAt": "2026-08-16T05:06:13.684Z",
+                "children": []
+              },
+              {
+                "id": 1943,
+                "name": "LCA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 128,
+                "createdAt": "2026-08-16T05:06:13.745Z",
+                "updatedAt": "2026-08-16T05:06:13.745Z",
+                "children": []
+              },
+              {
+                "id": 1944,
+                "name": "LCB",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 129,
+                "createdAt": "2026-08-16T05:06:13.804Z",
+                "updatedAt": "2026-08-16T05:06:13.804Z",
+                "children": []
+              },
+              {
+                "id": 1945,
+                "name": "LGA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 130,
+                "createdAt": "2026-08-16T05:06:13.864Z",
+                "updatedAt": "2026-08-16T05:06:13.864Z",
+                "children": []
+              },
+              {
+                "id": 1946,
+                "name": "LJP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 131,
+                "createdAt": "2026-08-16T05:06:13.924Z",
+                "updatedAt": "2026-08-16T05:06:13.924Z",
+                "children": []
+              },
+              {
+                "id": 1947,
+                "name": "LKA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 132,
+                "createdAt": "2026-08-16T05:06:13.983Z",
+                "updatedAt": "2026-08-16T05:06:13.983Z",
+                "children": []
+              },
+              {
+                "id": 1948,
+                "name": "LNA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 133,
+                "createdAt": "2026-08-16T05:06:14.044Z",
+                "updatedAt": "2026-08-16T05:06:14.044Z",
+                "children": []
+              },
+              {
+                "id": 1949,
+                "name": "SER",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 134,
+                "createdAt": "2026-08-16T05:06:14.103Z",
+                "updatedAt": "2026-08-16T05:06:14.103Z",
+                "children": []
+              },
+              {
+                "id": 1950,
+                "name": "SIT",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 135,
+                "createdAt": "2026-08-16T05:06:14.164Z",
+                "updatedAt": "2026-08-16T05:06:14.164Z",
+                "children": []
+              },
+              {
+                "id": 1951,
+                "name": "SRI",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 136,
+                "createdAt": "2026-08-16T05:06:14.224Z",
+                "updatedAt": "2026-08-16T05:06:14.224Z",
+                "children": []
+              },
+              {
+                "id": 1952,
+                "name": "SVA",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 137,
+                "createdAt": "2026-08-16T05:06:14.285Z",
+                "updatedAt": "2026-08-16T05:06:14.285Z",
+                "children": []
+              },
+              {
+                "id": 1953,
+                "name": "SXS",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 138,
+                "createdAt": "2026-08-16T05:06:14.343Z",
+                "updatedAt": "2026-08-16T05:06:14.343Z",
+                "children": []
+              },
+              {
+                "id": 1954,
+                "name": "VRI",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 139,
+                "createdAt": "2026-08-16T05:06:14.405Z",
+                "updatedAt": "2026-08-16T05:06:14.405Z",
+                "children": []
+              },
+              {
+                "id": 1955,
+                "name": "VVP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1808,
+                "order": 140,
+                "createdAt": "2026-08-16T05:06:14.465Z",
+                "updatedAt": "2026-08-16T05:06:14.465Z",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 1956,
+        "name": "Groupes",
+        "type": "directory",
+        "metadata": null,
+        "parentId": 1686,
+        "order": 2,
+        "createdAt": "2026-08-16T05:06:14.525Z",
+        "updatedAt": "2026-08-16T05:06:14.525Z",
+        "children": [
+          {
+            "id": 1957,
+            "name": "CHAUDIERE DE RECUPERATION 1",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1956,
+            "order": 0,
+            "createdAt": "2026-08-16T05:06:14.585Z",
+            "updatedAt": "2026-08-16T05:06:14.585Z",
+            "children": [
+              {
+                "id": 1958,
+                "name": "B1CR11",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1957,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:14.647Z",
+                "updatedAt": "2026-08-16T05:06:14.647Z",
+                "children": []
+              },
+              {
+                "id": 1959,
+                "name": "B1CR21",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1957,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:14.711Z",
+                "updatedAt": "2026-08-16T05:06:14.711Z",
+                "children": []
+              },
+              {
+                "id": 1960,
+                "name": "B1CR22",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1957,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:14.773Z",
+                "updatedAt": "2026-08-16T05:06:14.773Z",
+                "children": []
+              },
+              {
+                "id": 1961,
+                "name": "B1CR31",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1957,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:14.830Z",
+                "updatedAt": "2026-08-16T05:06:14.830Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 1962,
+            "name": "CHAUDIERE DE RECUPERATION 2",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1956,
+            "order": 1,
+            "createdAt": "2026-08-16T05:06:14.889Z",
+            "updatedAt": "2026-08-16T05:06:14.889Z",
+            "children": [
+              {
+                "id": 1963,
+                "name": "B2CR11",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1962,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:14.948Z",
+                "updatedAt": "2026-08-16T05:06:14.948Z",
+                "children": []
+              },
+              {
+                "id": 1964,
+                "name": "B2CR21",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1962,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:15.045Z",
+                "updatedAt": "2026-08-16T05:06:15.045Z",
+                "children": []
+              },
+              {
+                "id": 1965,
+                "name": "B2CR22",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1962,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:15.101Z",
+                "updatedAt": "2026-08-16T05:06:15.101Z",
+                "children": []
+              },
+              {
+                "id": 1966,
+                "name": "B2CR31",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1962,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:15.166Z",
+                "updatedAt": "2026-08-16T05:06:15.166Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 1967,
+            "name": "CONTROSTEAM",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1956,
+            "order": 2,
+            "createdAt": "2026-08-16T05:06:15.229Z",
+            "updatedAt": "2026-08-16T05:06:15.229Z",
+            "children": [
+              {
+                "id": 1968,
+                "name": "B3TV41",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1967,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:15.290Z",
+                "updatedAt": "2026-08-16T05:06:15.290Z",
+                "children": []
+              },
+              {
+                "id": 1969,
+                "name": "B3TV42",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1967,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:15.349Z",
+                "updatedAt": "2026-08-16T05:06:15.349Z",
+                "children": []
+              },
+              {
+                "id": 1970,
+                "name": "B3TV43",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1967,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:15.410Z",
+                "updatedAt": "2026-08-16T05:06:15.410Z",
+                "children": []
+              },
+              {
+                "id": 1971,
+                "name": "B3TV44",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1967,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:15.465Z",
+                "updatedAt": "2026-08-16T05:06:15.465Z",
+                "children": []
+              },
+              {
+                "id": 1972,
+                "name": "B3TV45",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1967,
+                "order": 5,
+                "createdAt": "2026-08-16T05:06:15.528Z",
+                "updatedAt": "2026-08-16T05:06:15.528Z",
+                "children": []
+              },
+              {
+                "id": 1973,
+                "name": "B3TV46EXP",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1967,
+                "order": 6,
+                "createdAt": "2026-08-16T05:06:15.589Z",
+                "updatedAt": "2026-08-16T05:06:15.589Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 1974,
+            "name": "DISTRIBUTION ELECTRIQUE",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1956,
+            "order": 3,
+            "createdAt": "2026-08-16T05:06:15.650Z",
+            "updatedAt": "2026-08-16T05:06:15.650Z",
+            "children": [
+              {
+                "id": 1975,
+                "name": "B0EL11",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1974,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:15.707Z",
+                "updatedAt": "2026-08-16T05:06:15.707Z",
+                "children": []
+              },
+              {
+                "id": 1976,
+                "name": "B0EL21",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1974,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:15.766Z",
+                "updatedAt": "2026-08-16T05:06:15.766Z",
+                "children": []
+              },
+              {
+                "id": 1977,
+                "name": "B0EL22",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1974,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:15.826Z",
+                "updatedAt": "2026-08-16T05:06:15.826Z",
+                "children": []
+              },
+              {
+                "id": 1978,
+                "name": "B1EL21",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1974,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:15.889Z",
+                "updatedAt": "2026-08-16T05:06:15.889Z",
+                "children": []
+              },
+              {
+                "id": 1979,
+                "name": "B2EL21",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1974,
+                "order": 5,
+                "createdAt": "2026-08-16T05:06:15.950Z",
+                "updatedAt": "2026-08-16T05:06:15.950Z",
+                "children": []
+              },
+              {
+                "id": 1980,
+                "name": "B3EL21",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1974,
+                "order": 6,
+                "createdAt": "2026-08-16T05:06:16.005Z",
+                "updatedAt": "2026-08-16T05:06:16.005Z",
+                "children": []
+              },
+              {
+                "id": 1981,
+                "name": "B3EL22",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1974,
+                "order": 7,
+                "createdAt": "2026-08-16T05:06:16.067Z",
+                "updatedAt": "2026-08-16T05:06:16.067Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 1982,
+            "name": "Groupes",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1956,
+            "order": 4,
+            "createdAt": "2026-08-16T05:06:16.128Z",
+            "updatedAt": "2026-08-16T05:06:16.128Z",
+            "children": []
+          },
+          {
+            "id": 1983,
+            "name": "ORDINATEUR DE SUPERVISION - TCI",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1956,
+            "order": 5,
+            "createdAt": "2026-08-16T05:06:16.191Z",
+            "updatedAt": "2026-08-16T05:06:16.191Z",
+            "children": [
+              {
+                "id": 1984,
+                "name": "B0SY11",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1983,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:16.252Z",
+                "updatedAt": "2026-08-16T05:06:16.252Z",
+                "children": []
+              },
+              {
+                "id": 1985,
+                "name": "B0SY21",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1983,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:16.315Z",
+                "updatedAt": "2026-08-16T05:06:16.315Z",
+                "children": []
+              },
+              {
+                "id": 1986,
+                "name": "B0SY31",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1983,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:16.377Z",
+                "updatedAt": "2026-08-16T05:06:16.377Z",
+                "children": []
+              },
+              {
+                "id": 1987,
+                "name": "B0SY32",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1983,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:16.449Z",
+                "updatedAt": "2026-08-16T05:06:16.449Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 1988,
+            "name": "POSTE D'EAU",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1956,
+            "order": 6,
+            "createdAt": "2026-08-16T05:06:16.509Z",
+            "updatedAt": "2026-08-16T05:06:16.509Z",
+            "children": [
+              {
+                "id": 1989,
+                "name": "B3PE11",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1988,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:16.571Z",
+                "updatedAt": "2026-08-16T05:06:16.571Z",
+                "children": []
+              },
+              {
+                "id": 1990,
+                "name": "B3PE20",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1988,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:16.627Z",
+                "updatedAt": "2026-08-16T05:06:16.627Z",
+                "children": []
+              },
+              {
+                "id": 1991,
+                "name": "B3PE21",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1988,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:16.731Z",
+                "updatedAt": "2026-08-16T05:06:16.731Z",
+                "children": []
+              },
+              {
+                "id": 1992,
+                "name": "B3PE22",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1988,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:16.797Z",
+                "updatedAt": "2026-08-16T05:06:16.797Z",
+                "children": []
+              },
+              {
+                "id": 1993,
+                "name": "B3PE23",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1988,
+                "order": 5,
+                "createdAt": "2026-08-16T05:06:16.869Z",
+                "updatedAt": "2026-08-16T05:06:16.869Z",
+                "children": []
+              },
+              {
+                "id": 1994,
+                "name": "B3PE24",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1988,
+                "order": 6,
+                "createdAt": "2026-08-16T05:06:16.932Z",
+                "updatedAt": "2026-08-16T05:06:16.932Z",
+                "children": []
+              },
+              {
+                "id": 1995,
+                "name": "B3PE25",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1988,
+                "order": 7,
+                "createdAt": "2026-08-16T05:06:16.997Z",
+                "updatedAt": "2026-08-16T05:06:16.997Z",
+                "children": []
+              },
+              {
+                "id": 1996,
+                "name": "B3PE26",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1988,
+                "order": 8,
+                "createdAt": "2026-08-16T05:06:17.059Z",
+                "updatedAt": "2026-08-16T05:06:17.059Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 1997,
+            "name": "REGULATION ET CALCULS",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1956,
+            "order": 7,
+            "createdAt": "2026-08-16T05:06:17.120Z",
+            "updatedAt": "2026-08-16T05:06:17.120Z",
+            "children": [
+              {
+                "id": 1998,
+                "name": "B0ASR1",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1997,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:17.176Z",
+                "updatedAt": "2026-08-16T05:06:17.176Z",
+                "children": []
+              },
+              {
+                "id": 1999,
+                "name": "B0GN31",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1997,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:17.235Z",
+                "updatedAt": "2026-08-16T05:06:17.235Z",
+                "children": []
+              },
+              {
+                "id": 2000,
+                "name": "B0GN32",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1997,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:17.298Z",
+                "updatedAt": "2026-08-16T05:06:17.298Z",
+                "children": []
+              },
+              {
+                "id": 2001,
+                "name": "B0GNR1",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1997,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:17.358Z",
+                "updatedAt": "2026-08-16T05:06:17.358Z",
+                "children": []
+              },
+              {
+                "id": 2002,
+                "name": "B1CRR1",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1997,
+                "order": 5,
+                "createdAt": "2026-08-16T05:06:17.418Z",
+                "updatedAt": "2026-08-16T05:06:17.418Z",
+                "children": []
+              },
+              {
+                "id": 2003,
+                "name": "B2CRR1",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1997,
+                "order": 6,
+                "createdAt": "2026-08-16T05:06:17.478Z",
+                "updatedAt": "2026-08-16T05:06:17.478Z",
+                "children": []
+              },
+              {
+                "id": 2004,
+                "name": "B3PER1",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 1997,
+                "order": 7,
+                "createdAt": "2026-08-16T05:06:17.541Z",
+                "updatedAt": "2026-08-16T05:06:17.541Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 2005,
+            "name": "SUPERVISION DU BLOC",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1956,
+            "order": 8,
+            "createdAt": "2026-08-16T05:06:17.598Z",
+            "updatedAt": "2026-08-16T05:06:17.598Z",
+            "children": [
+              {
+                "id": 2006,
+                "name": "B0GN02",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2005,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:17.657Z",
+                "updatedAt": "2026-08-16T05:06:17.657Z",
+                "children": []
+              },
+              {
+                "id": 2007,
+                "name": "B0GN11",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2005,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:17.716Z",
+                "updatedAt": "2026-08-16T05:06:17.716Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 2008,
+            "name": "TURBINE GAZ 1",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1956,
+            "order": 9,
+            "createdAt": "2026-08-16T05:06:17.781Z",
+            "updatedAt": "2026-08-16T05:06:17.781Z",
+            "children": [
+              {
+                "id": 2009,
+                "name": "B1TG11",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2008,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:17.841Z",
+                "updatedAt": "2026-08-16T05:06:17.841Z",
+                "children": []
+              },
+              {
+                "id": 2010,
+                "name": "B1TG21",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2008,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:17.899Z",
+                "updatedAt": "2026-08-16T05:06:17.899Z",
+                "children": []
+              },
+              {
+                "id": 2011,
+                "name": "B1TG31",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2008,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:17.959Z",
+                "updatedAt": "2026-08-16T05:06:17.959Z",
+                "children": []
+              },
+              {
+                "id": 2012,
+                "name": "B1TG32",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2008,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:18.015Z",
+                "updatedAt": "2026-08-16T05:06:18.015Z",
+                "children": []
+              },
+              {
+                "id": 2013,
+                "name": "B1TG33",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2008,
+                "order": 5,
+                "createdAt": "2026-08-16T05:06:18.076Z",
+                "updatedAt": "2026-08-16T05:06:18.076Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 2014,
+            "name": "TURBINE GAZ 2",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1956,
+            "order": 10,
+            "createdAt": "2026-08-16T05:06:18.141Z",
+            "updatedAt": "2026-08-16T05:06:18.141Z",
+            "children": [
+              {
+                "id": 2015,
+                "name": "B2TG11",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2014,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:18.198Z",
+                "updatedAt": "2026-08-16T05:06:18.198Z",
+                "children": []
+              },
+              {
+                "id": 2016,
+                "name": "B2TG21",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2014,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:18.254Z",
+                "updatedAt": "2026-08-16T05:06:18.254Z",
+                "children": []
+              },
+              {
+                "id": 2017,
+                "name": "B2TG31",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2014,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:18.314Z",
+                "updatedAt": "2026-08-16T05:06:18.314Z",
+                "children": []
+              },
+              {
+                "id": 2018,
+                "name": "B2TG32",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2014,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:18.377Z",
+                "updatedAt": "2026-08-16T05:06:18.377Z",
+                "children": []
+              },
+              {
+                "id": 2019,
+                "name": "B2TG33",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2014,
+                "order": 5,
+                "createdAt": "2026-08-16T05:06:18.434Z",
+                "updatedAt": "2026-08-16T05:06:18.434Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 2020,
+            "name": "TURBINE VAPEUR",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 1956,
+            "order": 11,
+            "createdAt": "2026-08-16T05:06:18.500Z",
+            "updatedAt": "2026-08-16T05:06:18.500Z",
+            "children": [
+              {
+                "id": 2021,
+                "name": "B1TV21",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2020,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:18.557Z",
+                "updatedAt": "2026-08-16T05:06:18.557Z",
+                "children": []
+              },
+              {
+                "id": 2022,
+                "name": "B1TV22",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2020,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:18.618Z",
+                "updatedAt": "2026-08-16T05:06:18.618Z",
+                "children": []
+              },
+              {
+                "id": 2023,
+                "name": "B2TV21",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2020,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:18.678Z",
+                "updatedAt": "2026-08-16T05:06:18.678Z",
+                "children": []
+              },
+              {
+                "id": 2024,
+                "name": "B2TV22",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2020,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:18.738Z",
+                "updatedAt": "2026-08-16T05:06:18.738Z",
+                "children": []
+              },
+              {
+                "id": 2025,
+                "name": "B3TV11",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2020,
+                "order": 5,
+                "createdAt": "2026-08-16T05:06:18.797Z",
+                "updatedAt": "2026-08-16T05:06:18.797Z",
+                "children": []
+              },
+              {
+                "id": 2026,
+                "name": "B3TV21",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2020,
+                "order": 6,
+                "createdAt": "2026-08-16T05:06:18.872Z",
+                "updatedAt": "2026-08-16T05:06:18.872Z",
+                "children": []
+              },
+              {
+                "id": 2027,
+                "name": "B3TV23",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2020,
+                "order": 7,
+                "createdAt": "2026-08-16T05:06:18.924Z",
+                "updatedAt": "2026-08-16T05:06:18.924Z",
+                "children": []
+              },
+              {
+                "id": 2028,
+                "name": "B3TV24",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2020,
+                "order": 8,
+                "createdAt": "2026-08-16T05:06:18.993Z",
+                "updatedAt": "2026-08-16T05:06:18.993Z",
+                "children": []
+              },
+              {
+                "id": 2029,
+                "name": "B3TV31",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2020,
+                "order": 9,
+                "createdAt": "2026-08-16T05:06:19.054Z",
+                "updatedAt": "2026-08-16T05:06:19.054Z",
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 2030,
+        "name": "mirror.json",
+        "type": "file",
+        "metadata": null,
+        "parentId": 1686,
+        "order": 3,
+        "createdAt": "2026-08-16T05:06:19.114Z",
+        "updatedAt": "2026-08-16T05:06:19.114Z",
+        "children": []
+      },
+      {
+        "id": 2031,
+        "name": "procedures",
+        "type": "directory",
+        "metadata": null,
+        "parentId": 1686,
+        "order": 4,
+        "createdAt": "2026-08-16T05:06:19.176Z",
+        "updatedAt": "2026-08-16T05:06:19.176Z",
+        "children": [
+          {
+            "id": 2032,
+            "name": "crf-start-001",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 2031,
+            "order": 0,
+            "createdAt": "2026-08-16T05:06:19.232Z",
+            "updatedAt": "2026-08-16T05:06:19.232Z",
+            "children": [
+              {
+                "id": 2033,
+                "name": "crf-start-001",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2032,
+                "order": 0,
+                "createdAt": "2026-08-16T05:06:19.295Z",
+                "updatedAt": "2026-08-16T05:06:19.295Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 2034,
+            "name": "procedures",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 2031,
+            "order": 1,
+            "createdAt": "2026-08-16T05:06:19.357Z",
+            "updatedAt": "2026-08-16T05:06:19.357Z",
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": 2035,
+        "name": "registry",
+        "type": "directory",
+        "metadata": null,
+        "parentId": 1686,
+        "order": 5,
+        "createdAt": "2026-08-16T05:06:19.418Z",
+        "updatedAt": "2026-08-16T05:06:19.418Z",
+        "children": [
+          {
+            "id": 2036,
+            "name": "bank",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 2035,
+            "order": 0,
+            "createdAt": "2026-08-16T05:06:19.474Z",
+            "updatedAt": "2026-08-16T05:06:19.474Z",
+            "children": [
+              {
+                "id": 2037,
+                "name": "test",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2036,
+                "order": 0,
+                "createdAt": "2026-08-16T05:06:19.536Z",
+                "updatedAt": "2026-08-16T05:06:19.536Z",
+                "children": [
+                  {
+                    "id": 2038,
+                    "name": "metadata.json",
+                    "type": "file",
+                    "metadata": null,
+                    "parentId": 2037,
+                    "order": 0,
+                    "createdAt": "2026-08-16T05:06:19.596Z",
+                    "updatedAt": "2026-08-16T05:06:19.596Z",
+                    "children": []
+                  },
+                  {
+                    "id": 2039,
+                    "name": "test.jpg",
+                    "type": "file",
+                    "metadata": null,
+                    "parentId": 2037,
+                    "order": 1,
+                    "createdAt": "2026-08-16T05:06:19.655Z",
+                    "updatedAt": "2026-08-16T05:06:19.655Z",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 2040,
+                "name": "test0",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2036,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:19.713Z",
+                "updatedAt": "2026-08-16T05:06:19.713Z",
+                "children": [
+                  {
+                    "id": 2041,
+                    "name": "ahmed abbes.jpg",
+                    "type": "file",
+                    "metadata": null,
+                    "parentId": 2040,
+                    "order": 0,
+                    "createdAt": "2026-08-16T05:06:20.501Z",
+                    "updatedAt": "2026-08-16T05:06:20.501Z",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 2042,
+                "name": "test1",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2036,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:20.559Z",
+                "updatedAt": "2026-08-16T05:06:20.559Z",
+                "children": [
+                  {
+                    "id": 2043,
+                    "name": "metadata.json",
+                    "type": "file",
+                    "metadata": null,
+                    "parentId": 2042,
+                    "order": 0,
+                    "createdAt": "2026-08-16T05:06:20.617Z",
+                    "updatedAt": "2026-08-16T05:06:20.617Z",
+                    "children": []
+                  },
+                  {
+                    "id": 2044,
+                    "name": "test1.jpg",
+                    "type": "file",
+                    "metadata": null,
+                    "parentId": 2042,
+                    "order": 1,
+                    "createdAt": "2026-08-16T05:06:20.674Z",
+                    "updatedAt": "2026-08-16T05:06:20.674Z",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 2045,
+                "name": "test_11",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2036,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:20.737Z",
+                "updatedAt": "2026-08-16T05:06:20.737Z",
+                "children": [
+                  {
+                    "id": 2046,
+                    "name": "metadata.json",
+                    "type": "file",
+                    "metadata": null,
+                    "parentId": 2045,
+                    "order": 0,
+                    "createdAt": "2026-08-16T05:06:20.799Z",
+                    "updatedAt": "2026-08-16T05:06:20.799Z",
+                    "children": []
+                  },
+                  {
+                    "id": 2047,
+                    "name": "test_11.jpg",
+                    "type": "file",
+                    "metadata": null,
+                    "parentId": 2045,
+                    "order": 1,
+                    "createdAt": "2026-08-16T05:06:20.855Z",
+                    "updatedAt": "2026-08-16T05:06:20.855Z",
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 2048,
+            "name": "Centrale",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 2035,
+            "order": 1,
+            "createdAt": "2026-08-16T05:06:20.914Z",
+            "updatedAt": "2026-08-16T05:06:20.914Z",
+            "children": []
+          },
+          {
+            "id": 2049,
+            "name": "items",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 2035,
+            "order": 2,
+            "createdAt": "2026-08-16T05:06:20.965Z",
+            "updatedAt": "2026-08-16T05:06:20.965Z",
+            "children": [
+              {
+                "id": 2050,
+                "name": "air d'atomisation.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 0,
+                "createdAt": "2026-08-16T05:06:21.025Z",
+                "updatedAt": "2026-08-16T05:06:21.025Z",
+                "children": []
+              },
+              {
+                "id": 2091,
+                "name": "pairs",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 0,
+                "createdAt": "2026-08-16T16:27:08.610Z",
+                "updatedAt": "2026-08-16T16:27:08.610Z",
+                "children": [
+                  {
+                    "id": 2090,
+                    "name": "pairs_1.json",
+                    "type": "file",
+                    "metadata": "{\"type\":\"qa\",\"title\":\"pairs\",\"description\":\"\",\"pairs\":[{\"question\":\"Updated11\",\"answer\":\"Updated12\"}],\"createdAt\":\"2026-08-16T16:26:11.337Z\",\"registryPath\":\"items/pairs/pairs_1.json\"}",
+                    "parentId": 2091,
+                    "order": 0,
+                    "createdAt": "2026-08-16T16:26:11.889Z",
+                    "updatedAt": "2026-08-16T16:27:08.730Z",
+                    "children": []
+                  },
+                  {
+                    "id": 2092,
+                    "name": "pairs_2.json",
+                    "type": "file",
+                    "metadata": "{\"type\":\"qa\",\"title\":\"pairs\",\"description\":\"\",\"pairs\":[{\"question\":\"Updated1112\",\"answer\":\"Updated12\"}],\"createdAt\":\"2026-08-16T16:27:08.260Z\",\"registryPath\":\"items/pairs/pairs_2.json\"}",
+                    "parentId": 2091,
+                    "order": 0,
+                    "createdAt": "2026-08-16T16:27:08.880Z",
+                    "updatedAt": "2026-08-16T16:27:08.880Z",
+                    "children": []
+                  },
+                  {
+                    "id": 2093,
+                    "name": "pairs_3.json",
+                    "type": "file",
+                    "metadata": "{\"type\":\"qa\",\"title\":\"pairs\",\"description\":\"\",\"pairs\":[{\"question\":\"Updated1112\",\"answer\":\"Updated12\"}],\"createdAt\":\"2026-08-16T18:21:22.291Z\",\"registryPath\":\"items/pairs/pairs_3.json\"}",
+                    "parentId": 2091,
+                    "order": 0,
+                    "createdAt": "2026-08-16T18:21:22.839Z",
+                    "updatedAt": "2026-08-16T18:21:22.839Z",
+                    "children": []
+                  },
+                  {
+                    "id": 2094,
+                    "name": "pairs_4.json",
+                    "type": "file",
+                    "metadata": "{\"type\":\"qa\",\"title\":\"pairs\",\"description\":\"\",\"pairs\":[{\"question\":\"Updated1155\",\"answer\":\"Updated102\"}],\"createdAt\":\"2026-08-16T19:35:50.174Z\",\"registryPath\":\"items/pairs/pairs_4.json\"}",
+                    "parentId": 2091,
+                    "order": 0,
+                    "createdAt": "2026-08-16T19:35:51.364Z",
+                    "updatedAt": "2026-08-16T19:35:51.364Z",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 2051,
+                "name": "alarmes-et-seuils-de-declenchement-de-la-turbine-a-gaz-TG.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:21.086Z",
+                "updatedAt": "2026-08-16T05:06:21.086Z",
+                "children": []
+              },
+              {
+                "id": 2052,
+                "name": "APH",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:21.149Z",
+                "updatedAt": "2026-08-16T05:06:21.149Z",
+                "children": [
+                  {
+                    "id": 2053,
+                    "name": "vibration.json",
+                    "type": "file",
+                    "metadata": null,
+                    "parentId": 2052,
+                    "order": 0,
+                    "createdAt": "2026-08-16T05:06:21.205Z",
+                    "updatedAt": "2026-08-16T05:06:21.205Z",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 2054,
+                "name": "global-qa-1786121399639.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:21.266Z",
+                "updatedAt": "2026-08-16T05:06:21.266Z",
+                "children": []
+              },
+              {
+                "id": 2055,
+                "name": "global-qa-1786124513294.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:21.378Z",
+                "updatedAt": "2026-08-16T05:06:21.378Z",
+                "children": []
+              },
+              {
+                "id": 2056,
+                "name": "global-qa-1786124643601.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 5,
+                "createdAt": "2026-08-16T05:06:21.443Z",
+                "updatedAt": "2026-08-16T05:06:21.443Z",
+                "children": []
+              },
+              {
+                "id": 2057,
+                "name": "global-qa-1786135284153.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 6,
+                "createdAt": "2026-08-16T05:06:21.495Z",
+                "updatedAt": "2026-08-16T05:06:21.495Z",
+                "children": []
+              },
+              {
+                "id": 2058,
+                "name": "global-qa-1786135431225.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 7,
+                "createdAt": "2026-08-16T05:06:21.555Z",
+                "updatedAt": "2026-08-16T05:06:21.555Z",
+                "children": []
+              },
+              {
+                "id": 2059,
+                "name": "global-qa-1786314634068.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 8,
+                "createdAt": "2026-08-16T05:06:21.969Z",
+                "updatedAt": "2026-08-16T05:06:21.969Z",
+                "children": []
+              },
+              {
+                "id": 2060,
+                "name": "global-qa-1786314847663.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 9,
+                "createdAt": "2026-08-16T05:06:22.035Z",
+                "updatedAt": "2026-08-16T05:06:22.035Z",
+                "children": []
+              },
+              {
+                "id": 2061,
+                "name": "global-qa-1786314921216.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 10,
+                "createdAt": "2026-08-16T05:06:22.097Z",
+                "updatedAt": "2026-08-16T05:06:22.097Z",
+                "children": []
+              },
+              {
+                "id": 2062,
+                "name": "global-qa-1786315714361.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 11,
+                "createdAt": "2026-08-16T05:06:22.159Z",
+                "updatedAt": "2026-08-16T05:06:22.159Z",
+                "children": []
+              },
+              {
+                "id": 2063,
+                "name": "niveau-condenseur.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 12,
+                "createdAt": "2026-08-16T05:06:22.217Z",
+                "updatedAt": "2026-08-16T05:06:22.217Z",
+                "children": []
+              },
+              {
+                "id": 2064,
+                "name": "qa_2026-08-16T02-35-43.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 13,
+                "createdAt": "2026-08-16T05:06:22.274Z",
+                "updatedAt": "2026-08-16T05:06:22.274Z",
+                "children": []
+              },
+              {
+                "id": 2065,
+                "name": "qa_2026-08-16T02-53-50.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 14,
+                "createdAt": "2026-08-16T05:06:22.337Z",
+                "updatedAt": "2026-08-16T05:06:22.337Z",
+                "children": []
+              },
+              {
+                "id": 2066,
+                "name": "qa_2026-08-16T03-21-13.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 15,
+                "createdAt": "2026-08-16T05:06:22.398Z",
+                "updatedAt": "2026-08-16T05:06:22.398Z",
+                "children": []
+              },
+              {
+                "id": 2067,
+                "name": "qa_2026-08-16T03-24-06.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 16,
+                "createdAt": "2026-08-16T05:06:22.455Z",
+                "updatedAt": "2026-08-16T05:06:22.455Z",
+                "children": []
+              },
+              {
+                "id": 2068,
+                "name": "rag_qr_2026-07-15T14-56-03-057Z.json",
+                "type": "file",
+                "metadata": null,
+                "parentId": 2049,
+                "order": 17,
+                "createdAt": "2026-08-16T05:06:22.515Z",
+                "updatedAt": "2026-08-16T05:06:22.515Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 2069,
+            "name": "procedures",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 2035,
+            "order": 3,
+            "createdAt": "2026-08-16T05:06:22.577Z",
+            "updatedAt": "2026-08-16T05:06:22.577Z",
+            "children": [
+              {
+                "id": 2070,
+                "name": "crf-start-001",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2069,
+                "order": 0,
+                "createdAt": "2026-08-16T05:06:22.639Z",
+                "updatedAt": "2026-08-16T05:06:22.639Z",
+                "children": [
+                  {
+                    "id": 2071,
+                    "name": "procedure.json",
+                    "type": "file",
+                    "metadata": null,
+                    "parentId": 2070,
+                    "order": 0,
+                    "createdAt": "2026-08-16T05:06:22.695Z",
+                    "updatedAt": "2026-08-16T05:06:22.695Z",
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 2072,
+            "name": "ressources humaines",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 2035,
+            "order": 4,
+            "createdAt": "2026-08-16T05:06:22.754Z",
+            "updatedAt": "2026-08-16T05:06:22.754Z",
+            "children": [
+              {
+                "id": 2073,
+                "name": "equipes",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2072,
+                "order": 0,
+                "createdAt": "2026-08-16T05:06:22.816Z",
+                "updatedAt": "2026-08-16T05:06:22.816Z",
+                "children": [
+                  {
+                    "id": 2074,
+                    "name": "equipe A",
+                    "type": "directory",
+                    "metadata": null,
+                    "parentId": 2073,
+                    "order": 0,
+                    "createdAt": "2026-08-16T05:06:22.874Z",
+                    "updatedAt": "2026-08-16T05:06:22.874Z",
+                    "children": []
+                  },
+                  {
+                    "id": 2075,
+                    "name": "equipe B",
+                    "type": "directory",
+                    "metadata": null,
+                    "parentId": 2073,
+                    "order": 1,
+                    "createdAt": "2026-08-16T05:06:22.937Z",
+                    "updatedAt": "2026-08-16T05:06:22.937Z",
+                    "children": []
+                  },
+                  {
+                    "id": 2076,
+                    "name": "equipe C",
+                    "type": "directory",
+                    "metadata": null,
+                    "parentId": 2073,
+                    "order": 2,
+                    "createdAt": "2026-08-16T05:06:22.994Z",
+                    "updatedAt": "2026-08-16T05:06:22.994Z",
+                    "children": []
+                  },
+                  {
+                    "id": 2077,
+                    "name": "equipe D",
+                    "type": "directory",
+                    "metadata": null,
+                    "parentId": 2073,
+                    "order": 3,
+                    "createdAt": "2026-08-16T05:06:23.057Z",
+                    "updatedAt": "2026-08-16T05:06:23.057Z",
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 2078,
+        "name": "ressources humaines",
+        "type": "directory",
+        "metadata": null,
+        "parentId": 1686,
+        "order": 6,
+        "createdAt": "2026-08-16T05:06:23.121Z",
+        "updatedAt": "2026-08-16T05:06:23.121Z",
+        "children": [
+          {
+            "id": 2079,
+            "name": "equipes",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 2078,
+            "order": 0,
+            "createdAt": "2026-08-16T05:06:23.179Z",
+            "updatedAt": "2026-08-16T05:06:23.179Z",
+            "children": [
+              {
+                "id": 2080,
+                "name": "equipe A",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2079,
+                "order": 0,
+                "createdAt": "2026-08-16T05:06:23.234Z",
+                "updatedAt": "2026-08-16T05:06:23.234Z",
+                "children": [
+                  {
+                    "id": 2081,
+                    "name": "equipe A",
+                    "type": "directory",
+                    "metadata": null,
+                    "parentId": 2080,
+                    "order": 0,
+                    "createdAt": "2026-08-16T05:06:23.294Z",
+                    "updatedAt": "2026-08-16T05:06:23.294Z",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 2082,
+                "name": "equipe B",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2079,
+                "order": 1,
+                "createdAt": "2026-08-16T05:06:23.358Z",
+                "updatedAt": "2026-08-16T05:06:23.358Z",
+                "children": [
+                  {
+                    "id": 2083,
+                    "name": "equipe B",
+                    "type": "directory",
+                    "metadata": null,
+                    "parentId": 2082,
+                    "order": 0,
+                    "createdAt": "2026-08-16T05:06:23.417Z",
+                    "updatedAt": "2026-08-16T05:06:23.417Z",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 2084,
+                "name": "equipe C",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2079,
+                "order": 2,
+                "createdAt": "2026-08-16T05:06:23.485Z",
+                "updatedAt": "2026-08-16T05:06:23.485Z",
+                "children": [
+                  {
+                    "id": 2085,
+                    "name": "equipe C",
+                    "type": "directory",
+                    "metadata": null,
+                    "parentId": 2084,
+                    "order": 0,
+                    "createdAt": "2026-08-16T05:06:23.548Z",
+                    "updatedAt": "2026-08-16T05:06:23.548Z",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 2086,
+                "name": "equipe D",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2079,
+                "order": 3,
+                "createdAt": "2026-08-16T05:06:23.617Z",
+                "updatedAt": "2026-08-16T05:06:23.617Z",
+                "children": [
+                  {
+                    "id": 2087,
+                    "name": "equipe D",
+                    "type": "directory",
+                    "metadata": null,
+                    "parentId": 2086,
+                    "order": 0,
+                    "createdAt": "2026-08-16T05:06:23.685Z",
+                    "updatedAt": "2026-08-16T05:06:23.685Z",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": 2088,
+                "name": "equipes",
+                "type": "directory",
+                "metadata": null,
+                "parentId": 2079,
+                "order": 4,
+                "createdAt": "2026-08-16T05:06:23.762Z",
+                "updatedAt": "2026-08-16T05:06:23.762Z",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": 2089,
+            "name": "ressources humaines",
+            "type": "directory",
+            "metadata": null,
+            "parentId": 2078,
+            "order": 1,
+            "createdAt": "2026-08-16T05:06:23.822Z",
+            "updatedAt": "2026-08-16T05:06:23.822Z",
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+]
