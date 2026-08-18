@@ -9,6 +9,8 @@ export interface LocalTreeNode {
   updatedAt: string;
   size?: number;
   path: string;
+  order: number;
+  content?: string | null;
 }
 
 export async function getLocalTree(): Promise<LocalTreeNode[]> {
@@ -26,6 +28,7 @@ export async function getLocalTree(): Promise<LocalTreeNode[]> {
       children: [],
       createdAt: folder.createdAt.toISOString(),
       updatedAt: folder.updatedAt.toISOString(),
+      order: folder.order ?? 0,
       path: folder.path ?? "",
     });
   }
@@ -38,8 +41,10 @@ export async function getLocalTree(): Promise<LocalTreeNode[]> {
       children: [],
       createdAt: file.createdAt.toISOString(),
       updatedAt: file.updatedAt.toISOString(),
+      order: file.order ?? 0,
       size: file.size,
       path: file.path ?? "",
+      content: file.content,
     };
 
     if (file.folderId && folderMap.has(file.folderId)) {
@@ -59,7 +64,16 @@ export async function getLocalTree(): Promise<LocalTreeNode[]> {
     }
   }
 
-  return roots;
+  const sortByOrder = (nodes: LocalTreeNode[]): LocalTreeNode[] =>
+    nodes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  const sortRecursively = (nodes: LocalTreeNode[]): LocalTreeNode[] =>
+    sortByOrder(nodes).map((node) => ({
+      ...node,
+      children: sortRecursively(node.children),
+    }));
+
+  return sortRecursively(roots);
 }
 
 export { deleteLocalTreeNode, addFolder, updateFolder, addFile };

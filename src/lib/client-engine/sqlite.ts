@@ -116,8 +116,10 @@ function initSchema(database: Database): void {
       name TEXT NOT NULL,
       type TEXT NOT NULL,
       parent_id INTEGER,
+      node_order INTEGER DEFAULT 0,
       path TEXT,
       size INTEGER,
+      content TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
@@ -136,6 +138,40 @@ function initSchema(database: Database): void {
     CREATE INDEX IF NOT EXISTS idx_qa_pairs_question ON qa_pairs(question);
     CREATE INDEX IF NOT EXISTS idx_chat_sessions_updated ON chat_sessions(updated_at);
     CREATE INDEX IF NOT EXISTS idx_local_tree_path ON local_tree(path);
+    CREATE INDEX IF NOT EXISTS idx_local_tree_parent ON local_tree(parent_id);
+    CREATE INDEX IF NOT EXISTS idx_local_tree_node_order ON local_tree(parent_id, node_order);
     CREATE INDEX IF NOT EXISTS idx_vector_docs_path ON vector_documents(relative_path);
   `);
+
+  migrateLocalTree(database);
+}
+
+function migrateLocalTree(database: Database): void {
+  try {
+    const stmt = database.prepare("PRAGMA table_info(local_tree)");
+    const columnNames: string[] = [];
+    while (stmt.step()) {
+      const row = stmt.get({}) as Record<string, unknown>;
+      columnNames.push(row.name as string);
+    }
+    stmt.finalize();
+
+    if (columnNames.length > 0) {
+      if (!columnNames.includes("node_order")) {
+        database.exec("ALTER TABLE local_tree ADD COLUMN node_order INTEGER DEFAULT 0");
+      }
+      if (!columnNames.includes("content")) {
+        database.exec("ALTER TABLE local_tree ADD COLUMN content TEXT");
+      }
+    }
+  } catch {
+    // table might not exist; CREATE TABLE will have handled it
+  }
+
+  try {
+    database.exec("CREATE INDEX IF NOT EXISTS idx_local_tree_parent ON local_tree(parent_id)");
+    database.exec("CREATE INDEX IF NOT EXISTS idx_local_tree_node_order ON local_tree(parent_id, node_order)");
+  } catch {
+    // index creation may fail if already exists; safe to ignore
+  }
 }

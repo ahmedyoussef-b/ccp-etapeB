@@ -28,14 +28,14 @@ async function importFolder(node: ApiFolderNode, parentId: number | null): Promi
     targetFolderId = localFolder.id!;
     await updateFolder(localFolder.id!, {
       name: node.name,
+      order: node.order ?? 0,
     });
   } else {
     targetFolderId = await addFolder({
       remoteId: node.id,
       name: node.name,
       parentId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      order: node.order ?? 0,
     });
   }
 
@@ -46,6 +46,7 @@ async function importFolder(node: ApiFolderNode, parentId: number | null): Promi
 
 async function importFile(node: ApiFileNode, parentId: number | null): Promise<void> {
   const existingFile = await getFileByNameAndFolder(node.name, parentId);
+  const fileContent = node.content ?? node.metadata ?? null;
 
   if (existingFile) {
     const { newName } = await generateNextFilename(parentId, node.name);
@@ -53,7 +54,9 @@ async function importFile(node: ApiFileNode, parentId: number | null): Promise<v
       remoteId: node.id,
       name: newName,
       folderId: parentId,
+      order: node.order ?? 0,
       size: node.size,
+      content: fileContent,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -62,7 +65,9 @@ async function importFile(node: ApiFileNode, parentId: number | null): Promise<v
       remoteId: node.id,
       name: node.name,
       folderId: parentId,
+      order: node.order ?? 0,
       size: node.size,
+      content: fileContent,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -109,7 +114,7 @@ export function useSyncData() {
       if (!response.ok) {
         throw new Error(`Sync failed: ${response.status} ${response.statusText}`);
       }
-      const data = (await response.json()) as { tree: ApiNode[] };
+      const data = (await response.json()) as { tree: ApiNode[]; lastSyncTimestamp: string };
       return data.tree;
     },
     onSuccess: async (tree) => {

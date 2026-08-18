@@ -379,14 +379,14 @@ export class ClientEngine {
   async exportAll(): Promise<{
     qaPairs: Array<{ id: number; question: string; answer: string; registryId: number; registryTitle: string; createdAt: string; updatedAt: string }>;
     chatSessions: Array<{ id: string; title: string | null; messages: Array<{ role: string; content: string }>; createdAt: string; updatedAt: string }>;
-    localTree: Array<{ id: number; remoteId: string; name: string; type: string; parentId: number | null; path: string; size: number | undefined; createdAt: string; updatedAt: string }>;
+    localTree: Array<{ id: number; remoteId: string; name: string; type: string; parentId: number | null; order: number; path: string; size: number | undefined; content: string | null; createdAt: string; updatedAt: string }>;
     vectorDocuments: Array<{ id: string; name: string; originalPath: string; relativePath: string; chunks: Array<{ documentId: string; documentName: string; chunkIndex: number; content: string; embedding: number[]; metadata?: Record<string, unknown> }>; metadata: Record<string, unknown> }>;
     jsonStore: Record<string, unknown>;
   }> {
     const db = getDb();
     let qaPairs: Array<{ id: number; question: string; answer: string; registryId: number; registryTitle: string; createdAt: string; updatedAt: string }> = [];
     let chatSessions: Array<{ id: string; title: string | null; messages: Array<{ role: string; content: string }>; createdAt: string; updatedAt: string }> = [];
-    let localTree: Array<{ id: number; remoteId: string; name: string; type: string; parentId: number | null; path: string; size: number | undefined; createdAt: string; updatedAt: string }> = [];
+    let localTree: Array<{ id: number; remoteId: string; name: string; type: string; parentId: number | null; order: number; path: string; size: number | undefined; content: string | null; createdAt: string; updatedAt: string }> = [];
 
     if (db) {
       try {
@@ -423,7 +423,7 @@ export class ClientEngine {
       }
 
       try {
-        const treeRows = await query<{ id: number; remote_id: string; name: string; type: string; parent_id: number | null; path: string; size: number | null; created_at: string; updated_at: string }>(`
+        const treeRows = await query<{ id: number; remote_id: string; name: string; type: string; parent_id: number | null; node_order: number; path: string | null; size: number | null; content: string | null; created_at: string; updated_at: string }>(`
           SELECT * FROM local_tree ORDER BY created_at DESC
         `);
         localTree = treeRows.map((row) => ({
@@ -432,8 +432,10 @@ export class ClientEngine {
           name: row.name,
           type: row.type,
           parentId: row.parent_id,
-          path: row.path,
+          order: row.node_order ?? 0,
+          path: row.path ?? '',
           size: row.size ?? undefined,
+          content: row.content,
           createdAt: row.created_at,
           updatedAt: row.updated_at,
         }));

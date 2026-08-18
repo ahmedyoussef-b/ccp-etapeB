@@ -39,9 +39,11 @@ import { toast } from "sonner";
 type LocalNode = {
   id: string;
   name: string;
-  type: "folder" | "file" | "meta";
+  type: "folder" | "file";
   children: LocalNode[];
   path: string;
+  order: number;
+  content?: string | null;
 };
 
 type WebTreeNode = {
@@ -61,9 +63,9 @@ const iconMap: Record<string, LucideIcon> = {
   category: FolderTree,
   group: FolderTree,
   item: FileText,
+  directory: FolderTree,
   folder: FolderTree,
   file: FileJson,
-  meta: FileText,
 };
 
 function TreeNodeItem({
@@ -91,7 +93,6 @@ function TreeNodeItem({
 
   const getBadgeVariant = () => {
     if (isLocal) {
-      if (nodeType === "meta") return "outline";
       if (nodeType === "folder") return "default";
       return "secondary";
     }
@@ -100,15 +101,14 @@ function TreeNodeItem({
 
   const getBadgeText = () => {
     if (isLocal) {
-      if (nodeType === "meta") return "meta";
       if (nodeType === "folder") return "dossier";
       return "fichier";
     }
     return node.type;
   };
 
-  const isJsonFile = isLocal && nodeType === "file" && node.name.endsWith(".json");
   const isFileNode = nodeType === "file" || nodeType === "item";
+  const hasLocalContent = isLocal && nodeType === "file" && node.content !== undefined && node.content !== null;
 
   return (
     <div
@@ -176,7 +176,7 @@ function TreeNodeItem({
             >
               <Trash2 className="h-3 w-3" />
             </Button>
-            {isJsonFile && onEdit && (
+            {hasLocalContent && onEdit && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -391,9 +391,9 @@ export default function StructureBDDPage() {
     }
   };
 
-  const handleSyncToLocal = async () => {
+   const handleSyncToLocal = async () => {
     const confirmed = window.confirm(
-      "Synchroniser la BDD Web vers la BDD Locale ?"
+      "Synchroniser la BDD Web vers la BDD Locale ? Cette opération recréera l'arborescence locale en miroir du Web."
     );
     if (!confirmed) return;
     console.log("[StructureBDD] sync to local start");
@@ -407,50 +407,163 @@ export default function StructureBDDPage() {
 
       await initSqlite();
 
-      await run(`
-        CREATE TABLE IF NOT EXISTS local_tree (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          remote_id TEXT,
-          name TEXT NOT NULL,
-          type TEXT NOT NULL,
-          parent_id INTEGER,
-          path TEXT,
-          size INTEGER,
-          created_at TEXT DEFAULT (datetime('now')),
-          updated_at TEXT DEFAULT (datetime('now'))
-        )
-      `);
-
       await run("DELETE FROM local_tree");
 
-      const flatten = (nodes: WebTreeNode[], parentId: number | null = null): Array<{ id: number; name: string; type: string; parentId: number | null }> => {
-        const result: Array<{ id: number; name: string; type: string; parentId: number | null }> = [];
-        for (const node of nodes) {
-          result.push({ id: node.id, name: node.name, type: node.type, parentId });
-          if (node.children?.length) {
-            result.push(...flatten(node.children, node.id));
-          }
-        }
-        return result;
+      const normalizeType = (webType: string): "folder" | "file" => {
+        if (webType === "file") return "file";
+        return "folder";
       };
 
-      const flatNodes = flatten(roots);
+      interface FlatNode {
+        remoteId: string;
+        name: string;
+        type: "folder" | "file";
+        parentId: number | null;
+        nodeOrder: number;
+        content: string | null;
+        size: number;
+        depth: number;
+      }
+
+      const flatNodes: FlatNode[] = [];
+      const queue: Array<{ node: WebTreeNode; depth: number; parentId: number | null }> = roots.map((r) => ({ node: r, depth: 0, parentId: null }));
+
+      while (queue.length > 0) {
+        const { node, depth, parentId } = queue.shift()!;
+        flatNodes.push({
+          remoteId: String(node.id),
+          name: node.name,
+          type: normalizeType(node.type),
+          parentId,
+          nodeOrder: node.order ?? 0,
+          content: node.type === "file" ? node.metadata : null,
+          size: 0,
+          depth,
+        });
+        if (node.children?.length) {
+          for (const child of node.children) {
+            queue.push({ node: child, depth: depth + 1, parentId: node.id });
+          }
+        }
+      }
+
+      flatNodes.sort((a, b) => a.depth - b.depth || (a.nodeOrder ?? 0) - (b.nodeOrder ?? 0));
+
+      const localIdMap = new Map<string, number>();
 
       for (const node of flatNodes) {
-        await run(
-          "INSERT INTO local_tree (remote_id, name, type, parent_id, size, created_at, updated_at) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))",
-          [String(node.id), node.name, node.type, node.parentId ?? null, 0]
+        const localParentId = node.parentId !== null && localIdMap.has(String(node.parentId))
+          ? localIdMap.get(String(node.parentId))!
+          : null;
+
+        const result = await run(
+          `INSERT INTO local_tree (remote_id, name, type, parent_id, node_order, size, content, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+          [node.remoteId, node.name, node.type, localParentId, node.nodeOrder, node.size, node.content]
         );
+
+        if (result.lastInsertRowid) {
+          localIdMap.set(node.remoteId, result.lastInsertRowid);
+        }
       }
 
       console.log("[StructureBDD] sync to local done", { count: flatNodes.length });
       await loadTrees();
-      toast.success("Synchronisation terminée");
+      toast.success(`Synchronisation miroir terminée (${flatNodes.length} nœuds)`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Sync to local failed";
       console.error("[StructureBDD] sync to local error", msg);
       setLocalError(msg);
       toast.error("Erreur lors de la synchronisation");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+   const handleResetMirror = async () => {
+    const confirmed = window.confirm(
+      "Réinitialiser le miroir local ? Cette opération supprimera toute la structure locale et la reconstruira exactement comme le Web."
+    );
+    if (!confirmed) return;
+    console.log("[StructureBDD] reset mirror start");
+
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/tree");
+      console.log("[StructureBDD] fetch web tree for reset status", res.status);
+      if (!res.ok) throw new Error("Failed to fetch web tree");
+      const { roots } = (await res.json()) as { roots: WebTreeNode[] };
+
+      await initSqlite();
+
+      await run("DELETE FROM local_tree");
+
+      const normalizeType = (webType: string): "folder" | "file" => {
+        if (webType === "file") return "file";
+        return "folder";
+      };
+
+      interface FlatNode {
+        remoteId: string;
+        name: string;
+        type: "folder" | "file";
+        parentId: number | null;
+        nodeOrder: number;
+        content: string | null;
+        size: number;
+        depth: number;
+      }
+
+      const flatNodes: FlatNode[] = [];
+      const queue: Array<{ node: WebTreeNode; depth: number; parentId: number | null }> = roots.map((r) => ({ node: r, depth: 0, parentId: null }));
+
+      while (queue.length > 0) {
+        const { node, depth, parentId } = queue.shift()!;
+        flatNodes.push({
+          remoteId: String(node.id),
+          name: node.name,
+          type: normalizeType(node.type),
+          parentId,
+          nodeOrder: node.order ?? 0,
+          content: node.type === "file" ? node.metadata : null,
+          size: 0,
+          depth,
+        });
+        if (node.children?.length) {
+          for (const child of node.children) {
+            queue.push({ node: child, depth: depth + 1, parentId: node.id });
+          }
+        }
+      }
+
+      flatNodes.sort((a, b) => a.depth - b.depth || (a.nodeOrder ?? 0) - (b.nodeOrder ?? 0));
+
+      const localIdMap = new Map<string, number>();
+
+      for (const node of flatNodes) {
+        const localParentId = node.parentId !== null && localIdMap.has(String(node.parentId))
+          ? localIdMap.get(String(node.parentId))!
+          : null;
+
+        const result = await run(
+          `INSERT INTO local_tree (remote_id, name, type, parent_id, node_order, size, content, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+          [node.remoteId, node.name, node.type, localParentId, node.nodeOrder, node.size, node.content]
+        );
+
+        if (result.lastInsertRowid) {
+          localIdMap.set(node.remoteId, result.lastInsertRowid);
+        }
+      }
+
+      console.log("[StructureBDD] reset mirror done", { count: flatNodes.length });
+      await loadTrees();
+      toast.success(`Miroir local réinitialisé (${flatNodes.length} nœuds)`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Reset mirror failed";
+      console.error("[StructureBDD] reset mirror error", msg);
+      setLocalError(msg);
+      toast.error("Erreur lors de la réinitialisation du miroir");
     } finally {
       setSyncing(false);
     }
@@ -609,8 +722,8 @@ export default function StructureBDDPage() {
 
   const handleEditJson = (node: LocalNode) => {
     if (!node.id) return;
-    setEditingFile({ tree: "local", path: node.id as string, content: "" });
-    setEditContent("");
+    setEditingFile({ tree: "local", path: node.id as string, content: node.content ?? "" });
+    setEditContent(node.content ?? "");
   };
 
   const confirmEditJson = async () => {
@@ -618,22 +731,30 @@ export default function StructureBDDPage() {
 
     try {
       if (editingFile.tree === "local") {
-        toast.message("Édition locale désactivée", { description: "L'édition de fichiers locaux n'est plus disponible via l'API." });
+        const idStr = editingFile.path;
+        const numericId = parseInt(idStr.replace(/^(folder|file)-/, ""), 10);
+        if (!isNaN(numericId)) {
+          await run(
+            "UPDATE local_tree SET content = ?, updated_at = datetime('now') WHERE id = ?",
+            [editContent, numericId]
+          );
+          console.log("[StructureBDD] edit local done", { numericId });
+          await loadTrees();
+          toast.success("Fichier JSON modifié localement");
+        }
+      } else {
+        const res = await fetch(`/api/tree/nodes/${editingFile.path}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ metadata: editContent }),
+        });
+        if (!res.ok) throw new Error("Failed to edit file");
+
         setEditingFile(null);
         setEditContent("");
-        return;
+        await loadTrees();
+        toast.success("Fichier JSON modifié");
       }
-      const res = await fetch(`/api/tree/nodes/${editingFile.path}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ metadata: editContent }),
-      });
-      if (!res.ok) throw new Error("Failed to edit file");
-
-      setEditingFile(null);
-      setEditContent("");
-      await loadTrees();
-      toast.success("Fichier JSON modifié");
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : "Edit failed");
       toast.error("Erreur lors de la modification du fichier");
@@ -688,11 +809,10 @@ export default function StructureBDDPage() {
       const webNode = node as WebTreeNode;
       setPreviewingFile({ name: webNode.name, tree: "web" });
       setPreviewData(null);
-      setPreviewLoading(true);
+      setPreviewLoading(false);
       try {
-        const raw = webNode.metadata || "{}";
+        const raw = webNode.metadata || "";
         const content = typeof raw === "string" ? raw : JSON.stringify(raw, null, 2);
-        // Pretty-print if JSON
         let pretty = content;
         try { pretty = JSON.stringify(JSON.parse(content), null, 2); } catch { /* not json */ }
         setPreviewData({
@@ -705,18 +825,39 @@ export default function StructureBDDPage() {
       } catch {
         toast.error("Erreur lors de la lecture des métadonnées");
         setPreviewingFile(null);
-      } finally {
-        setPreviewLoading(false);
       }
       return;
     }
 
-    // BDD Locale: preview disabled (no server API)
-    toast.message("Aperçu local désactivé", { description: "L'aperçu de fichiers locaux n'est plus disponible via l'API." });
-    setPreviewingFile(null);
+    // BDD Locale: read content from the synced node
+    const localNode = node as LocalNode;
+    setPreviewingFile({ name: localNode.name, tree: "local" });
     setPreviewData(null);
     setPreviewLoading(false);
-    return;
+
+    if (localNode.content === undefined || localNode.content === null) {
+      setPreviewData({
+        content: "",
+        mimeType: "text/plain",
+        name: localNode.name,
+        size: 0,
+        isText: true,
+      });
+      return;
+    }
+
+    const raw = localNode.content;
+    const content = typeof raw === "string" ? raw : JSON.stringify(raw, null, 2);
+    let pretty = content;
+    try { pretty = JSON.stringify(JSON.parse(content), null, 2); } catch { /* not json */ }
+
+    setPreviewData({
+      content: pretty,
+      mimeType: "application/json",
+      name: localNode.name,
+      size: new TextEncoder().encode(pretty).length,
+      isText: true,
+    });
   };
 
   const visibleWebTree = filterWebTree(webTree);
@@ -818,17 +959,26 @@ export default function StructureBDDPage() {
                   >
                     <RotateCcw className={`h-4 w-4 ${resettingLocal ? "animate-spin" : ""}`} />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleClearData}
-                    disabled={clearingData}
-                    title="Supprimer (.data)"
-                    className="text-red-500 hover:text-red-600"
-                  >
-                    <Trash2 className={`h-4 w-4 ${clearingData ? "animate-spin" : ""}`} />
-                  </Button>
-                </>
+                   <Button
+                     variant="ghost"
+                     size="icon"
+                     onClick={handleClearData}
+                     disabled={clearingData}
+                     title="Supprimer (.data)"
+                     className="text-red-500 hover:text-red-600"
+                   >
+                     <Trash2 className={`h-4 w-4 ${clearingData ? "animate-spin" : ""}`} />
+                   </Button>
+                   <Button
+                     variant="ghost"
+                     size="icon"
+                     onClick={handleResetMirror}
+                     disabled={syncing}
+                     title="Réinitialiser le miroir"
+                   >
+                     <ArrowRightLeft className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+                   </Button>
+                 </>
               )}
             </div>
           </div>
@@ -869,18 +1019,30 @@ export default function StructureBDDPage() {
                 Sync Web → Local
               </Button>
             )}
-            {activeView === "local" && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleSync}
-                disabled={isSyncing}
-                className="w-full"
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`} />
-                Synchroniser
-              </Button>
-            )}
+             {activeView === "local" && (
+               <Button
+                 variant="default"
+                 size="sm"
+                 onClick={handleSync}
+                 disabled={isSyncing}
+                 className="w-full"
+               >
+                 <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`} />
+                 Synchroniser
+               </Button>
+             )}
+             {activeView === "local" && (
+               <Button
+                 variant="outline"
+                 size="sm"
+                 onClick={handleResetMirror}
+                 disabled={syncing}
+                 className="w-full"
+               >
+                 <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+                 Réinitialiser le miroir
+               </Button>
+             )}
           </div>
         </Card>
 
