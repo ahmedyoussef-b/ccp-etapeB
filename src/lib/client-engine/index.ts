@@ -188,7 +188,7 @@ export class ClientEngine {
     const question = updates.question ?? existing.question;
     const answer = updates.answer ?? existing.answer;
 
-    await run('UPDATE qa_pairs SET question = ?, answer = ?, updated_at = datetime("now") WHERE id = ?', [
+    await run('UPDATE qa_pairs SET question = ?, answer = ?, updated_at = datetime(\'now\') WHERE id = ?', [
       question,
       answer,
       id,
@@ -273,7 +273,7 @@ export class ClientEngine {
 
     if (db) {
       await run(
-        'UPDATE chat_sessions SET title = ?, messages = ?, updated_at = datetime("now") WHERE id = ?',
+        'UPDATE chat_sessions SET title = ?, messages = ?, updated_at = datetime(\'now\') WHERE id = ?',
         [updated.title, JSON.stringify(updated.messages), id]
       );
     }

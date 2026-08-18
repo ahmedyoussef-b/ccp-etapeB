@@ -88,7 +88,7 @@ export async function getAllFiles(): Promise<File[]> {
 
 export async function getFolderByRemoteId(remoteId: string): Promise<Folder | undefined> {
   const row = await queryOne<LocalTreeRow>(
-    'SELECT * FROM local_tree WHERE remote_id = ? AND type = "folder" LIMIT 1',
+    'SELECT * FROM local_tree WHERE remote_id = ? AND type = \'folder\' LIMIT 1',
     [remoteId]
   );
   if (!row) return undefined;
@@ -116,7 +116,7 @@ export interface AddFolderInput {
 
 export async function addFolder(folder: AddFolderInput): Promise<number> {
   const result = await run(
-    'INSERT INTO local_tree (remote_id, name, type, parent_id, node_order, content, created_at, updated_at) VALUES (?, ?, "folder", ?, ?, NULL, datetime("now"), datetime("now"))',
+    'INSERT INTO local_tree (remote_id, name, type, parent_id, node_order, content, created_at, updated_at) VALUES (?, ?, \'folder\', ?, ?, NULL, datetime(\'now\'), datetime(\'now\'))',
     [folder.remoteId, folder.name, folder.parentId, folder.order ?? 0]
   );
   return result.lastInsertRowid;
@@ -126,7 +126,7 @@ export async function updateFolder(
   id: number,
   updates: Partial<Pick<Folder, 'name' | 'parentId' | 'order'>>
 ): Promise<void> {
-  const sets: string[] = ['updated_at = datetime("now")'];
+  const sets: string[] = ['updated_at = datetime(\'now\')'];
   const params: unknown[] = [];
   if (updates.name !== undefined) {
     sets.push('name = ?');
@@ -146,7 +146,7 @@ export async function updateFolder(
 
 export async function getFileByNameAndFolder(name: string, folderId: number | null): Promise<File | undefined> {
   const row = await queryOne<LocalTreeRow>(
-    'SELECT * FROM local_tree WHERE name = ? AND parent_id = ? AND type = "file" LIMIT 1',
+    'SELECT * FROM local_tree WHERE name = ? AND parent_id = ? AND type = \'file\' LIMIT 1',
     [name, folderId]
   );
   if (!row) return undefined;
@@ -177,7 +177,7 @@ export interface AddFileInput {
 
 export async function addFile(file: AddFileInput): Promise<number> {
   const result = await run(
-    'INSERT INTO local_tree (remote_id, name, type, parent_id, node_order, size, content, created_at, updated_at) VALUES (?, ?, "file", ?, ?, ?, ?, datetime("now"), datetime("now"))',
+    'INSERT INTO local_tree (remote_id, name, type, parent_id, node_order, size, content, created_at, updated_at) VALUES (?, ?, \'file\', ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
     [file.remoteId, file.name, file.folderId, file.order ?? 0, file.size, file.content ?? null]
   );
   return result.lastInsertRowid;
