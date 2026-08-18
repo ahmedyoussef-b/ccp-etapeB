@@ -253,6 +253,7 @@ export default function StructureBDDPage() {
   const { sync, isSyncing } = useSyncData();
 
   const loadTrees = async () => {
+    console.log("[StructureBDD] loadTrees start");
     setLoading(true);
     setWebError(null);
     setLocalError(null);
@@ -260,48 +261,66 @@ export default function StructureBDDPage() {
 
     const webPromise = fetch("/api/tree")
       .then((res) => {
+        console.log("[StructureBDD] /api/tree status", res.status);
         if (!res.ok) throw new Error("Failed to fetch web tree");
         return res.json();
       })
       .then((data) => {
         const roots = (data as { roots: WebTreeNode[] }).roots;
+        console.log("[StructureBDD] web tree loaded", { count: roots.length });
         setWebTree(roots);
       })
       .catch((err) => {
-        setWebError(err instanceof Error ? err.message : "Unknown error");
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        console.error("[StructureBDD] web tree error", msg);
+        setWebError(msg);
         setWebTree([]);
       });
 
     const localPromise = getLocalTree()
       .then((tree) => {
+        console.log("[StructureBDD] local tree loaded", { count: tree.length });
         setLocalTree(tree);
       })
       .catch((err) => {
-        setLocalError(err instanceof Error ? err.message : "Unknown error");
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        console.error("[StructureBDD] local tree error", msg);
+        setLocalError(msg);
         setLocalTree([]);
       });
 
     const vectorPromise = clientEngine.init()
       .then(() => clientEngine.getAllVectorDocuments())
       .then((docs) => {
+        console.log("[StructureBDD] vector docs loaded", { count: docs.length });
         setVectorDocs(docs.map((d) => ({ id: d.id, name: d.name, chunks: d.chunks })));
       })
       .catch((err) => {
-        setVectorError(err instanceof Error ? err.message : "Unknown error");
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        console.error("[StructureBDD] vector docs error", msg);
+        setVectorError(msg);
         setVectorDocs([]);
       });
 
     await Promise.all([webPromise, localPromise, vectorPromise]);
+    console.log("[StructureBDD] loadTrees done", {
+      web: webTree.length,
+      local: localTree.length,
+      vector: vectorDocs.length,
+    });
     setLoading(false);
   };
 
   useEffect(() => {
+    console.log("[StructureBDD] mount");
     loadTrees();
   }, []);
 
   const handleSync = async () => {
+    console.log("[StructureBDD] sync start");
     await sync();
     await loadTrees();
+    console.log("[StructureBDD] sync done");
   };
 
   const handleResetWeb = async () => {
@@ -309,15 +328,19 @@ export default function StructureBDDPage() {
       "Remise à zéro de la BDD Web : toutes les données web seront réinitialisées à l'état initial. Continuer ?"
     );
     if (!confirmed) return;
+    console.log("[StructureBDD] reset web start");
 
     setResettingWeb(true);
     try {
       const res = await fetch("/api/tree/reset", { method: "POST" });
+      console.log("[StructureBDD] reset web status", res.status);
       if (!res.ok) throw new Error("Failed to reset web tree");
       await loadTrees();
       toast.success("BDD Web remise à zéro avec succès");
     } catch (err) {
-      setWebError(err instanceof Error ? err.message : "Reset failed");
+      const msg = err instanceof Error ? err.message : "Reset failed";
+      console.error("[StructureBDD] reset web error", msg);
+      setWebError(msg);
       toast.error("Erreur lors de la remise à zéro de la BDD Web");
     } finally {
       setResettingWeb(false);
@@ -329,15 +352,19 @@ export default function StructureBDDPage() {
       "Remise à zéro de la BDD Locale : l'arborescence locale sera réinitialisée à l'état initial. Continuer ?"
     );
     if (!confirmed) return;
+    console.log("[StructureBDD] reset local start");
 
     setResettingLocal(true);
     try {
       await clientEngine.init();
       await clientEngine.clearAllData();
+      console.log("[StructureBDD] reset local done");
       await loadTrees();
       toast.success("BDD Locale remise à zéro avec succès");
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : "Reset failed");
+      const msg = err instanceof Error ? err.message : "Reset failed";
+      console.error("[StructureBDD] reset local error", msg);
+      setLocalError(msg);
       toast.error("Erreur lors de la remise à zéro de la BDD Locale");
     } finally {
       setResettingLocal(false);
@@ -349,15 +376,19 @@ export default function StructureBDDPage() {
       "Supprimer le contenu de .data ? Cette action est irréversible."
     );
     if (!confirmed) return;
+    console.log("[StructureBDD] clear data start");
 
     setClearingData(true);
     try {
       await clientEngine.init();
       await clientEngine.clearAllData();
+      console.log("[StructureBDD] clear data done");
       await loadTrees();
       toast.success("Contenu de .data supprimé");
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : "Clear failed");
+      const msg = err instanceof Error ? err.message : "Clear failed";
+      console.error("[StructureBDD] clear data error", msg);
+      setLocalError(msg);
       toast.error("Erreur lors de la suppression de .data");
     } finally {
       setClearingData(false);
@@ -369,19 +400,24 @@ export default function StructureBDDPage() {
       "Synchroniser la BDD Web vers la BDD Locale puis remettre à zéro la BDD Web ?"
     );
     if (!confirmed) return;
+    console.log("[StructureBDD] sync and reset start");
 
     setSyncingAndResetting(true);
     try {
       const syncRes = await fetch("/api/tree/sync-to-local", { method: "POST" });
+      console.log("[StructureBDD] sync-to-local status", syncRes.status);
       if (!syncRes.ok) throw new Error("Failed to sync web tree to local");
 
       const resetRes = await fetch("/api/tree/reset", { method: "POST" });
+      console.log("[StructureBDD] reset web status", resetRes.status);
       if (!resetRes.ok) throw new Error("Failed to reset web tree");
 
       await loadTrees();
       toast.success("Synchronisation terminée et BDD Web remise à zéro");
     } catch (err) {
-      setWebError(err instanceof Error ? err.message : "Sync and reset failed");
+      const msg = err instanceof Error ? err.message : "Sync and reset failed";
+      console.error("[StructureBDD] sync and reset error", msg);
+      setWebError(msg);
       toast.error("Erreur lors de la synchronisation");
     } finally {
       setSyncingAndResetting(false);
@@ -391,14 +427,18 @@ export default function StructureBDDPage() {
   const handleDeleteWeb = async (node: WebTreeNode | LocalNode) => {
     const confirmed = window.confirm(`Supprimer "${node.name}" ?`);
     if (!confirmed) return;
+    console.log("[StructureBDD] delete web", { id: node.id, name: node.name });
 
     try {
       const res = await fetch(`/api/tree/nodes/${node.id}`, { method: "DELETE" });
+      console.log("[StructureBDD] delete web status", res.status);
       if (!res.ok) throw new Error("Failed to delete node");
       await loadTrees();
       toast.success("Nœud supprimé");
     } catch (err) {
-      setWebError(err instanceof Error ? err.message : "Delete failed");
+      const msg = err instanceof Error ? err.message : "Delete failed";
+      console.error("[StructureBDD] delete web error", msg);
+      setWebError(msg);
       toast.error("Erreur lors de la suppression");
     }
   };
@@ -407,17 +447,21 @@ export default function StructureBDDPage() {
     if (!("id" in node)) return;
     const confirmed = window.confirm(`Supprimer "${node.name}" ?`);
     if (!confirmed) return;
+    console.log("[StructureBDD] delete local", { id: node.id, name: node.name });
 
     try {
       const idStr = node.id as string;
       const numericId = parseInt(idStr.replace(/^(folder|file)-/, ""), 10);
       if (!isNaN(numericId)) {
         await deleteLocalTreeNode(numericId);
+        console.log("[StructureBDD] delete local done", { numericId });
         await loadTrees();
         toast.success("Nœud supprimé");
       }
     } catch (err) {
-      setLocalError(err instanceof Error ? err.message : "Delete failed");
+      const msg = err instanceof Error ? err.message : "Delete failed";
+      console.error("[StructureBDD] delete local error", msg);
+      setLocalError(msg);
       toast.error("Erreur lors de la suppression");
     }
   };
@@ -649,12 +693,22 @@ export default function StructureBDDPage() {
     nodes.reduce((acc, node) => acc + 1 + totalNodes(node.children), 0);
 
   if (loading) {
+    console.log("[StructureBDD] render loading");
     return (
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <p className="text-sm text-muted-foreground">Chargement de la structure...</p>
       </section>
     );
   }
+
+  console.log("[StructureBDD] render result", {
+    web: visibleWebTree.length,
+    local: visibleLocalTree.length,
+    vector: vectorDocs.length,
+    webError: !!webError,
+    localError: !!localError,
+    vectorError: !!vectorError,
+  });
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
