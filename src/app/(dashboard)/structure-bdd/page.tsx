@@ -33,7 +33,7 @@ import {
 
 import { useSyncData } from "@/lib/sync/useSyncData";
 import { getLocalTree, deleteLocalTreeNode, addFolder, updateFolder, addFile } from "@/lib/db/tree";
-import { clientEngine } from "@/lib/client-engine";
+import { clientEngine, initSqlite, run } from "@/lib/client-engine";
 import { toast } from "sonner";
 
 type LocalNode = {
@@ -400,9 +400,36 @@ export default function StructureBDDPage() {
 
     setSyncingAndResetting(true);
     try {
-      const syncRes = await fetch("/api/tree/sync-to-local", { method: "POST" });
-      console.log("[StructureBDD] sync-to-local status", syncRes.status);
-      if (!syncRes.ok) throw new Error("Failed to sync web tree to local");
+      const res = await fetch("/api/tree");
+      console.log("[StructureBDD] fetch web tree status", res.status);
+      if (!res.ok) throw new Error("Failed to fetch web tree");
+      const { roots } = (await res.json()) as { roots: WebTreeNode[] };
+
+      await initSqlite();
+      
+      await run("DELETE FROM local_tree");
+
+      const flatten = (nodes: WebTreeNode[], parentId: number | null = null): Array<{ id: number; name: string; type: string; parentId: number | null; metadata: string | null }> => {
+        const result: Array<{ id: number; name: string; type: string; parentId: number | null; metadata: string | null }> = [];
+        for (const node of nodes) {
+          result.push({ id: node.id, name: node.name, type: node.type, parentId, metadata: node.metadata });
+          if (node.children?.length) {
+            result.push(...flatten(node.children, node.id));
+          }
+        }
+        return result;
+      };
+
+      const flatNodes = flatten(roots);
+      
+      for (const node of flatNodes) {
+        await run(
+          "INSERT INTO local_tree (remote_id, name, type, parent_id, size, created_at, updated_at) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))",
+          [String(node.id), node.name, node.type, node.parentId, 0]
+        );
+      }
+
+      console.log("[StructureBDD] sync to local done", { count: flatNodes.length });
 
       const resetRes = await fetch("/api/tree/reset", { method: "POST" });
       console.log("[StructureBDD] reset web status", resetRes.status);
