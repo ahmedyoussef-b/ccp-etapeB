@@ -251,6 +251,7 @@ export default function StructureBDDPage() {
   const [previewData, setPreviewData] = useState<{ content?: string; dataUrl?: string; mimeType: string; name: string; size: number; isText: boolean } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const { sync, isSyncing } = useSyncData();
+  const [activeView, setActiveView] = useState<"web" | "local" | "vector">("web");
 
   const loadTrees = async () => {
     console.log("[StructureBDD] loadTrees start");
@@ -710,6 +711,10 @@ export default function StructureBDDPage() {
     vectorError: !!vectorError,
   });
 
+  const activeTree = activeView === "web" ? visibleWebTree : activeView === "local" ? visibleLocalTree : [];
+  const activeError = activeView === "web" ? webError : activeView === "local" ? localError : vectorError;
+  const totalActiveNodes = totalNodes(activeTree);
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -719,173 +724,179 @@ export default function StructureBDDPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Structure BDD</h1>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Comparaison de la base de données web, locale et vectorielle · {totalNodes(visibleWebTree) + totalNodes(visibleLocalTree)} nœuds
-            {webError && <span className="text-red-500"> · Erreur web: {webError}</span>}
-            {localError && <span className="text-red-500"> · Erreur locale: {localError}</span>}
-            {vectorError && <span className="text-red-500"> · Erreur vectorielle: {vectorError}</span>}
+            Vue active : {activeView === "web" ? "Hub / PostgreSQL" : activeView === "local" ? "Spoke / SQLite OPFS" : "Spoke / IndexedDB"} · {totalActiveNodes} nœuds
+            {activeError && <span className="text-red-500"> · Erreur: {activeError}</span>}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Input
-            placeholder="Rechercher dans l'arborescence..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:w-80"
-          />
           <Button
-            variant="outline"
-            size="icon"
-            onClick={handleSync}
-            disabled={isSyncing}
+            variant={activeView === "web" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveView("web")}
           >
-            <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
+            Hub / Web
           </Button>
           <Button
-            variant="default"
-            size="icon"
-            onClick={handleSyncAndReset}
-            disabled={syncingAndResetting}
-            title="Synchroniser la BDD Web vers la BDD Locale et remettre à zéro la BDD Web"
+            variant={activeView === "local" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveView("local")}
           >
-            <ArrowRightLeft className={`h-4 w-4 ${syncingAndResetting ? "animate-spin" : ""}`} />
+            SQLite
+          </Button>
+          <Button
+            variant={activeView === "vector" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveView("vector")}
+          >
+            Vectorielle
           </Button>
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <div className="border-b border-border px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Database className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">Hub / PostgreSQL (API)</h3>
+              <FolderTree className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Arborescence</h3>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="text-xs">
-                {totalNodes(visibleWebTree)} nœuds
+                {totalActiveNodes} nœuds
               </Badge>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleResetWeb}
-                disabled={resettingWeb}
-                title="Remettre à zéro"
-              >
-                <RotateCcw className={`h-4 w-4 ${resettingWeb ? "animate-spin" : ""}`} />
-              </Button>
-            </div>
-          </div>
-          <div className="p-2 max-h-[600px] overflow-y-auto">
-            {webError ? (
-              <p className="text-sm text-red-500 text-center py-8">
-                Erreur : {webError}
-              </p>
-            ) : visibleWebTree.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Aucun nœud trouvé.
-              </p>
-            ) : (
-              visibleWebTree.map((node) => (
-                <TreeNodeItem
-                  key={node.id}
-                  node={node}
-                  onDelete={handleDeleteWeb}
-                  onAdd={handleAddWeb}
-                  onRename={handleRenameWeb}
-                  onPreview={handlePreviewFile}
-                />
-              ))
-            )}
-          </div>
-        </Card>
-
-        <Card>
-          <div className="border-b border-border px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Database className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">Spoke / SQLite OPFS</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="default" className="text-xs">
-                {totalNodes(visibleLocalTree)} nœuds
-              </Badge>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleResetLocal}
-                disabled={resettingLocal}
-                title="Remettre à zéro"
-              >
-                <RotateCcw className={`h-4 w-4 ${resettingLocal ? "animate-spin" : ""}`} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClearData}
-                disabled={clearingData}
-                title="Supprimer (.data)"
-                className="text-red-500 hover:text-red-600"
-              >
-                <Trash2 className={`h-4 w-4 ${clearingData ? "animate-spin" : ""}`} />
-              </Button>
-            </div>
-          </div>
-          <div className="p-2 max-h-[600px] overflow-y-auto">
-            {localError ? (
-              <p className="text-sm text-red-500 text-center py-8">
-                Erreur : {localError}
-              </p>
-            ) : visibleLocalTree.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Aucune donnée locale.
-              </p>
-            ) : (
-              visibleLocalTree.map((node) => (
-                <TreeNodeItem
-                  key={node.id}
-                  node={node}
-                  onDelete={handleDeleteLocal}
-                  onAdd={handleAddLocal}
-                  onRename={handleRenameLocal}
-                  onEdit={handleEditJson}
-                  onPreview={handlePreviewFile}
-                />
-              ))
-            )}
-          </div>
-        </Card>
-
-        <Card>
-          <div className="border-b border-border px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Database className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">Spoke / IndexedDB (Vectoriel)</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">
-                {vectorDocs.length} docs
-              </Badge>
-            </div>
-          </div>
-          <div className="p-2 max-h-[600px] overflow-y-auto">
-            {vectorError ? (
-              <p className="text-sm text-red-500 text-center py-8">
-                Erreur : {vectorError}
-              </p>
-            ) : vectorDocs.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Aucun document vectoriel.
-              </p>
-            ) : (
-              vectorDocs.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="flex flex-col gap-1 rounded-md px-2 py-1.5 hover:bg-muted/50"
+              {activeView === "web" && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleResetWeb}
+                  disabled={resettingWeb}
+                  title="Remettre à zéro"
                 >
-                  <span className="text-sm font-medium text-foreground">{doc.name}</span>
-                  <span className="text-xs text-muted-foreground">{doc.chunks.length} chunks</span>
-                </div>
+                  <RotateCcw className={`h-4 w-4 ${resettingWeb ? "animate-spin" : ""}`} />
+                </Button>
+              )}
+              {activeView === "local" && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleResetLocal}
+                    disabled={resettingLocal}
+                    title="Remettre à zéro"
+                  >
+                    <RotateCcw className={`h-4 w-4 ${resettingLocal ? "animate-spin" : ""}`} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleClearData}
+                    disabled={clearingData}
+                    title="Supprimer (.data)"
+                    className="text-red-500 hover:text-red-600"
+                  >
+                    <Trash2 className={`h-4 w-4 ${clearingData ? "animate-spin" : ""}`} />
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="p-2 max-h-[600px] overflow-y-auto">
+            {activeError ? (
+              <p className="text-sm text-red-500 text-center py-8">
+                Erreur : {activeError}
+              </p>
+            ) : activeTree.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Aucune donnée.
+              </p>
+            ) : (
+              activeTree.map((node) => (
+                <TreeNodeItem
+                  key={node.id}
+                  node={node}
+                  depth={0}
+                  onDelete={activeView === "web" ? handleDeleteWeb : activeView === "local" ? handleDeleteLocal : undefined}
+                  onAdd={activeView === "web" ? handleAddWeb : activeView === "local" ? handleAddLocal : undefined}
+                  onRename={activeView === "web" ? handleRenameWeb : activeView === "local" ? handleRenameLocal : undefined}
+                  onEdit={activeView === "local" ? handleEditJson : undefined}
+                  onPreview={handlePreviewFile}
+                />
               ))
+            )}
+          </div>
+          <div className="p-3 border-t border-border flex flex-col gap-2">
+            {activeView === "web" && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleSyncAndReset}
+                disabled={syncingAndResetting}
+                className="w-full"
+              >
+                <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncingAndResetting ? "animate-spin" : ""}`} />
+                Sync Web → Local
+              </Button>
+            )}
+            {activeView === "local" && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleSync}
+                disabled={isSyncing}
+                className="w-full"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`} />
+                Synchroniser
+              </Button>
+            )}
+          </div>
+        </Card>
+
+        <Card>
+          <div className="border-b border-border px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Eye className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Visualiseur</h3>
+            </div>
+            {previewingFile && (
+              <Badge variant="outline" className="text-xs">
+                {previewingFile.name}
+              </Badge>
+            )}
+          </div>
+          <div className="p-4 max-h-[600px] overflow-y-auto">
+            {!previewingFile ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Sélectionnez un nœud dans l'arborescence pour afficher son contenu.
+              </p>
+            ) : previewLoading ? (
+              <p className="text-sm text-muted-foreground text-center py-8">Chargement...</p>
+            ) : previewData ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">{previewData.mimeType}</span>
+                  <span className="text-xs text-muted-foreground">{(previewData.size / 1024).toFixed(1)} Ko</span>
+                </div>
+                {previewData.isText && previewData.content !== undefined ? (
+                  <pre className="text-xs font-mono text-foreground overflow-auto max-h-[520px] whitespace-pre-wrap break-all bg-muted/30 p-3 rounded-md">
+                    {previewData.content}
+                  </pre>
+                ) : previewData.dataUrl ? (
+                  previewData.mimeType.startsWith("image/") ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={previewData.dataUrl} alt={previewData.name} className="max-h-[520px] w-full object-contain rounded-md" />
+                  ) : previewData.mimeType.startsWith("video/") ? (
+                    <video src={previewData.dataUrl} controls className="max-h-[520px] w-full rounded-md" />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Aperçu non disponible pour ce type de fichier.</p>
+                  )
+                ) : (
+                  <p className="text-sm text-muted-foreground">Aperçu non disponible.</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">Aucun contenu.</p>
             )}
           </div>
         </Card>
