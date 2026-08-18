@@ -70,7 +70,10 @@ export async function run(sql: string, params: unknown[] | Record<string, unknow
   return new Promise((resolve, reject) => {
     try {
       const stmt = database.prepare(sql);
-      stmt.bind(params as BindingSpec);
+      const hasParams = Array.isArray(params) ? params.length > 0 : Object.keys(params).length > 0;
+      if (hasParams) {
+        stmt.bind(params as BindingSpec);
+      }
       stmt.step();
       const changes = database.changes();
       const lastInsertRowid = db ? Number(db.selectObject('SELECT last_insert_rowid()')?.last_insert_rowid ?? 0) : 0;
