@@ -230,9 +230,11 @@ function TreeNodeItem({
 export default function StructureBDDPage() {
   const [webTree, setWebTree] = useState<WebTreeNode[]>([]);
   const [localTree, setLocalTree] = useState<LocalNode[]>([]);
+  const [vectorDocs, setVectorDocs] = useState<{ id: string; name: string; chunks: { content: string }[] }[]>([]);
   const [loading, setLoading] = useState(true);
   const [webError, setWebError] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [vectorError, setVectorError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [resettingWeb, setResettingWeb] = useState(false);
   const [resettingLocal, setResettingLocal] = useState(false);
@@ -254,6 +256,7 @@ export default function StructureBDDPage() {
     setLoading(true);
     setWebError(null);
     setLocalError(null);
+    setVectorError(null);
 
     const webPromise = fetch("/api/tree")
       .then((res) => {
@@ -278,7 +281,17 @@ export default function StructureBDDPage() {
         setLocalTree([]);
       });
 
-    await Promise.all([webPromise, localPromise]);
+    const vectorPromise = clientEngine.init()
+      .then(() => clientEngine.getAllVectorDocuments())
+      .then((docs) => {
+        setVectorDocs(docs.map((d) => ({ id: d.id, name: d.name, chunks: d.chunks })));
+      })
+      .catch((err) => {
+        setVectorError(err instanceof Error ? err.message : "Unknown error");
+        setVectorDocs([]);
+      });
+
+    await Promise.all([webPromise, localPromise, vectorPromise]);
     setLoading(false);
   };
 
@@ -652,9 +665,10 @@ export default function StructureBDDPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Structure BDD</h1>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Comparaison de la base de données web et locale · {totalNodes(visibleWebTree) + totalNodes(visibleLocalTree)} nœuds
+            Comparaison de la base de données web, locale et vectorielle · {totalNodes(visibleWebTree) + totalNodes(visibleLocalTree)} nœuds
             {webError && <span className="text-red-500"> · Erreur web: {webError}</span>}
             {localError && <span className="text-red-500"> · Erreur locale: {localError}</span>}
+            {vectorError && <span className="text-red-500"> · Erreur vectorielle: {vectorError}</span>}
           </p>
         </div>
 
@@ -685,12 +699,12 @@ export default function StructureBDDPage() {
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
           <div className="border-b border-border px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Database className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">BDD Web</h3>
+              <h3 className="text-sm font-semibold text-foreground">Hub / PostgreSQL (API)</h3>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="text-xs">
@@ -735,7 +749,7 @@ export default function StructureBDDPage() {
           <div className="border-b border-border px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Database className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">BDD Locale</h3>
+              <h3 className="text-sm font-semibold text-foreground">Spoke / SQLite OPFS</h3>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="default" className="text-xs">
@@ -782,6 +796,41 @@ export default function StructureBDDPage() {
                   onEdit={handleEditJson}
                   onPreview={handlePreviewFile}
                 />
+              ))
+            )}
+          </div>
+        </Card>
+
+        <Card>
+          <div className="border-b border-border px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Database className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Spoke / IndexedDB (Vectoriel)</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs">
+                {vectorDocs.length} docs
+              </Badge>
+            </div>
+          </div>
+          <div className="p-2 max-h-[600px] overflow-y-auto">
+            {vectorError ? (
+              <p className="text-sm text-red-500 text-center py-8">
+                Erreur : {vectorError}
+              </p>
+            ) : vectorDocs.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                Aucun document vectoriel.
+              </p>
+            ) : (
+              vectorDocs.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="flex flex-col gap-1 rounded-md px-2 py-1.5 hover:bg-muted/50"
+                >
+                  <span className="text-sm font-medium text-foreground">{doc.name}</span>
+                  <span className="text-xs text-muted-foreground">{doc.chunks.length} chunks</span>
+                </div>
               ))
             )}
           </div>
