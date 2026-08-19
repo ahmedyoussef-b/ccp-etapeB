@@ -30,6 +30,18 @@ export function SyncButton() {
         throw new Error(data.error || `Sync failed: ${response.status}`);
       }
 
+      try {
+        const imagesResponse = await fetch('/api/images/sync-metadata');
+        if (imagesResponse.ok) {
+          const data = await imagesResponse.json();
+          if (data.images && Array.isArray(data.images)) {
+            await clientEngine.syncImageMetadata(data.images);
+          }
+        }
+      } catch (imageErr) {
+        console.error('[SyncButton] Image metadata sync failed:', imageErr);
+      }
+
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {

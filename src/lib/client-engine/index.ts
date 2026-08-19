@@ -45,6 +45,19 @@ export interface ChatSession {
   updatedAt: string;
 }
 
+export interface ImageMetadata {
+  id: string;
+  title: string;
+  description: string;
+  tags: string[];
+  category: string;
+  kind: 'image' | 'video';
+  mimeType: string;
+  size: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface QARegistryRow {
   id: number;
   title: string;
@@ -561,6 +574,61 @@ export class ClientEngine {
     });
 
     return finalName;
+  }
+
+  async syncImageMetadata(images: ImageMetadata[]): Promise<void> {
+    const DOC_ID = 'image-metadata';
+    const DOC_NAME = 'banque-images-metadata';
+
+    try {
+      await deleteDocument(DOC_ID);
+    } catch {
+      // ignore if not exists
+    }
+
+    if (images.length === 0) return;
+
+    const chunks = images.map((img, index) => {
+      const text = [
+        img.title,
+        img.description,
+        img.category,
+        ...img.tags,
+        img.kind,
+        img.mimeType,
+      ]
+        .filter(Boolean)
+        .join(' ');
+
+      return {
+        documentId: DOC_ID,
+        documentName: DOC_NAME,
+        chunkIndex: index,
+        content: text,
+        embedding: simpleTokenEmbedding(text),
+        metadata: {
+          type: 'image_metadata',
+          imageId: img.id,
+          title: img.title,
+          category: img.category,
+          tags: img.tags,
+          kind: img.kind,
+          mimeType: img.mimeType,
+          size: img.size,
+          createdAt: img.createdAt,
+          updatedAt: img.updatedAt,
+        },
+      };
+    });
+
+    await addDocument({
+      id: DOC_ID,
+      name: DOC_NAME,
+      originalPath: 'banque-d-images',
+      relativePath: 'banque-d-images',
+      chunks,
+      metadata: { type: 'image_metadata_collection', count: images.length },
+    });
   }
 }
 
