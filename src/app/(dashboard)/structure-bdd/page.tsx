@@ -31,7 +31,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { useSyncData } from "@/lib/sync/useSyncData";
 import { getLocalTree, deleteLocalTreeNode, addFolder, updateFolder, addFile } from "@/lib/db/tree";
 import { clientEngine, initSqlite, run, simpleTokenEmbedding } from "@/lib/client-engine";
 import type { VectorTreeNode } from "@/lib/client-engine";
@@ -316,7 +315,6 @@ export default function StructureBDDPage() {
   const [previewingFile, setPreviewingFile] = useState<{ path?: string; name: string; tree: "web" | "local" } | null>(null);
   const [previewData, setPreviewData] = useState<{ content?: string; dataUrl?: string; mimeType: string; name: string; size: number; isText: boolean } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const { sync, isSyncing } = useSyncData();
   const [syncing, setSyncing] = useState(false);
   const [activeView, setActiveView] = useState<"web" | "local" | "vector">("web");
 
@@ -345,7 +343,10 @@ export default function StructureBDDPage() {
         setWebTree([]);
       });
 
-    const localPromise = getLocalTree()
+    const enginePromise = clientEngine.init();
+
+    const localPromise = enginePromise
+      .then(() => getLocalTree())
       .then((tree) => {
         console.log("[StructureBDD] local tree loaded", { count: tree.length });
         setLocalTree(tree);
@@ -357,7 +358,7 @@ export default function StructureBDDPage() {
         setLocalTree([]);
       });
 
-    const vectorPromise = clientEngine.init()
+    const vectorPromise = enginePromise
       .then(() => clientEngine.getAllVectorDocuments())
       .then((docs) => {
         console.log("[StructureBDD] vector docs loaded", { count: docs.length });
@@ -384,13 +385,6 @@ export default function StructureBDDPage() {
     console.log("[StructureBDD] mount");
     loadTrees();
   }, [loadTrees]);
-
-  const handleSync = async () => {
-    console.log("[StructureBDD] sync start");
-    await sync();
-    await loadTrees();
-    console.log("[StructureBDD] sync done");
-  };
 
   const handleResetWeb = async () => {
     const confirmed = window.confirm(
@@ -1225,28 +1219,16 @@ export default function StructureBDDPage() {
                 <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
                 Sync Web → Local
               </Button>
-            )}
-             {activeView === "local" && (
-               <Button
-                 variant="default"
-                 size="sm"
-                 onClick={handleSync}
-                 disabled={isSyncing}
-                 className="w-full"
-               >
-                 <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`} />
-                 Synchroniser
-               </Button>
              )}
               {activeView === "local" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResetMirror}
-                  disabled={syncing}
-                  className="w-full"
-                >
-                  <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+                 <Button
+                   variant="outline"
+                   size="sm"
+                   onClick={handleResetMirror}
+                   disabled={syncing}
+                   className="w-full"
+                 >
+                   <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
                   Réinitialiser le miroir
                 </Button>
               )}

@@ -3,7 +3,8 @@ import type { Database, Sqlite3Static, BindingSpec } from '@sqlite.org/sqlite-wa
 let db: Database | null = null;
 let initPromise: Promise<Database> | null = null;
 
-const DB_NAME = '/nexaflow-client.sqlite';
+const DB_NAME = 'nexaflow_local_db.sqlite';
+const DB_PATH = `/nexaflow_data/${DB_NAME}`;
 
 export async function initSqlite(): Promise<Database> {
   if (db) return db;
@@ -18,9 +19,18 @@ export async function initSqlite(): Promise<Database> {
     });
 
     if (typeof sqlite3Instance.oo1?.OpfsDb === 'function') {
-      db = new sqlite3Instance.oo1.OpfsDb(DB_NAME);
+      if (typeof window !== 'undefined' && 'storage' in navigator) {
+        try {
+          const sm = navigator.storage as unknown as { getDirectory: () => Promise<{ getDirectoryHandle: (name: string, opts: { create: boolean }) => Promise<unknown> }> };
+          const root = await sm.getDirectory();
+          await root.getDirectoryHandle('nexaflow_data', { create: true });
+        } catch (err) {
+          console.warn('[SQLite] OPFS directory creation failed, using root path', err);
+        }
+      }
+      db = new sqlite3Instance.oo1.OpfsDb(DB_PATH);
     } else if (typeof sqlite3Instance.oo1?.DB === 'function') {
-      db = new sqlite3Instance.oo1.DB(DB_NAME);
+      db = new sqlite3Instance.oo1.DB(DB_PATH);
     } else {
       db = new sqlite3Instance.oo1.JsStorageDb('local');
     }
