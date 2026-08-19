@@ -614,9 +614,10 @@ export default function ImagesPage() {
       setDialogOpen(false);
       resetForm();
       await loadData();
-    } catch {
-      console.log(`[ImagesPage] handleSave() - ERROR`);
-      toast.error("Erreur lors de l'enregistrement");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erreur lors de l'enregistrement";
+      console.log(`[ImagesPage] handleSave() - ERROR: ${message}`);
+      toast.error(message);
     } finally {
       setSaving(false);
     }

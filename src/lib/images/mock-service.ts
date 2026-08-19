@@ -28,7 +28,14 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
     ...options,
   });
   if (!res.ok) {
-    throw new Error(`API error: ${res.status}`);
+    let errorMessage = `API error: ${res.status}`;
+    try {
+      const errorData = await res.json();
+      errorMessage = errorData.error || errorData.message || errorMessage;
+    } catch {
+      // ignore JSON parse error
+    }
+    throw new Error(errorMessage);
   }
   return res.json();
 }
