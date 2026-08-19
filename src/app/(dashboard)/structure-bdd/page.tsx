@@ -118,6 +118,7 @@ function TreeNodeItem({
   onPreview,
   onVectorize,
   vectorizing = false,
+  expandAll = false,
 }: {
   node: WebTreeNode | LocalNode;
   depth?: number;
@@ -129,8 +130,9 @@ function TreeNodeItem({
   onPreview?: (node: WebTreeNode | LocalNode) => void;
   onVectorize?: (node: LocalNode, path: string) => void;
   vectorizing?: boolean;
+  expandAll?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(depth < 1);
+  const [expanded, setExpanded] = useState(depth < 1 || expandAll);
   const [showActions, setShowActions] = useState(false);
   const isLocal = "path" in node;
   const nodeType = isLocal ? node.type : node.type;
@@ -283,6 +285,7 @@ function TreeNodeItem({
                 onEdit={onEdit}
                 onPreview={onPreview}
                 onVectorize={onVectorize}
+                expandAll={expandAll}
               />
           ))}
         </div>
@@ -1203,6 +1206,7 @@ export default function StructureBDDPage() {
                    onPreview={handlePreviewFile}
                    onVectorize={activeView === "local" ? handleVectorizeLocalFile : undefined}
                    vectorizing={vectorizing}
+                   expandAll={activeView === "vector"}
                 />
               ))
             )}
