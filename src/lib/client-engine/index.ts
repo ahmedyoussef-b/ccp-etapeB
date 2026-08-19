@@ -1,5 +1,5 @@
 import { initSqlite, getDb, query, queryOne, run } from './sqlite';
-import { initVectorStore, searchByEmbedding, addDocument, getAllDocuments, deleteDocument, getStats, clearVectorStore, simpleTokenEmbedding, type VectorDocument } from './vector-store';
+import { initVectorStore, searchByEmbedding, addDocument, getAllDocuments, deleteDocument, getStats, clearVectorStore, simpleTokenEmbedding, addVectorTreeNode, getAllVectorTreeNodes, deleteVectorTreeNode, clearVectorTree, type VectorDocument, type VectorTreeNode } from './vector-store';
 import { initJsonStore, jsonGet, jsonSet, jsonDelete, jsonClear, jsonGetAll } from './json-store';
 
 export { initSqlite, getDb, query, queryOne, run, exec } from './sqlite';
@@ -12,6 +12,12 @@ export {
   getStats,
   clearVectorStore,
   simpleTokenEmbedding,
+  addVectorTreeNode,
+  getAllVectorTreeNodes,
+  deleteVectorTreeNode,
+  clearVectorTree,
+  type VectorDocument,
+  type VectorTreeNode,
 } from './vector-store';
 export { initJsonStore, jsonGet, jsonSet, jsonDelete, jsonClear, jsonGetAll } from './json-store';
 
@@ -349,6 +355,22 @@ export class ClientEngine {
     await deleteDocument(id);
   }
 
+  async getAllVectorTreeNodes(): Promise<VectorTreeNode[]> {
+    return getAllVectorTreeNodes();
+  }
+
+  async addVectorTreeNode(node: Omit<VectorTreeNode, 'createdAt'>): Promise<void> {
+    await addVectorTreeNode(node);
+  }
+
+  async deleteVectorTreeNode(id: string): Promise<void> {
+    await deleteVectorTreeNode(id);
+  }
+
+  async clearVectorTree(): Promise<void> {
+    await clearVectorTree();
+  }
+
   async clearAllData(): Promise<void> {
     const db = getDb();
     if (db) {
@@ -360,6 +382,10 @@ export class ClientEngine {
     }
     await clearVectorStore();
     await jsonClear();
+  }
+
+  async clearAllVectorDocuments(): Promise<void> {
+    await clearVectorStore();
   }
 
   async getStats(): Promise<{ pairs: number; sessions: number; documents: number; chunks: number }> {

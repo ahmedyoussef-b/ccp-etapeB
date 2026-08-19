@@ -19,10 +19,23 @@ export interface VectorDocument {
   createdAt: number;
 }
 
+export interface VectorTreeNode {
+  id: string;
+  name: string;
+  type: 'folder' | 'file';
+  parentId: string | null;
+  order: number;
+  relativePath: string;
+  content: string | null;
+  docId: string | null;
+  createdAt: number;
+}
+
 const DB_NAME = 'nexaflow-vector-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const CHUNKS_STORE = 'chunks';
 const DOCUMENTS_STORE = 'documents';
+const TREE_STORE = 'vector_tree';
 
 let dbInstance: IDBDatabase | null = null;
 let initPromise: Promise<IDBDatabase> | null = null;
@@ -52,6 +65,12 @@ function openDb(): Promise<IDBDatabase> {
       if (!database.objectStoreNames.contains(DOCUMENTS_STORE)) {
         const docsStore = database.createObjectStore(DOCUMENTS_STORE, { keyPath: 'id' });
         docsStore.createIndex('relativePath', 'relativePath', { unique: true });
+      }
+
+      if (!database.objectStoreNames.contains(TREE_STORE)) {
+        const treeStore = database.createObjectStore(TREE_STORE, { keyPath: 'id' });
+        treeStore.createIndex('parentId', 'parentId', { unique: false });
+        treeStore.createIndex('relativePath', 'relativePath', { unique: false });
       }
     };
   });
@@ -83,6 +102,11 @@ export async function clearVectorStore(): Promise<void> {
   const docsTx = dbInstance!.transaction(DOCUMENTS_STORE, 'readwrite');
   chunksTx.objectStore(CHUNKS_STORE).clear();
   docsTx.objectStore(DOCUMENTS_STORE).clear();
+
+  if (dbInstance!.objectStoreNames.contains(TREE_STORE)) {
+    const treeTx = dbInstance!.transaction(TREE_STORE, 'readwrite');
+    treeTx.objectStore(TREE_STORE).clear();
+  }
 }
 
 export async function addDocument(doc: Omit<VectorDocument, 'createdAt'>): Promise<void> {
@@ -219,6 +243,32 @@ export async function getStats(): Promise<{ documentCount: number; chunkCount: n
   const countRequest = chunksStore.count();
   const chunkCount = await promisifyRequest(countRequest);
   return { documentCount: documents.length, chunkCount };
+}
+
+export async function addVectorTreeNode(node: Omit<VectorTreeNode, 'createdAt'>): Promise<void> {
+  await openDb();
+  const treeStore = tx(TREE_STORE, 'readwrite');
+  const record: VectorTreeNode = { ...node, createdAt: Date.now() };
+  await promisifyRequest(treeStore.put(record));
+}
+
+export async function getAllVectorTreeNodes(): Promise<VectorTreeNode[]> {
+  await openDb();
+  const treeStore = tx(TREE_STORE);
+  const request = treeStore.getAll();
+  return promisifyRequest<VectorTreeNode[]>(request);
+}
+
+export async function deleteVectorTreeNode(id: string): Promise<void> {
+  await openDb();
+  const treeStore = tx(TREE_STORE, 'readwrite');
+  await promisifyRequest(treeStore.delete(id));
+}
+
+export async function clearVectorTree(): Promise<void> {
+  await openDb();
+  const treeStore = tx(TREE_STORE, 'readwrite');
+  treeStore.clear();
 }
 
 function cosineSimilarity(a: number[], b: number[]): number {
