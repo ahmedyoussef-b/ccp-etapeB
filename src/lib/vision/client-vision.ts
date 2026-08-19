@@ -12,7 +12,7 @@ async function loadPipeline() {
     env.allowLocalModels = false;
     env.useBrowserCache = true;
 
-    featureExtractor = (await pipeline("feature-extraction", "Xenova/clip-vit-base-patch32", {
+    featureExtractor = (await pipeline("image-feature-extraction", "Xenova/clip-vit-base-patch32", {
       progress_callback: (p: { status?: string; loaded?: number; total?: number; file?: string }) => {
         if (p.status === "progress" && p.total) {
           const pct = Math.round(((p.loaded ?? 0) / p.total) * 100);
@@ -37,10 +37,7 @@ export async function getImageEmbedding(imageDataUrl: string): Promise<number[]>
     throw new Error("Modèle de vision non initialisé");
   }
 
-  const result = await featureExtractor(imageDataUrl, {
-    pooling: "mean",
-    normalize: true,
-  });
+  const result = await featureExtractor(imageDataUrl);
 
   return Array.from(result.data);
 }
