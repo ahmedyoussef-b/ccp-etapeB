@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,9 +53,12 @@ import {
   XCircle,
   MapPin,
   Maximize2,
+  Database,
 } from "lucide-react";
 import { MediaItem, MediaKind, imageService } from "@/lib/images/mock-service";
 import { getGeolocation } from "@/lib/media/capture";
+import { CategoryTreePicker } from "@/components/images/category-tree-picker";
+import { clientEngine } from "@/lib/client-engine";
 import type { ChangeEvent } from "react";
 
 const THUMBNAIL_MAX_SIZE = 200;
@@ -140,6 +144,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function ImagesPage() {
+  const router = useRouter();
   const [items, setItems] = useState<MediaItem[]>([]);
   const [categories, setCategories] = useState<string[]>(["Tous"]);
   const [filterCategory, setFilterCategory] = useState("Tous");
@@ -170,6 +175,7 @@ export default function ImagesPage() {
   const [tagInput, setTagInput] = useState("");
   const [showTagDialog, setShowTagDialog] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [vectorizedImageIds, setVectorizedImageIds] = useState<Set<string>>(new Set());
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -204,6 +210,17 @@ export default function ImagesPage() {
       setLoading(false);
     }
   }, [limit, sortBy, sortOrder, search, filterCategory]);
+
+  const loadVectorizedImageIds = useCallback(async () => {
+    try {
+      await clientEngine.init();
+      const ids = await clientEngine.getVectorizedImageIds();
+      setVectorizedImageIds(ids);
+      console.log(`[ImagesPage] loadVectorizedImageIds() - loaded ${ids.size} vectorized images`);
+    } catch {
+      console.log(`[ImagesPage] loadVectorizedImageIds() - ERROR`);
+    }
+  }, []);
 
   const loadMore = useCallback(async () => {
     const nextOffset = offset + limit;
@@ -331,6 +348,10 @@ export default function ImagesPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    loadVectorizedImageIds();
+  }, [loadVectorizedImageIds]);
 
   useEffect(() => {
     return () => {
@@ -614,6 +635,7 @@ export default function ImagesPage() {
       setDialogOpen(false);
       resetForm();
       await loadData();
+      await loadVectorizedImageIds();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erreur lors de l'enregistrement";
       console.log(`[ImagesPage] handleSave() - ERROR: ${message}`);
@@ -864,9 +886,19 @@ export default function ImagesPage() {
                       {isSelected && <CheckSquare className="h-3 w-3" />}
                     </button>
                   </div>
+                  {vectorizedImageIds.has(item.id) && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <span
+                        title="Vectorisé pour le RAG"
+                        className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-500 text-white"
+                      >
+                        <Database className="h-3 w-3" />
+                      </span>
+                    </div>
+                  )}
                   <div
                     className="aspect-square bg-gradient-to-br from-muted/30 to-muted/10 flex items-center justify-center cursor-pointer overflow-hidden"
-                    onClick={() => openLightbox(item)}
+                    onClick={() => router.push(`/images/${item.id}`)}
                   >
                     {displaySrc ? (
                       item.kind === "image" ? (
@@ -952,7 +984,7 @@ export default function ImagesPage() {
                       variant="ghost"
                       size="icon"
                       className="h-9 w-9 rounded-full bg-white/15 text-white hover:bg-white/25 backdrop-blur"
-                      onClick={() => openEditDialog(item)}
+                      onClick={() => router.push(`/images/${item.id}`)}
                       title="Modifier"
                     >
                       <Edit3 className="h-4 w-4" />
@@ -1180,25 +1212,13 @@ export default function ImagesPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="category">Catégorie *</Label>
-                    <Select
+                    <CategoryTreePicker
                       value={formData.category}
-                      onValueChange={(value) =>
-                        setFormData((prev) => ({ ...prev, category: value as string }))
+                      onChange={(value) =>
+                        setFormData((prev) => ({ ...prev, category: value }))
                       }
-                    >
-                      <SelectTrigger id="category">
-                        <SelectValue placeholder="Sélectionner" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories
-                          .filter((c) => c !== "Tous")
-                          .map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {cat}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder="Sélectionner une catégorie"
+                    />
                   </div>
                 </div>
 
@@ -1430,6 +1450,12 @@ export default function ImagesPage() {
                     <span className="flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
                       {lightboxItem.geolocation.lat.toFixed(4)}, {lightboxItem.geolocation.lng.toFixed(4)}
+                    </span>
+                  )}
+                  {vectorizedImageIds.has(lightboxItem.id) && (
+                    <span className="flex items-center gap-1 text-emerald-400">
+                      <Database className="h-3 w-3" />
+                      Vectorisé
                     </span>
                   )}
                 </div>

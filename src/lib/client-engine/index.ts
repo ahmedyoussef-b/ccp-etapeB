@@ -1,5 +1,5 @@
 import { initSqlite, getDb, query, queryOne, run } from './sqlite';
-import { initVectorStore, searchByEmbedding, addDocument, getAllDocuments, deleteDocument, getStats, clearVectorStore, simpleTokenEmbedding, addVectorTreeNode, getAllVectorTreeNodes, deleteVectorTreeNode, clearVectorTree, type VectorDocument, type VectorTreeNode } from './vector-store';
+import { initVectorStore, searchByEmbedding, addDocument, getAllDocuments, deleteDocument, getDocument, getStats, clearVectorStore, simpleTokenEmbedding, addVectorTreeNode, getAllVectorTreeNodes, deleteVectorTreeNode, clearVectorTree, type VectorDocument, type VectorTreeNode } from './vector-store';
 import { initJsonStore, jsonGet, jsonSet, jsonDelete, jsonClear, jsonGetAll } from './json-store';
 
 export { initSqlite, getDb, query, queryOne, run, exec } from './sqlite';
@@ -9,6 +9,7 @@ export {
   addDocument,
   getAllDocuments,
   deleteDocument,
+  getDocument,
   getStats,
   clearVectorStore,
   simpleTokenEmbedding,
@@ -629,6 +630,29 @@ export class ClientEngine {
       chunks,
       metadata: { type: 'image_metadata_collection', count: images.length },
     });
+  }
+
+  async getVectorizedImageIds(): Promise<Set<string>> {
+    const DOC_ID = 'image-metadata';
+    const ids = new Set<string>();
+
+    try {
+      const doc = await getDocument(DOC_ID);
+      if (!doc || !doc.chunks || doc.chunks.length === 0) {
+        return ids;
+      }
+
+      for (const chunk of doc.chunks) {
+        const meta = chunk.metadata as { imageId?: string } | undefined;
+        if (meta?.imageId) {
+          ids.add(meta.imageId);
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    return ids;
   }
 }
 
