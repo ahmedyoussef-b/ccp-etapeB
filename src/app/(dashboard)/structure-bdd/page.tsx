@@ -1269,44 +1269,143 @@ export default function StructureBDDPage() {
         <Card>
           <div className="border-b border-border px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-foreground">Visualiseur</h3>
+              {editingFile ? (
+                <>
+                  <Pencil className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">Éditeur JSON</h3>
+                </>
+              ) : (
+                <>
+                  <Eye className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">Visualiseur</h3>
+                </>
+              )}
             </div>
-            {previewingFile && (
+            {editingFile && (
+              <Badge variant="outline" className="text-xs">
+                {editingFile.path}
+              </Badge>
+            )}
+            {previewingFile && !editingFile && (
               <Badge variant="outline" className="text-xs">
                 {previewingFile.name}
               </Badge>
             )}
           </div>
-          <div className="p-4 max-h-[600px] overflow-y-auto">
-            {!previewingFile ? (
+          <div className="p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+            {editingFile ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Contenu</label>
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    placeholder='{ "key": "value" }'
+                    className="w-full h-96 p-2 font-mono text-sm border rounded-md resize-none"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setEditingFile(null)}>
+                    Annuler
+                  </Button>
+                  <Button size="sm" onClick={confirmEditJson}>Enregistrer</Button>
+                </div>
+              </div>
+            ) : !previewingFile ? (
               <p className="text-sm text-muted-foreground text-center py-8">
                 Sélectionnez un nœud dans l&apos;arborescence pour afficher son contenu.
               </p>
             ) : previewLoading ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Chargement...</p>
+              <div className="flex items-center justify-center py-12">
+                <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
             ) : previewData ? (
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">{previewData.mimeType}</span>
-                  <span className="text-xs text-muted-foreground">{(previewData.size / 1024).toFixed(1)} Ko</span>
+                <div className="flex items-center justify-between rounded-lg bg-muted/30 px-4 py-2">
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className="text-xs">
+                      {previewData.mimeType || "application/octet-stream"}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {(previewData.size / 1024).toFixed(1)} KB
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (previewData.content) {
+                        const blob = new Blob([previewData.content], { type: previewData.mimeType || "text/plain" });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.download = previewingFile?.name || "file";
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                      } else {
+                        const link = document.createElement("a");
+                        link.href = previewData.dataUrl || "#";
+                        link.download = previewingFile?.name || "file";
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Télécharger
+                  </Button>
                 </div>
-                {previewData.isText && previewData.content !== undefined ? (
-                  <pre className="text-xs font-mono text-foreground overflow-auto max-h-[520px] whitespace-pre-wrap break-all bg-muted/30 p-3 rounded-md">
-                    {previewData.content}
-                  </pre>
-                ) : previewData.dataUrl ? (
-                  previewData.mimeType.startsWith("image/") ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={previewData.dataUrl} alt={previewData.name} className="max-h-[520px] w-full object-contain rounded-md" />
-                  ) : previewData.mimeType.startsWith("video/") ? (
-                    <video src={previewData.dataUrl} controls className="max-h-[520px] w-full rounded-md" />
+                <div className="rounded-lg border border-border/60 bg-muted/10 overflow-hidden">
+                  {previewData.isText && previewData.content !== undefined ? (
+                    <pre className="p-4 text-sm font-mono text-foreground overflow-auto max-h-[520px] whitespace-pre-wrap break-all">
+                      {previewData.content}
+                    </pre>
+                  ) : previewData.dataUrl ? (
+                    previewData.mimeType.startsWith("image/") ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={previewData.dataUrl}
+                        alt={previewData.name}
+                        className="max-h-[520px] w-full object-contain"
+                      />
+                    ) : previewData.mimeType.startsWith("video/") ? (
+                      <video
+                        src={previewData.dataUrl}
+                        controls
+                        className="max-h-[520px] w-full"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                        <FileText className="h-12 w-12 mb-2" />
+                        <p className="text-sm">Aperçu non disponible pour ce type de fichier</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-4"
+                          onClick={() => {
+                            const link = document.createElement("a");
+                            link.href = previewData.dataUrl || "#";
+                            link.download = previewingFile?.name || "file";
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Télécharger
+                        </Button>
+                      </div>
+                    )
                   ) : (
-                    <p className="text-sm text-muted-foreground">Aperçu non disponible pour ce type de fichier.</p>
-                  )
-                ) : (
-                  <p className="text-sm text-muted-foreground">Aperçu non disponible.</p>
-                )}
+                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                      <FileText className="h-12 w-12 mb-2" />
+                      <p className="text-sm">Aperçu non disponible pour ce type de fichier</p>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground text-center py-8">Aucun contenu.</p>
@@ -1371,158 +1470,6 @@ export default function StructureBDDPage() {
               Annuler
             </Button>
             <Button onClick={confirmRename}>Renommer</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit JSON Modal */}
-      <Dialog open={!!editingFile} onOpenChange={(open) => !open && setEditingFile(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Éditer le fichier JSON</DialogTitle>
-          </DialogHeader>
-          <div>
-            <label className="text-sm font-medium">Contenu</label>
-            <textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              placeholder='{ "key": "value" }'
-              className="w-full h-96 p-2 font-mono text-sm border rounded-md"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingFile(null)}>
-              Annuler
-            </Button>
-            <Button onClick={confirmEditJson}>Enregistrer</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Preview Modal */}
-      <Dialog open={!!previewingFile} onOpenChange={(open) => !open && setPreviewingFile(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-primary" />
-              Aperçu : {previewingFile?.name}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {previewLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : previewData ? (
-              <>
-                <div className="flex items-center justify-between rounded-lg bg-muted/30 px-4 py-2">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="text-xs">
-                      {previewData.mimeType || "application/octet-stream"}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {(previewData.size / 1024).toFixed(1)} KB
-                    </span>
-                  </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (previewData.content) {
-                          const blob = new Blob([previewData.content], { type: previewData.mimeType || "text/plain" });
-                          const url = URL.createObjectURL(blob);
-                          const link = document.createElement("a");
-                          link.href = url;
-                          link.download = previewingFile?.name || "file";
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                          URL.revokeObjectURL(url);
-                         } else {
-                           const link = document.createElement("a");
-                           link.href = previewData.dataUrl || "#";
-                           link.download = previewingFile?.name || "file";
-                           document.body.appendChild(link);
-                           link.click();
-                           document.body.removeChild(link);
-                         }
-                      }}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Télécharger
-                    </Button>
-                </div>
-                <div className="rounded-lg border border-border/60 bg-muted/10 overflow-hidden">
-                  {previewData.isText && previewData.content !== undefined ? (
-                    <pre className="p-4 text-sm font-mono text-foreground overflow-auto max-h-[60vh] whitespace-pre-wrap break-all">
-                      {previewData.content}
-                    </pre>
-                     ) : previewData.dataUrl ? (
-                     previewData.mimeType.startsWith("image/") ? (
-                       // eslint-disable-next-line @next/next/no-img-element
-                       <img
-                         src={previewData.dataUrl}
-                         alt={previewData.name}
-                         className="max-h-[60vh] w-full object-contain"
-                       />
-                    ) : previewData.mimeType.startsWith("video/") ? (
-                      <video
-                        src={previewData.dataUrl}
-                        controls
-                        className="max-h-[60vh] w-full"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                        <FileText className="h-12 w-12 mb-2" />
-                        <p className="text-sm">Aperçu non disponible pour ce type de fichier</p>
-                         <Button
-                           variant="outline"
-                           size="sm"
-                           className="mt-4"
-                            onClick={() => {
-                              const link = document.createElement("a");
-                              link.href = previewData.dataUrl || "#";
-                              link.download = previewingFile?.name || "file";
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
-                            }}
-                         >
-                           <Download className="h-4 w-4 mr-2" />
-                           Télécharger
-                         </Button>
-                      </div>
-                    )
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                      <FileText className="h-12 w-12 mb-2" />
-                      <p className="text-sm">Aperçu non disponible pour ce type de fichier</p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="mt-4"
-                          onClick={() => {
-                            const link = document.createElement("a");
-                            link.href = "#";
-                            link.download = previewingFile?.name || "file";
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                          }}
-                        >
-                        <Download className="h-4 w-4 mr-2" />
-                        Télécharger
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : null}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewingFile(null)}>
-              Fermer
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
