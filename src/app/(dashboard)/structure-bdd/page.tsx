@@ -366,11 +366,27 @@ export default function StructureBDDPage() {
       .then((docs) => {
         console.log("[StructureBDD] vector docs loaded", { count: docs.length });
         setVectorDocs(docs.map((d) => ({ id: d.id, name: d.name, chunks: d.chunks })));
+        return docs;
       })
-      .then(() => clientEngine.getAllVectorTreeNodes())
-      .then((nodes) => {
+      .then((docs) => clientEngine.getAllVectorTreeNodes().then((nodes) => ({ docs, nodes })))
+      .then(({ docs, nodes }) => {
         console.log("[StructureBDD] vector tree loaded", { count: nodes.length });
-        setVectorTree(buildVectorTree(nodes));
+        if (nodes.length === 0 && docs.length > 0) {
+          const fallbackNodes: VectorTreeNode[] = docs.map((doc) => ({
+            id: doc.id,
+            name: doc.name,
+            type: "file",
+            parentId: null,
+            order: 0,
+            relativePath: doc.relativePath || doc.id,
+            content: doc.chunks.map((c) => c.content).join("\n\n"),
+            docId: doc.id,
+            createdAt: Date.now(),
+          }));
+          setVectorTree(buildVectorTree(fallbackNodes));
+        } else {
+          setVectorTree(buildVectorTree(nodes));
+        }
       })
       .catch((err) => {
         const msg = err instanceof Error ? err.message : "Unknown error";

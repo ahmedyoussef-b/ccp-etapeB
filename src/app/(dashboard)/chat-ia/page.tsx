@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { NexaFlowLogo } from "@/components/brand/nexaflow-logo";
 import { useSpeech } from "@/lib/speech/use-speech";
 import { qrService } from "@/lib/qr/mock-service";
+import { clientEngine } from "@/lib/client-engine";
 import {
   Send,
   Mic,
@@ -148,7 +149,22 @@ export default function ChatIAPage() {
             return;
           }
         } catch {
-          // Q/R search unavailable — fall through to keyword responses
+          // Q/R search unavailable — fall through to local search
+        }
+
+        try {
+          await clientEngine.init();
+          const localResults = await clientEngine.searchPairs(userMessage, 5);
+          const localMatch = localResults.find((r) => r.score >= 0.5);
+          if (localMatch) {
+            finishResponse(
+              localMatch.answer +
+                "\n\n*Source : base de connaissances locale*"
+            );
+            return;
+          }
+        } catch {
+          // local search unavailable — fall through to keyword responses
         }
 
         let response = "";

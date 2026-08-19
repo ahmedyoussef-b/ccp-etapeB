@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Pencil, Trash2, RefreshCw, Upload } from "lucide-react";
 import type { QAPairWithRegistry } from "@/lib/qr/client-store";
 import { csrfFetch } from "@/lib/procedures/csrf-fetch"; // ✅ Ajout de l'import
+import { clientEngine } from "@/lib/client-engine";
 import {
   Dialog,
   DialogContent,
@@ -27,10 +28,12 @@ export default function QAPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [exportFilename, setExportFilename] = useState("");
   const lastQuestionRef = useRef("");
   const lastAnswerRef = useRef("");
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   const loadItems = useCallback(async () => {
     setLoading(true);
@@ -191,6 +194,45 @@ export default function QAPage() {
     resetForm();
   };
 
+  const handleImportJson = async () => {
+    const file = importFileRef.current?.files?.[0];
+    if (!file) {
+      toast.error("Veuillez sélectionner un fichier JSON");
+      return;
+    }
+
+    setImporting(true);
+    try {
+      await clientEngine.init();
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (!Array.isArray(data)) {
+        throw new Error("Format attendu : tableau de { question, answer }");
+      }
+
+      let count = 0;
+      for (const item of data) {
+        const q = typeof item.question === "string" ? item.question.trim() : "";
+        const a = typeof item.answer === "string" ? item.answer.trim() : "";
+        if (q && a) {
+          await clientEngine.createQAPair({ question: q, answer: a });
+          count++;
+        }
+      }
+
+      toast.success(`${count} paire(s) Q/R importée(s) dans la base locale`);
+    } catch (err: unknown) {
+      console.error("[Q/R] import error:", err);
+      toast.error(`Erreur: ${err instanceof Error ? err.message : "Import impossible"}`);
+    } finally {
+      setImporting(false);
+      if (importFileRef.current) {
+        importFileRef.current.value = "";
+      }
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId !== null) {
@@ -284,6 +326,24 @@ export default function QAPage() {
               </Badge>
             </div>
             <div className="flex gap-2">
+              <input
+                ref={importFileRef}
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={handleImportJson}
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="rounded-lg"
+                onClick={() => importFileRef.current?.click()}
+                disabled={importing}
+              >
+                <Upload className="h-4 w-4 mr-1" />
+                {importing ? "Import..." : "Importer JSON"}
+              </Button>
               <Button
                 type="button"
                 size="sm"
