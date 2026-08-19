@@ -1,26 +1,50 @@
 import fs from "fs";
 import path from "path";
 
-const DB_DIR = path.join(process.cwd(), ".local-db", "images");
-const DB_FILE = path.join(DB_DIR, "items.json");
+const NORMAL_DB_DIR = path.join(process.cwd(), ".local-db", "images");
+const TMP_DB_DIR = path.join("/tmp", ".local-db", "images");
 
-function ensureDir(): void {
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
+let resolvedDbDir: string | null = null;
+
+function getDbDir(): string {
+  if (resolvedDbDir) return resolvedDbDir;
+
+  const candidates = [NORMAL_DB_DIR, TMP_DB_DIR];
+
+  for (const dir of candidates) {
+    try {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      const testFile = path.join(dir, ".write-test");
+      fs.writeFileSync(testFile, "test");
+      fs.unlinkSync(testFile);
+      resolvedDbDir = dir;
+      return dir;
+    } catch {
+      continue;
+    }
   }
+
+  resolvedDbDir = NORMAL_DB_DIR;
+  return resolvedDbDir;
+}
+
+function getDbFile(): string {
+  return path.join(getDbDir(), "items.json");
 }
 
 function readItems(): MediaItem[] {
-  ensureDir();
-  if (!fs.existsSync(DB_FILE)) {
-    console.log(`[ServerStore] readItems() - file not found at ${DB_FILE}, returning empty array`);
+  const dbFile = getDbFile();
+  if (!fs.existsSync(dbFile)) {
+    console.log(`[ServerStore] readItems() - file not found at ${dbFile}, returning empty array`);
     return [];
   }
   try {
-    const raw = fs.readFileSync(DB_FILE, "utf-8");
+    const raw = fs.readFileSync(dbFile, "utf-8");
     const parsed = JSON.parse(raw);
     const items = Array.isArray(parsed) ? parsed : [];
-    console.log(`[ServerStore] readItems() - loaded ${items.length} items from ${DB_FILE}`);
+    console.log(`[ServerStore] readItems() - loaded ${items.length} items from ${dbFile}`);
     return items;
   } catch (error) {
     console.log(`[ServerStore] readItems() - error reading file: ${(error as Error).message}`);
@@ -29,10 +53,14 @@ function readItems(): MediaItem[] {
 }
 
 function writeItems(items: MediaItem[]): void {
-  ensureDir();
-  const json = JSON.stringify(items, null, 2);
-  fs.writeFileSync(DB_FILE, json, "utf-8");
-  console.log(`[ServerStore] writeItems() - wrote ${items.length} items to ${DB_FILE} (${Buffer.byteLength(json, "utf-8")} bytes)`);
+  const dbFile = getDbFile();
+  try {
+    const json = JSON.stringify(items, null, 2);
+    fs.writeFileSync(dbFile, json, "utf-8");
+    console.log(`[ServerStore] writeItems() - wrote ${items.length} items to ${dbFile} (${Buffer.byteLength(json, "utf-8")} bytes)`);
+  } catch (error) {
+    console.log(`[ServerStore] writeItems() - error writing file: ${(error as Error).message}`);
+  }
 }
 
 export interface MediaItem {
