@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,9 @@ import {
 import { MediaItem, MediaKind, imageService } from "@/lib/images/mock-service";
 import { CategoryTreePicker } from "@/components/images/category-tree-picker";
 import { clientEngine } from "@/lib/client-engine";
+import { getDocument } from "@/lib/client-engine/vector-store";
+import { type VectorChunk, getChunksByDocumentId } from "@/lib/client-engine/vector-store";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 const emptyForm = {
@@ -51,6 +54,9 @@ export default function ImageDetailPage() {
   const [formData, setFormData] = useState(emptyForm);
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [vectorized, setVectorized] = useState(false);
+  const [activeTab, setActiveTab] = useState<"metadata" | "vector">("metadata");
+  const [vectorChunks, setVectorChunks] = useState<VectorChunk[]>([]);
+  const [loadingVector, setLoadingVector] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -99,6 +105,32 @@ export default function ImageDetailPage() {
       cancelled = true;
     };
   }, [id]);
+
+  const loadVectorChunks = useCallback(async () => {
+    if (!id) return;
+    setLoadingVector(true);
+    try {
+      await clientEngine.init();
+      const doc = await getDocument('image-metadata');
+      if (!doc) {
+        setVectorChunks([]);
+        return;
+      }
+      const chunks = await getChunksByDocumentId(doc.id);
+      const imageChunks = chunks.filter((c) => (c.metadata as { imageId?: string } | undefined)?.imageId === id);
+      setVectorChunks(imageChunks);
+    } catch {
+      setVectorChunks([]);
+    } finally {
+      setLoadingVector(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (activeTab === "vector") {
+      loadVectorChunks();
+    }
+  }, [activeTab, loadVectorChunks]);
 
   const handleSave = async () => {
     if (!id || !item) return;
@@ -277,7 +309,22 @@ export default function ImageDetailPage() {
             <FileJson className="h-4 w-4 text-primary" />
             <span className="text-sm font-semibold">Métadonnées</span>
           </div>
-          <div className="p-4 space-y-5">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "metadata" | "vector")} className="flex flex-col">
+            <div className="px-4 pt-3">
+              <TabsList variant="line">
+                <TabsTrigger value="metadata" className="gap-1.5">
+                  <FileJson className="h-3.5 w-3.5" />
+                  Métadonnées
+                </TabsTrigger>
+                <TabsTrigger value="vector" className="gap-1.5">
+                  <Database className="h-3.5 w-3.5" />
+                  Vectorisation
+                  {vectorized && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="metadata" className="flex-1 p-4 space-y-5 data-[slot= tabs-content]:flex-1">
             <div className="space-y-2">
               <Label htmlFor="title">Titre *</Label>
               <Input
@@ -410,7 +457,73 @@ export default function ImageDetailPage() {
                 )}
               </Button>
             </div>
-          </div>
+            </TabsContent>
+            <TabsContent value="vector" className="flex-1 p-4 data-[slot=tabs-content]:flex-1">
+              {loadingVector ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : vectorChunks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Database className="h-8 w-8 text-muted-foreground/50 mb-2" />
+                  <p className="text-sm font-medium text-foreground">Aucun vecteur</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {vectorized
+                      ? "Ce média est vectorisé mais aucun chunk n'a été trouvé."
+                      : "Ce média n'est pas encore vectorisé. Lancez une synchronisation depuis la Banque d'images."}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      {vectorChunks.length} chunk{vectorChunks.length > 1 ? "s" : ""} vectorisé{vectorChunks.length > 1 ? "s" : ""}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Dimension: {vectorChunks[0]?.embedding?.length ?? 0}
+                    </span>
+                  </div>
+                  {vectorChunks.map((chunk, idx) => (
+                    <div key={chunk.id ?? idx} className="rounded-lg border border-border/60 bg-muted/10 overflow-hidden">
+                      <div className="border-b border-border/60 px-3 py-2 flex items-center justify-between">
+                        <span className="text-xs font-medium text-foreground">Chunk #{chunk.chunkIndex + 1}</span>
+                        <Badge variant="outline" className="text-[10px]">
+                          {(chunk.metadata as { type?: string } | undefined)?.type ?? "image_metadata"}
+                        </Badge>
+                      </div>
+                      <div className="p-3 space-y-3">
+                        <div>
+                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Texte indexé</span>
+                          <p className="mt-1 text-xs text-foreground whitespace-pre-wrap break-words">{chunk.content}</p>
+                        </div>
+                        <div>
+                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Vecteur (premières valeurs)</span>
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {(chunk.embedding ?? []).slice(0, 16).map((val: number, i: number) => (
+                              <span key={i} className="text-[10px] font-mono bg-background/60 px-1 py-0.5 rounded border border-border/40">
+                                {val.toFixed(3)}
+                              </span>
+                            ))}
+                            {(chunk.embedding?.length ?? 0) > 16 && (
+                              <span className="text-[10px] text-muted-foreground">+{(chunk.embedding!.length - 16)}...</span>
+                            )}
+                          </div>
+                        </div>
+                        {chunk.metadata && (
+                          <div>
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Métadonnées</span>
+                            <pre className="mt-1 text-[10px] font-mono text-foreground whitespace-pre-wrap break-words bg-background/40 p-2 rounded border border-border/40">
+                              {JSON.stringify(chunk.metadata, null, 2)}
+                            </pre>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </Card>
       </div>
     </section>

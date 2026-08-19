@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Thermometer, Video, MicOff, AlertTriangle, ScanEye } from "lucide-react";
+import { clientEngine } from "@/lib/client-engine";
 
 interface SensorData {
   camera: {
@@ -32,43 +33,145 @@ interface SensorReadingsProps {
   initialData?: SensorData;
 }
 
-function useSensorSimulation(initialData: SensorData) {
-  const [data, setData] = useState<SensorData>(initialData);
+const DEFAULT_SENSOR_DATA: SensorData = {
+  camera: { active: true, resolution: "1920x1080", fps: 30, motionDetected: false },
+  microphone: { active: true, level: 45, noiseDetected: false },
+  temperature: { active: true, current: 22.5, min: 18, max: 35, unit: "C", alert: false },
+};
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setData((prev) => ({
-        camera: {
-          ...prev.camera,
-          motionDetected: Math.random() > 0.85,
-        },
-        microphone: {
-          ...prev.microphone,
-          level: Math.max(0, Math.min(100, prev.microphone.level + (Math.random() - 0.5) * 20)),
-          noiseDetected: Math.random() > 0.9,
-        },
-        temperature: {
-          ...prev.temperature,
-          current: Math.round((prev.temperature.current + (Math.random() - 0.5) * 0.5) * 10) / 10,
-          alert: Math.random() > 0.95,
-        },
-      }));
-    }, 3000);
+async function seedSensorConfigsIfNeeded() {
+  const existing = await clientEngine.getAllSensorConfigs();
+  if (existing.length > 0) return existing;
 
-    return () => clearInterval(interval);
-  }, []);
+  const defaults = [
+    { id: "camera-main", name: "Caméra principale", type: "camera", value: 1, unit: "active", threshold: 1 },
+    { id: "mic-main", name: "Micro principal", type: "microphone", value: 45, unit: "%", threshold: 80 },
+    { id: "temp-main", name: "Température principale", type: "temperature", value: 22.5, unit: "°C", threshold: 35 },
+  ];
 
-  return data;
+  for (const cfg of defaults) {
+    await clientEngine.upsertSensorConfig(cfg);
+  }
+
+  return defaults.map((cfg) => ({
+    id: cfg.id,
+    name: cfg.name,
+    type: cfg.type,
+    value: cfg.value,
+    unit: cfg.unit,
+    threshold: cfg.threshold,
+    updatedAt: new Date().toISOString(),
+  }));
 }
 
 export function SensorReadings({ deviceName, initialData }: SensorReadingsProps) {
-  const defaultData: SensorData = {
-    camera: { active: true, resolution: "1920x1080", fps: 30, motionDetected: false },
-    microphone: { active: true, level: 45, noiseDetected: false },
-    temperature: { active: true, current: 22.5, min: 18, max: 35, unit: "C", alert: false },
-  };
+  const [sensorData, setSensorData] = useState<SensorData>(initialData ?? DEFAULT_SENSOR_DATA);
+  const [loaded, setLoaded] = useState(false);
 
-  const sensorData = useSensorSimulation(initialData ?? defaultData);
+  useEffect(() => {
+    let active = true;
+
+    async function load() {
+      try {
+        await clientEngine.init();
+        const configs = await seedSensorConfigsIfNeeded();
+
+        if (!active) return;
+
+        const mapped: SensorData = { ...DEFAULT_SENSOR_DATA };
+        for (const cfg of configs) {
+          if (cfg.type === "camera") {
+            mapped.camera.active = cfg.value === 1;
+            mapped.camera.motionDetected = false;
+          } else if (cfg.type === "microphone") {
+            mapped.microphone.active = true;
+            mapped.microphone.level = Math.max(0, Math.min(100, cfg.value));
+            mapped.microphone.noiseDetected = false;
+          } else if (cfg.type === "temperature") {
+            mapped.temperature.active = true;
+            mapped.temperature.current = cfg.value;
+            mapped.temperature.alert = cfg.value > cfg.threshold;
+          }
+        }
+
+        setSensorData(mapped);
+        setLoaded(true);
+      } catch {
+        // ignore load errors, keep defaults
+        setLoaded(true);
+      }
+    }
+
+    load();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+
+    const interval = setInterval(() => {
+      setSensorData((prev) => {
+        const next: SensorData = {
+          camera: {
+            ...prev.camera,
+            motionDetected: Math.random() > 0.85,
+          },
+          microphone: {
+            ...prev.microphone,
+            level: Math.max(0, Math.min(100, prev.microphone.level + (Math.random() - 0.5) * 20)),
+            noiseDetected: Math.random() > 0.9,
+          },
+          temperature: {
+            ...prev.temperature,
+            current: Math.round((prev.temperature.current + (Math.random() - 0.5) * 0.5) * 10) / 10,
+            alert: Math.random() > 0.95,
+          },
+        };
+
+        clientEngine.upsertSensorConfig({
+          id: "camera-main",
+          name: "Caméra principale",
+          type: "camera",
+          value: next.camera.active ? 1 : 0,
+          unit: "active",
+          threshold: 1,
+        }).catch(() => {});
+
+        clientEngine.upsertSensorConfig({
+          id: "mic-main",
+          name: "Micro principal",
+          type: "microphone",
+          value: next.microphone.level,
+          unit: "%",
+          threshold: 80,
+        }).catch(() => {});
+
+        clientEngine.upsertSensorConfig({
+          id: "temp-main",
+          name: "Température principale",
+          type: "temperature",
+          value: next.temperature.current,
+          unit: "°C",
+          threshold: 35,
+        }).catch(() => {});
+
+        return next;
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [loaded]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    const syncInterval = setInterval(() => {
+      clientEngine.syncIotMetadata().catch(() => {});
+    }, 10000);
+    return () => clearInterval(syncInterval);
+  }, [loaded]);
 
   return (
     <Card className="overflow-hidden">
@@ -221,7 +324,7 @@ export function SensorReadings({ deviceName, initialData }: SensorReadingsProps)
             ) : (
               <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
                 <Thermometer className="h-6 w-6 opacity-30 mb-2" />
-                <span className="text-[10px] font-medium">Inactive</span>
+                <span className="text-[10px] font-medium">Inactif</span>
               </div>
             )}
           </div>

@@ -174,3 +174,24 @@ model ProcedureVersion {
   @@index([procedureCode, version])
 }
 
+model IotSensorState {
+  id         String   @id
+  name       String
+  type       String
+  value      Float
+  unit       String
+  threshold  Float
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+}
+
+model IotActuatorState {
+  id         String   @id
+  name       String
+  type       String
+  isOn       Boolean  @default(false)
+  position   Int?
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+}
+

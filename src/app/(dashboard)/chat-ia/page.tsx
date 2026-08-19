@@ -190,6 +190,115 @@ export default function ChatIAPage() {
         ) {
           response =
             "NexaFlow supporte plus de 200 intégrations natives : Slack, GitHub, Notion, Linear, et bien d'autres. Un SDK est aussi disponible pour vos outils custom.";
+        } else if (
+          lower.includes("allume") ||
+          lower.includes("éteins") ||
+          lower.includes("active") ||
+          lower.includes("désactive") ||
+          lower.includes("relais") ||
+          lower.includes("servo") ||
+          lower.includes("led") ||
+          lower.includes("actionneur")
+        ) {
+          const isOn = lower.includes("allume") || lower.includes("active");
+          const isOff = lower.includes("éteins") || lower.includes("désactive");
+
+          if (isOn || isOff) {
+            let actuatorId: string | null = null;
+            if (lower.includes("relais 1") || lower.includes("relais principal")) actuatorId = "relay-1";
+            else if (lower.includes("servo")) actuatorId = "servo-1";
+            else if (lower.includes("led")) actuatorId = "led-1";
+
+            if (actuatorId) {
+              try {
+                const result = await clientEngine.commandActuator(actuatorId, isOn);
+                response = result.message;
+              } catch {
+                response = `Erreur lors de la commande de l'actionneur ${actuatorId}.`;
+              }
+            } else {
+              response = "Je n'ai pas reconnu l'actionneur. Essayez : 'Allume le relais 1'.";
+            }
+          } else {
+            response = "Pour commander un actionneur, utilisez : 'Allume le relais 1', 'Éteins le servo', etc.";
+          }
+        } else if (
+          lower.includes("température") ||
+          lower.includes("capteur") ||
+          lower.includes("camera") ||
+          lower.includes("caméra") ||
+          lower.includes("microphone") ||
+          lower.includes("micro") ||
+          lower.includes("lecture") ||
+          lower.includes("valeur")
+        ) {
+          let sensorId: string | null = null;
+          if (lower.includes("température")) sensorId = "temp-main";
+          else if (lower.includes("camera") || lower.includes("caméra")) sensorId = "camera-main";
+          else if (lower.includes("microphone") || lower.includes("micro")) sensorId = "mic-main";
+
+          if (sensorId) {
+            try {
+              const result = await clientEngine.readSensor(sensorId);
+              if (result.success) {
+                response = result.message;
+              } else {
+                response = result.message;
+              }
+            } catch {
+              response = `Erreur lors de la lecture du capteur ${sensorId}.`;
+            }
+          } else {
+            response = "Je n'ai pas reconnu le capteur. Essayez : 'Quelle est la température ?', 'Lecture du microphone', etc.";
+          }
+        } else if (
+          lower.includes("état") ||
+          lower.includes("status") ||
+          lower.includes("statut") ||
+          lower.includes("dashboard") ||
+          lower.includes("tableau de bord")
+        ) {
+          try {
+            const status = await clientEngine.getDeviceStatus();
+            const activeActuators = status.actuators.filter((a) => a.isOn).length;
+            const sensorSummary = status.sensors.map((s) => `${s.name}: ${s.value}${s.unit}`).join(", ");
+            response = `Système IoT : ${activeActuators} actionneur(s) actif(s). Capteurs : ${sensorSummary}.`;
+          } catch {
+            response = "Je n'ai pas pu récupérer l'état du système.";
+          }
+        } else if (
+          lower.includes("ajoute") ||
+          lower.includes("ajouter") ||
+          lower.includes("nouveau périphérique") ||
+          lower.includes("nouveau capteur") ||
+          lower.includes("nouvel actionneur") ||
+          lower.includes("supprime") ||
+          lower.includes("supprimer") ||
+          lower.includes("liste") ||
+          lower.includes("affiche") ||
+          lower.includes("montre")
+        ) {
+          try {
+            await clientEngine.init();
+            const devices = await clientEngine.getAllDevices();
+
+            if (lower.includes("ajoute") || lower.includes("ajouter") || lower.includes("nouveau")) {
+              response = `Pour ajouter un périphérique, rendez-vous sur la page Périphériques ou donnez-moi les détails : identifiant, nom, type (capteur/actionneur/caméra), sous-type et adresse IP.`;
+            } else if (lower.includes("supprime") || lower.includes("supprimer")) {
+              const deviceToDelete = devices.find((d) => lower.includes(d.id) || lower.includes(d.name.toLowerCase()));
+              if (deviceToDelete) {
+                await clientEngine.deleteDevice(deviceToDelete.id);
+                response = `Périphérique "${deviceToDelete.name}" (${deviceToDelete.id}) supprimé avec succès.`;
+              } else {
+                response = "Je n'ai pas reconnu le périphérique à supprimer. Essayez : 'Supprime le relais 1'.";
+              }
+            } else {
+              const summary = devices.map((d) => `• ${d.name} (${d.id}) - ${d.type}${d.subtype ? `/${d.subtype}` : ""} - ${d.ipAddress ?? "sans IP"}`).join("\n");
+              response = `Périphériques enregistrés :\n${summary}`;
+            }
+          } catch {
+            response = "Erreur lors de l'accès à la liste des périphériques.";
+          }
         } else {
           response =
             "Je comprends votre demande. Pour aller plus loin, je vous invite à consulter notre section Q/R ou à contacter notre support.";

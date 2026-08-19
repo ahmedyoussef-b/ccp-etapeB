@@ -137,6 +137,46 @@ function initSchema(database: Database): void {
       metadata TEXT DEFAULT '{}',
       created_at TEXT DEFAULT (datetime('now'))
     );
+    CREATE TABLE IF NOT EXISTS sensor_configs (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      type TEXT,
+      value REAL,
+      unit TEXT,
+      threshold REAL,
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS actuator_states (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      type TEXT,
+      is_on INTEGER DEFAULT 0,
+      position INTEGER,
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS devices (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      subtype TEXT,
+      ip_address TEXT,
+      port INTEGER,
+      is_active INTEGER DEFAULT 1,
+      metadata TEXT DEFAULT '{}',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS iot_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      field TEXT NOT NULL,
+      old_value TEXT,
+      new_value TEXT NOT NULL,
+      alert INTEGER DEFAULT 0,
+      resolved INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
     CREATE INDEX IF NOT EXISTS idx_qa_registries_title ON qa_registries(title);
     CREATE INDEX IF NOT EXISTS idx_qa_pairs_registry ON qa_pairs(registry_id);
     CREATE INDEX IF NOT EXISTS idx_qa_pairs_question ON qa_pairs(question);
@@ -145,9 +185,16 @@ function initSchema(database: Database): void {
     CREATE INDEX IF NOT EXISTS idx_local_tree_parent ON local_tree(parent_id);
     CREATE INDEX IF NOT EXISTS idx_local_tree_node_order ON local_tree(parent_id, node_order);
     CREATE INDEX IF NOT EXISTS idx_vector_docs_path ON vector_documents(relative_path);
+    CREATE INDEX IF NOT EXISTS idx_sensor_configs_type ON sensor_configs(type);
+    CREATE INDEX IF NOT EXISTS idx_actuator_states_type ON actuator_states(type);
+    CREATE INDEX IF NOT EXISTS idx_iot_history_entity ON iot_history(entity_type, entity_id);
+    CREATE INDEX IF NOT EXISTS idx_iot_history_created ON iot_history(created_at);
+    CREATE INDEX IF NOT EXISTS idx_devices_type ON devices(type);
   `);
 
   migrateLocalTree(database);
+  migrateIotHistory(database);
+  migrateDevices(database);
 }
 
 function migrateLocalTree(database: Database): void {
@@ -177,5 +224,52 @@ function migrateLocalTree(database: Database): void {
     database.exec("CREATE INDEX IF NOT EXISTS idx_local_tree_node_order ON local_tree(parent_id, node_order)");
   } catch {
     // index creation may fail if already exists; safe to ignore
+  }
+}
+
+function migrateIotHistory(database: Database): void {
+  try {
+    const stmt = database.prepare("PRAGMA table_info(iot_history)");
+    const columnNames: string[] = [];
+    while (stmt.step()) {
+      const row = stmt.get({}) as Record<string, unknown>;
+      columnNames.push(row.name as string);
+    }
+    stmt.finalize();
+
+    if (columnNames.length > 0 && !columnNames.includes("resolved")) {
+      database.exec("ALTER TABLE iot_history ADD COLUMN resolved INTEGER DEFAULT 0");
+    }
+  } catch {
+    // table might not exist; CREATE TABLE will have handled it
+  }
+}
+
+function migrateDevices(database: Database): void {
+  try {
+    const stmt = database.prepare("PRAGMA table_info(devices)");
+    const columnNames: string[] = [];
+    while (stmt.step()) {
+      const row = stmt.get({}) as Record<string, unknown>;
+      columnNames.push(row.name as string);
+    }
+    stmt.finalize();
+
+    if (columnNames.length > 0) {
+      if (!columnNames.includes("ip_address")) {
+        database.exec("ALTER TABLE devices ADD COLUMN ip_address TEXT");
+      }
+      if (!columnNames.includes("port")) {
+        database.exec("ALTER TABLE devices ADD COLUMN port INTEGER");
+      }
+      if (!columnNames.includes("is_active")) {
+        database.exec("ALTER TABLE devices ADD COLUMN is_active INTEGER DEFAULT 1");
+      }
+      if (!columnNames.includes("metadata")) {
+        database.exec("ALTER TABLE devices ADD COLUMN metadata TEXT DEFAULT '{}'");
+      }
+    }
+  } catch {
+    // table might not exist; CREATE TABLE will have handled it
   }
 }

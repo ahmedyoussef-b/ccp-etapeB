@@ -6,6 +6,10 @@ const SyncPayloadSchema = z.object({
   procedureExecutions: z.array(z.any()).optional(),
   mediaCaptured: z.array(z.any()).optional(),
   etatDesLieux: z.array(z.any()).optional(),
+  iotData: z.object({
+    sensorConfigs: z.array(z.any()).optional(),
+    actuatorStates: z.array(z.any()).optional(),
+  }).optional(),
 });
 
 const MAX_SYNC_MEDIA_BYTES = 4.5 * 1024 * 1024;
@@ -130,6 +134,66 @@ export async function POST(req: Request) {
 
     if (payload.etatDesLieux && payload.etatDesLieux.length > 0) {
       console.log('[Sync] etatDesLieux received (no Prisma model yet):', payload.etatDesLieux.length, 'items');
+    }
+
+    if (payload.iotData) {
+      const { sensorConfigs, actuatorStates } = payload.iotData;
+
+      if (sensorConfigs && sensorConfigs.length > 0) {
+        for (const sensor of sensorConfigs) {
+          try {
+            await prisma.iotSensorState.upsert({
+              where: { id: sensor.id },
+              update: {
+                name: sensor.name,
+                type: sensor.type,
+                value: sensor.value,
+                unit: sensor.unit,
+                threshold: sensor.threshold,
+                updatedAt: new Date(sensor.updatedAt),
+              },
+              create: {
+                id: sensor.id,
+                name: sensor.name,
+                type: sensor.type,
+                value: sensor.value,
+                unit: sensor.unit,
+                threshold: sensor.threshold,
+                updatedAt: new Date(sensor.updatedAt),
+              },
+            });
+          } catch {
+            // ignore individual sensor sync errors
+          }
+        }
+      }
+
+      if (actuatorStates && actuatorStates.length > 0) {
+        for (const actuator of actuatorStates) {
+          try {
+            await prisma.iotActuatorState.upsert({
+              where: { id: actuator.id },
+              update: {
+                name: actuator.name,
+                type: actuator.type,
+                isOn: actuator.isOn,
+                position: actuator.position ?? null,
+                updatedAt: new Date(actuator.updatedAt),
+              },
+              create: {
+                id: actuator.id,
+                name: actuator.name,
+                type: actuator.type,
+                isOn: actuator.isOn,
+                position: actuator.position ?? null,
+                updatedAt: new Date(actuator.updatedAt),
+              },
+            });
+          } catch {
+            // ignore individual actuator sync errors
+          }
+        }
+      }
     }
 
     return NextResponse.json({ success: true, synced });

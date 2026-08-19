@@ -75,7 +75,15 @@ export async function GET() {
       tree.push(item);
     }
 
-    return NextResponse.json({ tree, lastSyncTimestamp: new Date().toISOString() });
+    const sensorStates = await prisma.iotSensorState.findMany({
+      orderBy: { updatedAt: "desc" },
+    });
+
+    const actuatorStates = await prisma.iotActuatorState.findMany({
+      orderBy: { updatedAt: "desc" },
+    });
+
+    return NextResponse.json({ tree, lastSyncTimestamp: new Date().toISOString(), iot: { sensorStates, actuatorStates } });
   } catch (error) {
     console.error("Failed to fetch sync data:", error);
     return NextResponse.json({ error: "Failed to load sync data" }, { status: 500 });

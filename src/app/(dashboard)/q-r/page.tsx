@@ -20,6 +20,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { VoiceGuidedInput } from "@/components/ui/voice-guided-input";
 
 export default function QAPage() {
   const [items, setItems] = useState<QAPairWithRegistry[]>([]);
@@ -260,42 +261,30 @@ export default function QAPage() {
             className="rounded-xl border border-border bg-card p-6 shadow-sm"
           >
             <div className="flex flex-col gap-4">
-              <div>
-                <label
-                  htmlFor="question"
-                  className="mb-1.5 block text-sm font-medium text-foreground"
-                >
-                  Question
-                </label>
-                <Input
-                  id="question"
-                  value={question}
-                  onChange={(e) => {
-                    setQuestion(e.target.value);
-                    lastQuestionRef.current = e.target.value;
-                  }}
-                  placeholder="Tapez votre question ici..."
-                  autoComplete="off"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="answer"
-                  className="mb-1.5 block text-sm font-medium text-foreground"
-                >
-                  Réponse
-                </label>
-                <Input
-                  id="answer"
-                  value={answer}
-                  onChange={(e) => {
-                    setAnswer(e.target.value);
-                    lastAnswerRef.current = e.target.value;
-                  }}
-                  placeholder="Tapez la réponse correspondante..."
-                  autoComplete="off"
-                />
-              </div>
+              <VoiceGuidedInput
+                value={question}
+                onChange={(val) => {
+                  setQuestion(val);
+                  lastQuestionRef.current = val;
+                }}
+                label="Question"
+                placeholder="Tapez votre question ici..."
+                mode="input"
+                guidance="Veuillez saisir votre question. Vous pouvez utiliser le micro pour dicter."
+                language="fr-FR"
+              />
+              <VoiceGuidedInput
+                value={answer}
+                onChange={(val) => {
+                  setAnswer(val);
+                  lastAnswerRef.current = val;
+                }}
+                label="Réponse"
+                placeholder="Tapez la réponse correspondante..."
+                mode="textarea"
+                guidance="Veuillez saisir la réponse correspondante. Utilisez le micro si besoin."
+                language="fr-FR"
+              />
               <div className="flex gap-3 pt-1">
                 <Button type="button" className="flex-1" onClick={handleSubmit}>
                   {editingId !== null ? "Modifier" : "Ajouter"}

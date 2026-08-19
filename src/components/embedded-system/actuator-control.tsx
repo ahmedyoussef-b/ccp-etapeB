@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Power, Activity, AlertTriangle, Loader2 } from "lucide-react";
+import { clientEngine } from "@/lib/client-engine";
 
 interface ActuatorConfig {
   id: string;
@@ -20,7 +21,7 @@ interface ActuatorControlProps {
   actuators?: ActuatorConfig[];
 }
 
-const defaultActuators: ActuatorConfig[] = [
+const DEFAULT_ACTUATORS: ActuatorConfig[] = [
   {
     id: "relay-1",
     name: "Relais principal",
@@ -50,22 +51,97 @@ const defaultActuators: ActuatorConfig[] = [
   },
 ];
 
+async function seedActuatorStatesIfNeeded() {
+  const existing = await clientEngine.getAllActuatorStates();
+  if (existing.length > 0) return existing;
+
+  const defaults = [
+    { id: "relay-1", name: "Relais principal", type: "relay", isOn: false, position: null },
+    { id: "servo-1", name: "Servo d'orientation", type: "servo", isOn: false, position: 90 },
+    { id: "led-1", name: "LED indicateur", type: "led", isOn: false, position: null },
+  ];
+
+  for (const state of defaults) {
+    await clientEngine.upsertActuatorState(state);
+  }
+
+  return defaults.map((s) => ({
+    id: s.id,
+    name: s.name,
+    type: s.type,
+    isOn: s.isOn,
+    position: s.position,
+    updatedAt: new Date().toISOString(),
+  }));
+}
+
 export function ActuatorControl({ deviceName, actuators: initialActuators }: ActuatorControlProps) {
-  const [actuators, setActuators] = useState<ActuatorConfig[]>(initialActuators ?? defaultActuators);
+  const [actuators, setActuators] = useState<ActuatorConfig[]>(initialActuators ?? DEFAULT_ACTUATORS);
   const [activating, setActivating] = useState<string | null>(null);
 
-  const handleToggle = (id: string) => {
+  useEffect(() => {
+    let active = true;
+
+    async function load() {
+      try {
+        await clientEngine.init();
+        const states = await seedActuatorStatesIfNeeded();
+
+        if (!active) return;
+
+        const mapped: ActuatorConfig[] = states.map((s) => {
+          const base = DEFAULT_ACTUATORS.find((d) => d.id === s.id) ?? DEFAULT_ACTUATORS[0];
+          return {
+            ...base,
+            id: s.id,
+            name: s.name,
+            type: s.type as ActuatorConfig["type"],
+            enabled: s.isOn,
+            state: s.isOn ? "active" : "idle",
+          };
+        });
+
+        setActuators(mapped);
+      } catch {
+        // ignore load errors, keep defaults
+      }
+    }
+
+    load();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleToggle = async (id: string) => {
+    if (activating !== null) return;
+
     setActivating(id);
     const actuator = actuators.find((a) => a.id === id);
     if (!actuator) return;
 
     const newState = actuator.state === "active" ? "idle" : "active";
+    const newIsOn = newState === "active";
 
-    setTimeout(() => {
+    setTimeout(async () => {
       setActuators((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, state: newState, enabled: newState === "active" } : a))
+        prev.map((a) => (a.id === id ? { ...a, state: newState, enabled: newIsOn } : a))
       );
       setActivating(null);
+
+      try {
+        await clientEngine.upsertActuatorState({
+          id,
+          name: actuator.name,
+          type: actuator.type,
+          isOn: newIsOn,
+          position: actuator.type === "servo" ? 90 : null,
+        });
+        await clientEngine.syncIotMetadata();
+      } catch {
+        // ignore sync errors
+      }
     }, 800);
   };
 

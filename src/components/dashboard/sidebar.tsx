@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, HelpCircle, FileText, MessageSquare, BookOpen, Image, Database, Video, BarChart3, Users, ClipboardList, Bot, Sun, Moon, GitBranch, CheckCircle2, History, Sparkles } from "lucide-react";
+import { LayoutDashboard, HelpCircle, FileText, MessageSquare, BookOpen, Image, Database, Video, BarChart3, Users, ClipboardList, Bot, Sun, Moon, GitBranch, CheckCircle2, History, Sparkles, AlertTriangle, Monitor } from "lucide-react";
 import { NexaFlowLogo } from "@/components/brand/nexaflow-logo";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,9 @@ const navItems = [
   { href: "/pipeline", label: "Pipeline", icon: GitBranch, roles: ["admin"], devOnly: true },
   { href: "/q-r", label: "Q/R", icon: HelpCircle, roles: ["admin"] },
   { href: "/actions-ia", label: "Actions IA", icon: Bot, roles: ["admin"] },
+  { href: "/devices", label: "Périphériques", icon: Monitor, roles: ["admin"] },
+  { href: "/alarmes-actives", label: "Alarmes actives", icon: AlertTriangle, roles: ["admin"] },
+  { href: "/historique-iot", label: "Historique IoT", icon: History, roles: ["admin"] },
   { href: "/creer-procedure", label: "Créer une procédure", icon: FileText, roles: ["admin", "chef-de-quart"] },
   { href: "/guide-procedure", label: "Guide procédure", icon: BookOpen, roles: ["admin", "chef-de-quart", "chef-de-bloc", "rondier"] },
   { href: "/approvals", label: "Approbations", icon: CheckCircle2, roles: ["admin", "chef-de-quart"] },

@@ -1,4 +1,4 @@
-interface VectorChunk {
+export interface VectorChunk {
   id?: number;
   documentId: string;
   documentName: string;
@@ -131,6 +131,29 @@ export async function getDocument(id: string): Promise<VectorDocument | null> {
   const docsStore = tx(DOCUMENTS_STORE);
   const result = await promisifyRequest<VectorDocument | undefined>(docsStore.get(id));
   return result ?? null;
+}
+
+export async function getChunksByDocumentId(documentId: string): Promise<VectorChunk[]> {
+  await openDb();
+  const chunksStore = tx(CHUNKS_STORE);
+  const index = chunksStore.index('documentId');
+  const request = index.openCursor(IDBKeyRange.only(documentId));
+  const results: VectorChunk[] = [];
+
+  await new Promise<void>((resolve, reject) => {
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (cursor) {
+        results.push(cursor.value);
+        cursor.continue();
+      } else {
+        resolve();
+      }
+    };
+    request.onerror = () => reject(request.error);
+  });
+
+  return results.sort((a, b) => a.chunkIndex - b.chunkIndex);
 }
 
 export async function getAllDocuments(): Promise<VectorDocument[]> {

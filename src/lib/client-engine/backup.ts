@@ -40,6 +40,34 @@ export interface BackupData {
       createdAt: string;
       updatedAt: string;
     }>;
+    sensorConfigs: Array<{
+      id: string;
+      name: string;
+      type: string;
+      value: number;
+      unit: string;
+      threshold: number;
+      updatedAt: string;
+    }>;
+    actuatorStates: Array<{
+      id: string;
+      name: string;
+      type: string;
+      isOn: boolean;
+      position: number | null;
+      updatedAt: string;
+    }>;
+    iotHistory: Array<{
+      id: number;
+      entityType: string;
+      entityId: string;
+      field: string;
+      oldValue: string | null;
+      newValue: string;
+      alert: boolean;
+      resolved: boolean;
+      createdAt: string;
+    }>;
   };
   vectorStore: Array<{
     id: string;
@@ -64,6 +92,9 @@ export async function exportBackup(): Promise<Blob> {
 
   let qaPairs: BackupData['sqlite']['qaPairs'] = [];
   let chatSessions: BackupData['sqlite']['chatSessions'] = [];
+  let sensorConfigs: BackupData['sqlite']['sensorConfigs'] = [];
+  let actuatorStates: BackupData['sqlite']['actuatorStates'] = [];
+  let iotHistory: BackupData['sqlite']['iotHistory'] = [];
 
   if (db) {
     try {
@@ -94,6 +125,52 @@ export async function exportBackup(): Promise<Blob> {
         messages: JSON.parse(row.messages || '[]'),
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+      }));
+    } catch {
+      // ignore
+    }
+
+    try {
+      const sensorRows = await query<{ id: string; name: string; type: string; value: number; unit: string; threshold: number; updated_at: string }>(`SELECT * FROM sensor_configs`);
+      sensorConfigs = sensorRows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        type: row.type,
+        value: row.value,
+        unit: row.unit,
+        threshold: row.threshold,
+        updatedAt: row.updated_at,
+      }));
+    } catch {
+      // ignore
+    }
+
+    try {
+      const actuatorRows = await query<{ id: string; name: string; type: string; is_on: number; position: number | null; updated_at: string }>(`SELECT * FROM actuator_states`);
+      actuatorStates = actuatorRows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        type: row.type,
+        isOn: Boolean(row.is_on),
+        position: row.position,
+        updatedAt: row.updated_at,
+      }));
+    } catch {
+      // ignore
+    }
+
+    try {
+      const historyRows = await query<{ id: number; entity_type: string; entity_id: string; field: string; old_value: string | null; new_value: string; alert: number; resolved: number; created_at: string }>(`SELECT * FROM iot_history ORDER BY created_at DESC`);
+      iotHistory = historyRows.map((row) => ({
+        id: row.id,
+        entityType: row.entity_type,
+        entityId: row.entity_id,
+        field: row.field,
+        oldValue: row.old_value,
+        newValue: row.new_value,
+        alert: Boolean(row.alert),
+        resolved: Boolean(row.resolved),
+        createdAt: row.created_at,
       }));
     } catch {
       // ignore
@@ -135,6 +212,9 @@ export async function exportBackup(): Promise<Blob> {
     sqlite: {
       qaPairs,
       chatSessions,
+      sensorConfigs,
+      actuatorStates,
+      iotHistory,
     },
     vectorStore,
     jsonStore,
@@ -143,7 +223,7 @@ export async function exportBackup(): Promise<Blob> {
   return new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
 }
 
-export async function importBackup(blob: Blob): Promise<{ imported: { pairs: number; sessions: number; documents: number; jsonKeys: number } }> {
+export async function importBackup(blob: Blob): Promise<{ imported: { pairs: number; sessions: number; documents: number; jsonKeys: number; sensors: number; actuators: number; history: number } }> {
   const text = await blob.text();
   const backup = JSON.parse(text) as BackupData;
 
@@ -151,7 +231,7 @@ export async function importBackup(blob: Blob): Promise<{ imported: { pairs: num
     throw new Error('Format de sauvegarde non supporté');
   }
 
-  const result = { imported: { pairs: 0, sessions: 0, documents: 0, jsonKeys: 0 } };
+  const result = { imported: { pairs: 0, sessions: 0, documents: 0, jsonKeys: 0, sensors: 0, actuators: 0, history: 0 } };
 
   const db = getDb();
   if (db) {
@@ -159,6 +239,9 @@ export async function importBackup(blob: Blob): Promise<{ imported: { pairs: num
       await exec('DELETE FROM qa_pairs');
       await exec('DELETE FROM qa_registries');
       await exec('DELETE FROM chat_sessions');
+      await exec('DELETE FROM sensor_configs');
+      await exec('DELETE FROM actuator_states');
+      await exec('DELETE FROM iot_history');
     } catch {
       // ignore
     }
@@ -191,6 +274,48 @@ export async function importBackup(blob: Blob): Promise<{ imported: { pairs: num
         );
       }
       result.imported.sessions++;
+    } catch {
+      // ignore
+    }
+  }
+
+  for (const sensor of backup.sqlite.sensorConfigs) {
+    try {
+      if (db) {
+        await run(
+          'INSERT INTO sensor_configs (id, name, type, value, unit, threshold, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING',
+          [sensor.id, sensor.name, sensor.type, sensor.value, sensor.unit, sensor.threshold, sensor.updatedAt]
+        );
+      }
+      result.imported.sensors++;
+    } catch {
+      // ignore
+    }
+  }
+
+  for (const actuator of backup.sqlite.actuatorStates) {
+    try {
+      if (db) {
+        await run(
+          'INSERT INTO actuator_states (id, name, type, is_on, position, updated_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING',
+          [actuator.id, actuator.name, actuator.type, actuator.isOn ? 1 : 0, actuator.position, actuator.updatedAt]
+        );
+      }
+      result.imported.actuators++;
+    } catch {
+      // ignore
+    }
+  }
+
+  for (const entry of backup.sqlite.iotHistory) {
+    try {
+      if (db) {
+        await run(
+          'INSERT INTO iot_history (id, entity_type, entity_id, field, old_value, new_value, alert, resolved, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING',
+          [entry.id, entry.entityType, entry.entityId, entry.field, entry.oldValue, entry.newValue, entry.alert ? 1 : 0, entry.resolved ? 1 : 0, entry.createdAt]
+        );
+      }
+      result.imported.history++;
     } catch {
       // ignore
     }
