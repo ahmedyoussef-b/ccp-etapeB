@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, HelpCircle, FileText, MessageSquare, BookOpen, Image, Database, Video, BarChart3, Users, ClipboardList, Bot, Sun, Moon, GitBranch, CheckCircle2, History } from "lucide-react";
+import { LayoutDashboard, HelpCircle, FileText, MessageSquare, BookOpen, Image, Database, Video, BarChart3, Users, ClipboardList, Bot, Sun, Moon, GitBranch, CheckCircle2, History, Sparkles } from "lucide-react";
 import { NexaFlowLogo } from "@/components/brand/nexaflow-logo";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ const navItems = [
   { href: "/equipes", label: "Équipes", icon: Users, roles: ["admin", "chef-de-quart"] },
   { href: "/etat-des-lieux", label: "État des lieux", icon: ClipboardList, roles: ["admin", "chef-de-quart", "chef-de-bloc", "rondier"] },
   { href: "/chat-ia", label: "Chat IA", icon: MessageSquare, roles: ["admin", "chef-de-quart", "chef-de-bloc", "rondier"] },
+  { href: "/ai-hub", label: "Centre IA", icon: Sparkles, roles: ["admin", "chef-de-quart", "chef-de-bloc", "rondier"] },
 ];
 
 export function DashboardSidebar({ role }: { role: "admin" | "chef-de-quart" | "chef-de-bloc" | "rondier" }) {
