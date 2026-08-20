@@ -212,29 +212,71 @@ export function useSpeech(
         return;
       }
 
-      speechSynthesisRef.current.cancel();
-      speechLogger.trace.speakStart(text, language);
+      const synth = speechSynthesisRef.current;
+      const voices = (synth as unknown as { getVoices: () => SpeechSynthesisVoice[] }).getVoices?.();
+      const hasVoices = Array.isArray(voices) && voices.length > 0;
 
-      const utterance = new SpeechSynthesisUtterance(text) as unknown as SpeechSynthesisUtteranceInstance;
-      utterance.lang = language;
-      let hasError = false;
+      const trySpeak = () => {
+        synth.cancel();
+        speechLogger.trace.speakStart(text, language);
 
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => {
-        setIsSpeaking(false);
-        if (!hasError) {
-          speechLogger.trace.speakEnd();
+        const utterance = new SpeechSynthesisUtterance(text) as unknown as SpeechSynthesisUtteranceInstance;
+        utterance.lang = language;
+        let hasError = false;
+
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => {
+          setIsSpeaking(false);
+          if (!hasError) {
+            speechLogger.trace.speakEnd();
+          }
+          setError(null);
+        };
+        utterance.onerror = () => {
+          hasError = true;
+          setIsSpeaking(false);
+          setError("Erreur lors de la synthèse vocale.");
+          speechLogger.trace.speakError("utterance onerror");
+        };
+
+        try {
+          synth.speak(utterance);
+        } catch (err) {
+          setIsSpeaking(false);
+          setError("Erreur lors de la synthèse vocale.");
+          speechLogger.trace.speakError("speak threw: " + ((err as Error)?.message ?? err));
         }
-        setError(null);
-      };
-      utterance.onerror = () => {
-        hasError = true;
-        setIsSpeaking(false);
-        setError("Erreur lors de la synthèse vocale.");
-        speechLogger.trace.speakError("utterance onerror");
       };
 
-      speechSynthesisRef.current.speak(utterance);
+      if (!hasVoices) {
+        speechLogger.warn("speechSynthesisNoVoices", { language });
+        const onVoicesChanged = () => {
+          (synth as unknown as { onvoiceschanged: (() => void) | null }).onvoiceschanged = null;
+          const updatedVoices = (synth as unknown as { getVoices: () => SpeechSynthesisVoice[] }).getVoices?.();
+          if (Array.isArray(updatedVoices) && updatedVoices.length > 0) {
+            speechLogger.info("speechSynthesisVoicesLoaded", { count: updatedVoices.length });
+            trySpeak();
+          } else {
+            speechLogger.error("speechSynthesisVoicesUnavailable");
+            setError("Synthèse vocale indisponible pour le moment.");
+          }
+        };
+        (synth as unknown as { onvoiceschanged: (() => void) | null }).onvoiceschanged = onVoicesChanged;
+        setTimeout(() => {
+          (synth as unknown as { onvoiceschanged: (() => void) | null }).onvoiceschanged = null;
+          const lateVoices = (synth as unknown as { getVoices: () => SpeechSynthesisVoice[] }).getVoices?.();
+          if (Array.isArray(lateVoices) && lateVoices.length > 0) {
+            speechLogger.info("speechSynthesisVoicesLoadedLate", { count: lateVoices.length });
+            trySpeak();
+          } else {
+            speechLogger.error("speechSynthesisVoicesTimeout");
+            setError("Synthèse vocale indisponible pour le moment.");
+          }
+        }, 1000);
+        return;
+      }
+
+      trySpeak();
     },
     [language]
   );
