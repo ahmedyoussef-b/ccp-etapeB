@@ -7,6 +7,7 @@ interface UseSpeechOptions {
   language?: string;
   continuous?: boolean;
   interimResults?: boolean;
+  onCommand?: (command: "yes" | "no" | "clear", raw: string) => void;
 }
 
 interface UseSpeechReturn {
@@ -90,6 +91,7 @@ export function useSpeech(
     language = "fr-FR",
     continuous = false,
     interimResults = true,
+    onCommand,
   } = options;
 
   const [isListening, setIsListening] = useState(false);
@@ -138,7 +140,22 @@ export function useSpeech(
       }
       const merged = finalTranscriptRef.current + interim;
       speechLogger.trace.recognitionResult(merged, !interim, event.results[event.results.length - 1]?.[0]?.confidence);
-      setTranscript(merged);
+
+      const normalized = merged.trim().toLowerCase();
+      const clearCommands = ["non", "efface", "supprime", "annule", "recommence"];
+      const yesCommands = ["oui", "valide", "c'est bon", "ok", "d'accord"];
+
+      if (clearCommands.some((cmd) => normalized === cmd || normalized.startsWith(cmd + " "))) {
+        speechLogger.info("voiceCommandDetected", { command: "clear", raw: merged });
+        finalTranscriptRef.current = "";
+        setTranscript("");
+        onCommand?.("clear", merged);
+      } else if (yesCommands.some((cmd) => normalized === cmd || normalized.startsWith(cmd + " "))) {
+        speechLogger.info("voiceCommandDetected", { command: "yes", raw: merged });
+        onCommand?.("yes", merged);
+      } else {
+        setTranscript(merged);
+      }
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -162,7 +179,7 @@ export function useSpeech(
     setIsListening(true);
     setError(null);
     speechLogger.trace.listeningStart(language, continuous);
-  }, [language, continuous, interimResults]);
+  }, [language, continuous, interimResults, onCommand]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {

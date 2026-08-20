@@ -23,6 +23,7 @@ interface VoiceGuidedInputProps {
   continuous?: boolean;
   disabled?: boolean;
   className?: string;
+  onVoiceCommand?: (command: "yes" | "no" | "clear") => void;
 }
 
 export function VoiceGuidedInput({
@@ -36,7 +37,33 @@ export function VoiceGuidedInput({
   continuous = false,
   disabled = false,
   className,
+  onVoiceCommand,
 }: VoiceGuidedInputProps) {
+  const [interimText, setInterimText] = useState("");
+  const [commandDetected, setCommandDetected] = useState<"clear" | "yes" | "no" | null>(null);
+  const guidanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasSpokenGuidanceRef = useRef(false);
+  const commandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleCommand = useCallback(
+    (command: "yes" | "no" | "clear") => {
+      setCommandDetected(command);
+      commandTimerRef.current = setTimeout(() => setCommandDetected(null), 2000);
+
+      if (command === "clear") {
+        onChange("");
+        setInterimText("");
+        speechLogger.info("voiceCommandExecuted", { command: "clear", label });
+      } else if (command === "yes") {
+        speechLogger.info("voiceCommandExecuted", { command: "yes", label });
+      } else if (command === "no") {
+        speechLogger.info("voiceCommandExecuted", { command: "no", label });
+      }
+      onVoiceCommand?.(command);
+    },
+    [onChange, onVoiceCommand, label]
+  );
+
   const {
     isListening,
     transcript,
@@ -45,11 +72,7 @@ export function VoiceGuidedInput({
     speak,
     toggleListening,
     stopSpeaking,
-  } = useSpeech({ language, continuous });
-
-  const [interimText, setInterimText] = useState("");
-  const guidanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasSpokenGuidanceRef = useRef(false);
+  } = useSpeech({ language, continuous, onCommand: handleCommand });
 
   const mergedText = value || interimText || transcript;
 
@@ -85,6 +108,14 @@ export function VoiceGuidedInput({
       setInterimText("");
     }
   }, [isListening]);
+
+  useEffect(() => {
+    return () => {
+      if (commandTimerRef.current) {
+        clearTimeout(commandTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -232,6 +263,18 @@ export function VoiceGuidedInput({
 
       {error && (
         <p className="text-xs text-destructive">{error}</p>
+      )}
+
+      {commandDetected === "clear" && (
+        <p className="text-xs text-destructive font-medium animate-pulse">
+          Commande vocale détectée : effacement du champ en cours...
+        </p>
+      )}
+
+      {commandDetected === "yes" && (
+        <p className="text-xs text-green-600 dark:text-green-400 font-medium animate-pulse">
+          Commande vocale détectée : validation du texte.
+        </p>
       )}
 
       {isSpeaking && guidance && !isControlled && (
