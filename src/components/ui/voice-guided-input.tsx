@@ -78,6 +78,7 @@ export function VoiceGuidedInput({
 
   useEffect(() => {
     if (!guidance || hasSpokenGuidanceRef.current || disabled) return;
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
     guidanceTimerRef.current = setTimeout(() => {
       speak(guidance);

@@ -205,10 +205,12 @@ export function useSpeech(
   const speak = useCallback(
     (text: string) => {
       if (!speechSynthesisRef.current) {
-        setError(
-          "La synthèse vocale n'est pas supportée par ce navigateur."
-        );
         speechLogger.error("speechSynthesisNotSupported");
+        return;
+      }
+
+      if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+        speechLogger.error("speechSynthesisUnavailable");
         return;
       }
 
@@ -230,12 +232,10 @@ export function useSpeech(
           if (!hasError) {
             speechLogger.trace.speakEnd();
           }
-          setError(null);
         };
         utterance.onerror = () => {
           hasError = true;
           setIsSpeaking(false);
-          setError("Erreur lors de la synthèse vocale.");
           speechLogger.trace.speakError("utterance onerror");
         };
 
@@ -243,7 +243,6 @@ export function useSpeech(
           synth.speak(utterance);
         } catch (err) {
           setIsSpeaking(false);
-          setError("Erreur lors de la synthèse vocale.");
           speechLogger.trace.speakError("speak threw: " + ((err as Error)?.message ?? err));
         }
       };
@@ -258,7 +257,6 @@ export function useSpeech(
             trySpeak();
           } else {
             speechLogger.error("speechSynthesisVoicesUnavailable");
-            setError("Synthèse vocale indisponible pour le moment.");
           }
         };
         (synth as unknown as { onvoiceschanged: (() => void) | null }).onvoiceschanged = onVoicesChanged;
@@ -270,7 +268,6 @@ export function useSpeech(
             trySpeak();
           } else {
             speechLogger.error("speechSynthesisVoicesTimeout");
-            setError("Synthèse vocale indisponible pour le moment.");
           }
         }, 1000);
         return;
