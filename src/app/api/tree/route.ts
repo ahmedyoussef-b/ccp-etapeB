@@ -100,7 +100,13 @@ export async function POST(request: Request) {
       },
     });
     return NextResponse.json(node, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Invalid node" }, { status: 400 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[Tree POST] error:", msg, error);
+    const isDb = msg.toLowerCase().includes("database") || msg.toLowerCase().includes("connection") || msg.toLowerCase().includes("timeout");
+    return NextResponse.json(
+      { error: isDb ? "database_unavailable" : "Invalid node", details: msg },
+      { status: isDb ? 503 : 400 }
+    );
   }
 }
