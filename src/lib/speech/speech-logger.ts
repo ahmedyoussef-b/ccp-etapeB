@@ -1,12 +1,15 @@
 const SPEECH_PREFIX = "[Speech]";
 
 function log(level: "log" | "warn" | "error", label: string, data?: Record<string, unknown>) {
+  const suffix = data ? ` ${JSON.stringify(data)}` : "";
+  const message = `${SPEECH_PREFIX} ${level === "error" ? "❌" : level === "warn" ? "⚠️" : "ℹ️"} ${label}${suffix}`;
+
   if (level === "error") {
-    console.error(`${SPEECH_PREFIX} ❌ ${label}`, data ?? "");
+    console.error(message);
   } else if (level === "warn") {
-    console.warn(`${SPEECH_PREFIX} ⚠️ ${label}`, data ?? "");
+    console.warn(message);
   } else {
-    console.log(`${SPEECH_PREFIX} ℹ️ ${label}`, data ?? "");
+    console.log(message);
   }
 }
 
