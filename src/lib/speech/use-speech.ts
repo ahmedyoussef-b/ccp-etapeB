@@ -200,13 +200,18 @@ export function useSpeech(
 
       const utterance = new SpeechSynthesisUtterance(text) as unknown as SpeechSynthesisUtteranceInstance;
       utterance.lang = language;
+      const speakErrorRef = { current: false };
 
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => {
         setIsSpeaking(false);
-        speechLogger.trace.speakEnd();
+        if (!speakErrorRef.current) {
+          speechLogger.trace.speakEnd();
+        }
+        setError(null);
       };
       utterance.onerror = () => {
+        speakErrorRef.current = true;
         setIsSpeaking(false);
         setError("Erreur lors de la synthèse vocale.");
         speechLogger.trace.speakError("utterance onerror");
