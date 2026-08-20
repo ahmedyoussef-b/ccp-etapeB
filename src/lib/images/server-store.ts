@@ -30,36 +30,71 @@ function getDbDir(): string {
   return resolvedDbDir;
 }
 
-function getDbFile(): string {
-  return path.join(getDbDir(), "items.json");
+function getMediaDir(): string {
+  return path.join(getDbDir(), "media");
+}
+
+function getItemDir(item: MediaItem): string {
+  const safeCategory = (item.category || "sans-categorie").replace(/[^a-zA-Z0-9_-]/g, "_");
+  const safeTitle = (item.title || item.id).replace(/[^a-zA-Z0-9_-]/g, "_");
+  return path.join(getMediaDir(), safeCategory, `${safeTitle}_${item.id}`);
 }
 
 function readItems(): MediaItem[] {
-  const dbFile = getDbFile();
-  if (!fs.existsSync(dbFile)) {
-    console.log(`[ServerStore] readItems() - file not found at ${dbFile}, returning empty array`);
+  const mediaDir = getMediaDir();
+  if (!fs.existsSync(mediaDir)) {
     return [];
   }
-  try {
-    const raw = fs.readFileSync(dbFile, "utf-8");
-    const parsed = JSON.parse(raw);
-    const items = Array.isArray(parsed) ? parsed : [];
-    console.log(`[ServerStore] readItems() - loaded ${items.length} items from ${dbFile}`);
-    return items;
-  } catch (error) {
-    console.log(`[ServerStore] readItems() - error reading file: ${(error as Error).message}`);
-    return [];
+
+  const items: MediaItem[] = [];
+  const categories = fs.readdirSync(mediaDir, { withFileTypes: true });
+
+  for (const category of categories) {
+    if (!category.isDirectory()) continue;
+    const categoryPath = path.join(mediaDir, category.name);
+    const itemFolders = fs.readdirSync(categoryPath, { withFileTypes: true });
+
+    for (const itemFolder of itemFolders) {
+      if (!itemFolder.isDirectory()) continue;
+      const metadataPath = path.join(categoryPath, itemFolder.name, "metadata.json");
+      if (!fs.existsSync(metadataPath)) continue;
+
+      try {
+        const raw = fs.readFileSync(metadataPath, "utf-8");
+        const item = JSON.parse(raw) as MediaItem;
+        items.push(item);
+      } catch {
+        console.warn(`[ServerStore] Failed to read metadata: ${metadataPath}`);
+      }
+    }
+  }
+
+  console.log(`[ServerStore] readItems() - loaded ${items.length} items from ${mediaDir}`);
+  return items;
+}
+
+function writeItem(item: MediaItem): void {
+  const itemDir = getItemDir(item);
+  const metadataPath = path.join(itemDir, "metadata.json");
+  const dataPath = path.join(itemDir, "data");
+
+  if (!fs.existsSync(itemDir)) {
+    fs.mkdirSync(itemDir, { recursive: true });
+  }
+
+  const { dataUrl, ...metadata } = item as MediaItem & { dataUrl?: string };
+  fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), "utf-8");
+
+  if (dataUrl) {
+    const base64Data = dataUrl.replace(/^data:[^;]+;base64,/, "");
+    fs.writeFileSync(dataPath, Buffer.from(base64Data, "base64"));
   }
 }
 
-function writeItems(items: MediaItem[]): void {
-  const dbFile = getDbFile();
-  try {
-    const json = JSON.stringify(items, null, 2);
-    fs.writeFileSync(dbFile, json, "utf-8");
-    console.log(`[ServerStore] writeItems() - wrote ${items.length} items to ${dbFile} (${Buffer.byteLength(json, "utf-8")} bytes)`);
-  } catch (error) {
-    console.log(`[ServerStore] writeItems() - error writing file: ${(error as Error).message}`);
+function deleteItemDir(item: MediaItem): void {
+  const itemDir = getItemDir(item);
+  if (fs.existsSync(itemDir)) {
+    fs.rmSync(itemDir, { recursive: true, force: true });
   }
 }
 
@@ -77,6 +112,7 @@ export interface MediaItem {
   geolocation?: { lat: number; lng: number };
   createdAt: string;
   updatedAt: string;
+  syncStatus?: "pending" | "synced";
 }
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/svg+xml"];
@@ -115,7 +151,6 @@ function sortItems(items: MediaItem[], sortBy: string, sortOrder: "asc" | "desc"
 
 function searchItems(items: MediaItem[], query: string): MediaItem[] {
   if (!query.trim()) {
-    console.log(`[ServerStore] searchItems() - empty query, returning all ${items.length} items`);
     return items;
   }
   const q = query.toLowerCase().trim();
@@ -125,7 +160,6 @@ function searchItems(items: MediaItem[], query: string): MediaItem[] {
       item.description.toLowerCase().includes(q) ||
       item.tags.some((tag) => tag.toLowerCase().includes(q))
   );
-  console.log(`[ServerStore] searchItems() - query="${q}" matched ${filtered.length}/${items.length} items`);
   return filtered;
 }
 
@@ -136,8 +170,7 @@ export function generateId(): string {
 export async function getAll(): Promise<MediaItem[]> {
   console.log(`[ServerStore] getAll()`);
   await delay(50);
-  const items = readItems();
-  return items;
+  return readItems();
 }
 
 export async function getAllPaginated(params?: { limit?: number; offset?: number; sortBy?: string; sortOrder?: string; q?: string; category?: string }): Promise<{ items: MediaItem[]; total: number }> {
@@ -158,12 +191,10 @@ export async function getAllPaginated(params?: { limit?: number; offset?: number
   const total = items.length;
   const sortOrder = (params?.sortOrder === "asc" ? "asc" : "desc") as "asc" | "desc";
   items = sortItems(items, params?.sortBy || "createdAt", sortOrder);
-  console.log(`[ServerStore] getAllPaginated() - sorted by ${params?.sortBy || "createdAt"} ${sortOrder}`);
 
   const limit = params?.limit || items.length;
   const offset = params?.offset || 0;
   const paginated = items.slice(offset, offset + limit);
-  console.log(`[ServerStore] getAllPaginated() - returning ${paginated.length}/${total} items (offset=${offset}, limit=${limit})`);
 
   return { items: paginated, total };
 }
@@ -191,11 +222,10 @@ export async function create(item: Omit<MediaItem, "id" | "createdAt" | "updated
     id: generateId(),
     createdAt: now,
     updatedAt: now,
+    syncStatus: "pending",
   };
-  const items = readItems();
-  items.unshift(newItem);
-  writeItems(items);
-  console.log(`[ServerStore] create() - created id=${newItem.id}`);
+  writeItem(newItem);
+  console.log(`[ServerStore] create() - created id=${newItem.id} in ${getItemDir(newItem)}`);
   return newItem;
 }
 
@@ -204,11 +234,6 @@ export async function update(
   updates: Partial<Omit<MediaItem, "id" | "createdAt">>
 ): Promise<MediaItem | undefined> {
   console.log(`[ServerStore] update() - id=${id} fields=${Object.keys(updates).join(",")}`);
-  const validationError = validateMediaItem(updates);
-  if (validationError) {
-    console.log(`[ServerStore] update() - VALIDATION ERROR: ${validationError}`);
-    throw new Error(validationError);
-  }
   await delay(50);
   const items = readItems();
   const index = items.findIndex((item) => item.id === id);
@@ -216,27 +241,35 @@ export async function update(
     console.log(`[ServerStore] update() - item not found id=${id}`);
     return undefined;
   }
-  items[index] = {
+
+  const updatedItem: MediaItem = {
     ...items[index],
     ...updates,
     updatedAt: new Date().toISOString(),
   };
-  writeItems(items);
+
+  if (updates.category || updates.title) {
+    const oldItem = items[index];
+    if (oldItem.category !== updatedItem.category || oldItem.title !== updatedItem.title) {
+      deleteItemDir(oldItem);
+    }
+  }
+
+  writeItem(updatedItem);
   console.log(`[ServerStore] update() - updated id=${id}`);
-  return items[index];
+  return updatedItem;
 }
 
 export async function remove(id: string): Promise<boolean> {
   console.log(`[ServerStore] remove() - id=${id}`);
   await delay(50);
   const items = readItems();
-  const index = items.findIndex((item) => item.id === id);
-  if (index === -1) {
+  const item = items.find((item) => item.id === id);
+  if (!item) {
     console.log(`[ServerStore] remove() - item not found id=${id}`);
     return false;
   }
-  items.splice(index, 1);
-  writeItems(items);
+  deleteItemDir(item);
   console.log(`[ServerStore] remove() - deleted id=${id}`);
   return true;
 }
@@ -247,13 +280,13 @@ export async function bulkDelete(ids: string[]): Promise<boolean> {
   if (!ids.length) return false;
   const items = readItems();
   const beforeCount = items.length;
-  const filtered = items.filter((item) => !ids.includes(item.id));
-  const deletedCount = beforeCount - filtered.length;
-  if (filtered.length === items.length) {
-    console.log(`[ServerStore] bulkDelete() - no items matched`);
-    return false;
+  for (const id of ids) {
+    const item = items.find((i) => i.id === id);
+    if (item) {
+      deleteItemDir(item);
+    }
   }
-  writeItems(filtered);
+  const deletedCount = beforeCount - items.filter((item) => !ids.includes(item.id)).length;
   console.log(`[ServerStore] bulkDelete() - deleted ${deletedCount} items`);
   return true;
 }
@@ -272,6 +305,7 @@ export async function bulkTag(ids: string[], tagsToAdd: string[]): Promise<boole
         item.tags = newTags;
         changed = true;
         affectedCount++;
+        writeItem(item);
       }
     }
   });
@@ -279,9 +313,22 @@ export async function bulkTag(ids: string[], tagsToAdd: string[]): Promise<boole
     console.log(`[ServerStore] bulkTag() - no changes needed`);
     return false;
   }
-  writeItems(items);
   console.log(`[ServerStore] bulkTag() - tagged ${affectedCount} items`);
   return true;
+}
+
+export async function markSynced(ids: string[]): Promise<boolean> {
+  if (!ids.length) return false;
+  const items = readItems();
+  let changed = false;
+  items.forEach((item) => {
+    if (ids.includes(item.id) && item.syncStatus !== "synced") {
+      item.syncStatus = "synced";
+      writeItem(item);
+      changed = true;
+    }
+  });
+  return changed;
 }
 
 export async function getCategories(): Promise<string[]> {

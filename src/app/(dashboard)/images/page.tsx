@@ -354,6 +354,15 @@ export default function ImagesPage() {
   }, [loadVectorizedImageIds]);
 
   useEffect(() => {
+    const handler = () => {
+      loadData();
+      loadVectorizedImageIds();
+    };
+    window.addEventListener('image-sync-complete', handler);
+    return () => window.removeEventListener('image-sync-complete', handler);
+  }, [loadData, loadVectorizedImageIds]);
+
+  useEffect(() => {
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
@@ -612,6 +621,7 @@ export default function ImagesPage() {
           mimeType: formData.mimeType,
           size: formData.size,
           geolocation: geoLocation || undefined,
+          syncStatus: "pending",
         });
         console.log(`[ImagesPage] handleSave() - UPDATE success`);
         toast.success("Média mis à jour avec succès");
@@ -628,6 +638,7 @@ export default function ImagesPage() {
           mimeType: formData.mimeType,
           size: formData.size,
           geolocation: geoLocation || undefined,
+          syncStatus: "pending",
         });
         console.log(`[ImagesPage] handleSave() - CREATE success`);
         toast.success("Média ajouté avec succès");
@@ -893,6 +904,16 @@ export default function ImagesPage() {
                         className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-500 text-white"
                       >
                         <Database className="h-3 w-3" />
+                      </span>
+                    </div>
+                  )}
+                  {item.syncStatus === "pending" && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <span
+                        title="En attente de synchronisation"
+                        className="flex h-5 w-5 items-center justify-center rounded-md bg-amber-500 text-white"
+                      >
+                        <Clock className="h-3 w-3" />
                       </span>
                     </div>
                   )}

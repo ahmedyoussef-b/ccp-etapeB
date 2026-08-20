@@ -48,6 +48,22 @@ type LocalNode = {
   docId?: string | null;
 };
 
+type ImageNode = {
+  id: string;
+  name: string;
+  type: "directory" | "folder" | "file";
+  path: string;
+  children: ImageNode[];
+  size?: number;
+  createdAt: string;
+  updatedAt: string;
+  content?: string | null;
+  order?: number;
+  metadata?: string | null;
+  parentId?: number | string | null;
+  docId?: string | null;
+};
+
 function buildVectorTree(nodes: VectorTreeNode[]): LocalNode[] {
   const nodeMap = new Map<string, LocalNode>();
   const roots: LocalNode[] = [];
@@ -123,7 +139,7 @@ function TreeNodeItem({
   vectorizing = false,
   expandAll = false,
 }: {
-  node: WebTreeNode | LocalNode;
+  node: WebTreeNode | LocalNode | ImageNode;
   depth?: number;
   path?: string;
   onDelete?: (node: WebTreeNode | LocalNode) => void;
@@ -217,7 +233,7 @@ function TreeNodeItem({
                 className="h-6 w-6"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onAdd(node);
+                  onAdd?.((node as unknown) as LocalNode);
                 }}
                 title="Ajouter"
               >
@@ -231,7 +247,7 @@ function TreeNodeItem({
                 className="h-6 w-6 text-green-500"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDownload(node);
+                  onDownload?.((node as unknown) as LocalNode);
                 }}
                 title="Télécharger vers local"
               >
@@ -244,7 +260,7 @@ function TreeNodeItem({
               className="h-6 w-6"
               onClick={(e) => {
                 e.stopPropagation();
-                onRename?.(node);
+                  onRename?.((node as unknown) as LocalNode);
               }}
               title="Renommer"
             >
@@ -256,7 +272,7 @@ function TreeNodeItem({
               className="h-6 w-6 text-red-500"
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete?.(node);
+                  onDelete?.((node as unknown) as LocalNode);
               }}
               title="Supprimer"
             >
@@ -269,7 +285,7 @@ function TreeNodeItem({
                 className="h-6 w-6"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onEdit(node as LocalNode);
+                  onEdit?.((node as unknown) as LocalNode);
                 }}
                 title="Éditer"
               >
@@ -284,7 +300,7 @@ function TreeNodeItem({
                   disabled={vectorizing}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onVectorize?.(node as LocalNode, nodePath);
+                    onVectorize?.((node as unknown) as LocalNode, nodePath);
                   }}
                   title={isVectorized ? 'Déjà vectorisé' : 'Vectoriser'}
                 >
@@ -299,7 +315,7 @@ function TreeNodeItem({
                  className="h-6 w-6"
                  onClick={(e) => {
                    e.stopPropagation();
-                   onPreview(node);
+                    onPreview?.((node as unknown) as LocalNode);
                  }}
                  title="Aperçu"
                >
@@ -345,6 +361,8 @@ export default function StructureBDDPage() {
   const [webError, setWebError] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const [vectorError, setVectorError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [imageTree, setImageTree] = useState<ImageNode[]>([]);
   const [search] = useState("");
   const [resettingWeb, setResettingWeb] = useState(false);
   const [resettingLocal, setResettingLocal] = useState(false);
@@ -360,7 +378,7 @@ export default function StructureBDDPage() {
   const [previewData, setPreviewData] = useState<{ content?: string; dataUrl?: string; mimeType: string; name: string; size: number; isText: boolean } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [activeView, setActiveView] = useState<"web" | "local" | "vector">("web");
+  const [activeView, setActiveView] = useState<"web" | "local" | "vector" | "images">("web");
   const [showOnlyVectorized, setShowOnlyVectorized] = useState(false);
   const [vectorizedPaths, setVectorizedPaths] = useState<Set<string>>(new Set());
   const [vectorizedCount, setVectorizedCount] = useState(0);
@@ -479,7 +497,25 @@ export default function StructureBDDPage() {
         setVectorTree([]);
       });
 
-    await Promise.all([webPromise, localPromise, vectorPromise]);
+    const imagePromise = fetch("/api/images/tree")
+      .then((res) => {
+        console.log("[StructureBDD] /api/images/tree status", res.status);
+        if (!res.ok) throw new Error("Failed to fetch image tree");
+        return res.json();
+      })
+      .then((data) => {
+        const roots = (data as { roots: ImageNode[] }).roots;
+        console.log("[StructureBDD] image tree loaded", { count: roots.length });
+        setImageTree(roots);
+      })
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        console.error("[StructureBDD] image tree error", msg);
+        setImageError(msg);
+        setImageTree([]);
+      });
+
+    await Promise.all([webPromise, localPromise, vectorPromise, imagePromise]);
     setLoading(false);
   }, []);
 
@@ -1203,7 +1239,7 @@ export default function StructureBDDPage() {
   const baseLocalTree = filterLocalTree(localTree);
   const visibleLocalTree = showOnlyVectorized ? filterLocalTreeByVectorized(baseLocalTree) : baseLocalTree;
   const visibleVectorTree = filterLocalTree(vectorTree);
-  const totalNodes = (nodes: (WebTreeNode | LocalNode)[]): number =>
+  const totalNodes = (nodes: (WebTreeNode | LocalNode | ImageNode)[]): number =>
     nodes.reduce((acc, node) => acc + 1 + totalNodes(node.children), 0);
 
   if (loading) {
@@ -1219,13 +1255,15 @@ export default function StructureBDDPage() {
     web: visibleWebTree.length,
     local: visibleLocalTree.length,
     vector: vectorDocs.length,
+    images: imageTree.length,
     webError: !!webError,
     localError: !!localError,
     vectorError: !!vectorError,
+    imageError: !!imageError,
   });
 
-  const activeTree = activeView === "web" ? visibleWebTree : activeView === "local" ? visibleLocalTree : visibleVectorTree;
-  const activeError = activeView === "web" ? webError : activeView === "local" ? localError : vectorError;
+  const activeTree = activeView === "web" ? visibleWebTree : activeView === "local" ? visibleLocalTree : activeView === "vector" ? visibleVectorTree : imageTree;
+  const activeError = activeView === "web" ? webError : activeView === "local" ? localError : activeView === "vector" ? vectorError : imageError;
   const totalActiveNodes = totalNodes(activeTree);
 
   return (
@@ -1237,7 +1275,7 @@ export default function StructureBDDPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Structure BDD</h1>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Vue active : {activeView === "web" ? "Hub / PostgreSQL" : activeView === "local" ? "Spoke / SQLite OPFS" : "Spoke / IndexedDB"} · {totalActiveNodes} nœuds
+            Vue active : {activeView === "web" ? "Hub / PostgreSQL" : activeView === "local" ? "Spoke / SQLite OPFS" : activeView === "vector" ? "Spoke / IndexedDB" : "Hub / Médias"} · {totalActiveNodes} nœuds
             {activeView === "local" && showOnlyVectorized && <span className="text-blue-500"> · {vectorizedCount} vectorisés</span>}
             {activeError && <span className="text-red-500"> · Erreur: {activeError}</span>}
           </p>
@@ -1264,6 +1302,13 @@ export default function StructureBDDPage() {
             onClick={() => setActiveView("vector")}
           >
             Vectorielle
+          </Button>
+          <Button
+            variant={activeView === "images" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveView("images")}
+          >
+            Médias
           </Button>
         </div>
       </div>
@@ -1350,23 +1395,23 @@ export default function StructureBDDPage() {
               </p>
             ) : (
               activeTree.map((node) => (
-              <TreeNodeItem
-                key={node.id}
-                node={node}
-                depth={0}
-                 onDelete={activeView === "web" ? handleDeleteWeb : activeView === "local" ? handleDeleteLocal : activeView === "vector" ? handleDeleteVectorNode : undefined}
-                 onAdd={activeView === "web" ? handleAddWeb : activeView === "local" ? handleAddLocal : undefined}
-                 onRename={activeView === "web" ? handleRenameWeb : activeView === "local" ? handleRenameLocal : undefined}
-                 onEdit={activeView === "local" ? handleEditJson : undefined}
-                 onPreview={handlePreviewFile}
-                 onVectorize={activeView === "local" ? handleVectorizeLocalFile : undefined}
-                 onDownload={activeView === "web" ? handleDownloadDirectory : undefined}
-                 vectorizedPaths={vectorizedPaths}
-                 vectorizing={vectorizing}
-                 expandAll={activeView === "vector"}
+                <TreeNodeItem
+                  key={node.id}
+                  node={node as LocalNode}
+                  depth={0}
+                  onDelete={activeView === "web" ? handleDeleteWeb : activeView === "local" ? handleDeleteLocal : activeView === "vector" ? handleDeleteVectorNode : undefined}
+                  onAdd={activeView === "web" ? handleAddWeb : activeView === "local" ? handleAddLocal : undefined}
+                  onRename={activeView === "web" ? handleRenameWeb : activeView === "local" ? handleRenameLocal : undefined}
+                  onEdit={activeView === "local" ? handleEditJson : undefined}
+                  onPreview={handlePreviewFile}
+                  onVectorize={activeView === "local" ? handleVectorizeLocalFile : undefined}
+                  onDownload={activeView === "web" ? handleDownloadDirectory : undefined}
+                  vectorizedPaths={vectorizedPaths}
+                  vectorizing={vectorizing}
+                  expandAll={activeView === "vector" || activeView === "images"}
                 />
-               ))
-             )}
+              ))
+            )}
           </div>
           <div className="p-3 border-t border-border flex flex-col gap-2">
             {activeView === "web" && (
@@ -1423,6 +1468,18 @@ export default function StructureBDDPage() {
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Vider la vectorielle
+            </Button>
+          )}
+          {activeView === "images" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadTrees}
+              disabled={loading}
+              className="w-full"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              Actualiser l&apos;arborescence
             </Button>
           )}
         </Card>

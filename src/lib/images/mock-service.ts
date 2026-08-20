@@ -14,6 +14,7 @@ export interface MediaItem {
   geolocation?: { lat: number; lng: number };
   createdAt: string;
   updatedAt: string;
+  syncStatus?: "pending" | "synced";
 }
 
 const API_BASE = "/api/images";
@@ -22,8 +23,10 @@ function delay(ms = 200): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+import { csrfFetch } from "@/lib/procedures/csrf-fetch";
+
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
+  const res = await csrfFetch(url, {
     headers: { "Content-Type": "application/json", ...options?.headers },
     ...options,
   });
@@ -99,7 +102,7 @@ export const imageService = {
   async delete(id: string): Promise<boolean> {
     console.log(`[ImageService] delete() - DELETE ${API_BASE}/${id}`);
     await delay();
-    const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
+    const res = await csrfFetch(`${API_BASE}/${id}`, { method: "DELETE" });
     console.log(`[ImageService] delete() - result=${res.ok}`);
     return res.ok;
   },
@@ -129,10 +132,22 @@ export const imageService = {
     return formatted;
   },
 
+  async markSynced(ids: string[]): Promise<boolean> {
+    console.log(`[ImageService] markSynced() - PUT ${API_BASE}/sync | ids=[${ids.join(",")}]`);
+    await delay();
+    const res = await csrfFetch(`${API_BASE}/sync`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    console.log(`[ImageService] markSynced() - result=${res.ok}`);
+    return res.ok;
+  },
+
   async bulkDelete(ids: string[]): Promise<boolean> {
     console.log(`[ImageService] bulkDelete() - DELETE ${API_BASE}/bulk | ids=[${ids.join(",")}]`);
     await delay();
-    const res = await fetch(`${API_BASE}/bulk`, {
+    const res = await csrfFetch(`${API_BASE}/bulk`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids }),
@@ -144,7 +159,7 @@ export const imageService = {
   async bulkTag(ids: string[], tags: string[]): Promise<boolean> {
     console.log(`[ImageService] bulkTag() - PATCH ${API_BASE}/bulk | ids=[${ids.length} items] tags=[${tags.join(",")}]`);
     await delay();
-    const res = await fetch(`${API_BASE}/bulk`, {
+    const res = await csrfFetch(`${API_BASE}/bulk`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids, tags }),

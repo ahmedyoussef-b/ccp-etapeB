@@ -1,5 +1,21 @@
 import { NextResponse } from "next/server";
 import { getById, update, remove } from "@/lib/images/server-store";
+import fs from "fs";
+import path from "path";
+import type { MediaItem } from "@/lib/images/server-store";
+
+const MEDIA_DIR = path.join(process.cwd(), ".local-db", "images", "media");
+
+function resolveDataUrl(item: MediaItem): string {
+  if (item.dataUrl) return item.dataUrl;
+  const itemDir = path.join(MEDIA_DIR, item.category || "sans-categorie", `${(item.title || item.id).replace(/[^a-zA-Z0-9_-]/g, "_")}_${item.id}`);
+  const dataPath = path.join(itemDir, "data");
+  if (fs.existsSync(dataPath)) {
+    const buffer = fs.readFileSync(dataPath);
+    return `data:${item.mimeType};base64,${buffer.toString("base64")}`;
+  }
+  return "";
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +30,8 @@ export async function GET(
     return NextResponse.json({ message: "Image not found" }, { status: 404 });
   }
   console.log(`[API][GET /api/images/${params.id}] - found: ${item.title}`);
-  return NextResponse.json(item);
+  const itemWithData = { ...item, dataUrl: resolveDataUrl(item) };
+  return NextResponse.json(itemWithData);
 }
 
 export async function PUT(

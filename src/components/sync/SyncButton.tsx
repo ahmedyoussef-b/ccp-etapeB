@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 import { clientEngine } from '@/lib/client-engine';
+import { imageService } from '@/lib/images/mock-service';
 
 export function SyncButton() {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -35,7 +36,11 @@ export function SyncButton() {
         if (imagesResponse.ok) {
           const data = await imagesResponse.json();
           if (data.images && Array.isArray(data.images)) {
+            const ids: string[] = data.images.map((img: { id?: string }) => img.id).filter((id: string | undefined): id is string => !!id);
             await clientEngine.syncImageMetadata(data.images);
+            if (ids.length > 0) {
+              await imageService.markSynced(ids);
+            }
           }
         }
       } catch (imageErr) {
@@ -43,6 +48,7 @@ export function SyncButton() {
       }
 
       setShowSuccess(true);
+      window.dispatchEvent(new CustomEvent('image-sync-complete'));
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sync failed');

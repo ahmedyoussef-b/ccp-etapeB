@@ -23,6 +23,7 @@ import {
   Database,
   FileJson,
   X,
+  CheckCircle2,
 } from "lucide-react";
 import { MediaItem, MediaKind, imageService } from "@/lib/images/mock-service";
 import { CategoryTreePicker } from "@/components/images/category-tree-picker";
@@ -159,6 +160,7 @@ export default function ImageDetailPage() {
         mimeType: formData.mimeType,
         size: formData.size,
         geolocation: geoLocation || undefined,
+        syncStatus: "pending",
       });
       if (updated) {
         setItem(updated);
@@ -282,6 +284,18 @@ export default function ImageDetailPage() {
               <Badge variant="secondary" className="text-xs gap-1">
                 <Database className="h-3 w-3" />
                 Vectorisé
+              </Badge>
+            )}
+            {item.syncStatus === "pending" && (
+              <Badge variant="outline" className="text-xs gap-1 text-amber-600 border-amber-300">
+                <Clock className="h-3 w-3" />
+                En attente
+              </Badge>
+            )}
+            {item.syncStatus === "synced" && (
+              <Badge variant="secondary" className="text-xs gap-1 text-emerald-600 border-emerald-300">
+                <CheckCircle2 className="h-3 w-3" />
+                Synchronisé
               </Badge>
             )}
           </div>
