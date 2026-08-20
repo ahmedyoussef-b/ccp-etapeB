@@ -5,16 +5,6 @@ let initPromise: Promise<Database> | null = null;
 
 const DB_NAME = 'nexaflow-client.sqlite';
 
-/**
- * Ouvre la base de données locale en privilégiant le stockage persistant OPFS.
- *
- * `OpfsDb` (VFS "opfs") nécessite l'isolation de l'origine (en-têtes COOP/COEP
- * et SharedArrayBuffer). En son absence il n'est pas installé et la base
- * précédente retombait silencieusement sur une base en mémoire (`DB`), ce qui
- * faisait disparaître les données au rechargement. On utilise donc le VFS
- * OPFS SAH Pool (`installOpfsSAHPoolVfs`) comme repli persistant : il écrit
- * dans l'OPFS sans exiger d'isolation de l'origine.
- */
 async function openPersistentDatabase(sqlite3: Sqlite3Static): Promise<Database> {
   const oo1 = sqlite3.oo1;
 
@@ -22,7 +12,7 @@ async function openPersistentDatabase(sqlite3: Sqlite3Static): Promise<Database>
     try {
       return new oo1.OpfsDb(DB_NAME);
     } catch (error) {
-      console.warn('[SQLite] OpfsDb indisponible, repli sur OPFS SAH Pool.', error);
+      console.warn('[SQLite] OpfsDb indisponible, repli sur IndexedDB (SqlJsDb).', error);
     }
   }
 
@@ -33,17 +23,17 @@ async function openPersistentDatabase(sqlite3: Sqlite3Static): Promise<Database>
         return new poolUtil.OpfsSAHPoolDb(DB_NAME);
       }
     } catch (error) {
-      console.warn('[SQLite] OPFS SAH Pool indisponible, repli sur stockage non persistant.', error);
+      console.warn('[SQLite] OPFS SAH Pool indisponible, repli sur IndexedDB (SqlJsDb).', error);
     }
   }
 
-  if (oo1 && typeof oo1.DB === 'function') {
-    console.warn('[SQLite] Aucun stockage OPFS persistant disponible : repli sur base en mémoire (les données ne survivront pas au rechargement).');
-    return new oo1.DB(DB_NAME);
+  if (oo1 && typeof oo1.JsStorageDb === 'function') {
+    console.warn('[SQLite] Aucun stockage OPFS persistant disponible : repli sur localStorage (les données survivront au rechargement dans la limite de stockage du navigateur).');
+    return new oo1.JsStorageDb('local');
   }
 
-  console.warn('[SQLite] Repli sur JsStorageDb (localStorage).');
-  return new oo1.JsStorageDb('local');
+  console.warn('[SQLite] Repli sur base en mémoire (les données ne survivront pas au rechargement).');
+  return new oo1.DB(DB_NAME);
 }
 
 export async function initSqlite(): Promise<Database> {
@@ -60,7 +50,7 @@ export async function initSqlite(): Promise<Database> {
 
     db = await openPersistentDatabase(sqlite3Instance);
     initSchema(db!);
-    console.log('[SQLite] Base de données locale initialisée (persistance OPFS)');
+    console.log('[SQLite] Base de données locale initialisée');
     return db as Database;
   })();
 
