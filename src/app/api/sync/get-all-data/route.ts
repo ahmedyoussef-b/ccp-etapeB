@@ -1,3 +1,4 @@
+//src/app/api/sync/get-all-data/route.ts
 import { NextResponse } from "next/server";
 import type { PrismaClient } from "@prisma/client";
 

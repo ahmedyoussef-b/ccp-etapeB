@@ -30,6 +30,7 @@ import {
   Download,
   type LucideIcon,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 import { getLocalTree, deleteLocalTreeNode, addFolder, updateFolder, addFile } from "@/lib/db/tree";
 import { clientEngine, initSqlite, run, simpleTokenEmbedding } from "@/lib/client-engine";
@@ -117,6 +118,8 @@ function TreeNodeItem({
   onEdit,
   onPreview,
   onVectorize,
+  onDownload,
+  vectorizedPaths,
   vectorizing = false,
   expandAll = false,
 }: {
@@ -129,6 +132,8 @@ function TreeNodeItem({
   onEdit?: (node: LocalNode) => void;
   onPreview?: (node: WebTreeNode | LocalNode) => void;
   onVectorize?: (node: LocalNode, path: string) => void;
+  onDownload?: (node: WebTreeNode | LocalNode) => void;
+  vectorizedPaths?: Set<string>;
   vectorizing?: boolean;
   expandAll?: boolean;
 }) {
@@ -138,6 +143,28 @@ function TreeNodeItem({
   const nodeType = isLocal ? node.type : node.type;
   const Icon = iconMap[nodeType] ?? FileText;
   const nodePath = path ? `${path}/${node.name}` : node.name;
+
+  const isFileNode = nodeType === "file" || nodeType === "item";
+  const hasLocalContent = isLocal && nodeType === "file" && node.content !== undefined && node.content !== null;
+
+  const isVectorized = (() => {
+    if (!vectorizedPaths || !isLocal) return false;
+    const localNode = node as LocalNode;
+    if (localNode.type === "file") {
+      return vectorizedPaths.has(nodePath);
+    }
+    return localNode.children.some((child) => {
+      const childPath = `${nodePath}/${child.name}`;
+      if (vectorizedPaths.has(childPath)) return true;
+      if ((child as LocalNode).children) {
+        return (child as LocalNode).children.some((grandChild) => {
+          const grandPath = `${childPath}/${grandChild.name}`;
+          return vectorizedPaths.has(grandPath);
+        });
+      }
+      return false;
+    });
+  })();
 
   const getBadgeVariant = () => {
     if (isLocal) {
@@ -154,9 +181,6 @@ function TreeNodeItem({
     }
     return node.type;
   };
-
-  const isFileNode = nodeType === "file" || nodeType === "item";
-  const hasLocalContent = isLocal && nodeType === "file" && node.content !== undefined && node.content !== null;
 
   return (
     <div
@@ -200,6 +224,20 @@ function TreeNodeItem({
                 <Plus className="h-3 w-3" />
               </Button>
             )}
+            {!isLocal && (nodeType === "directory" || nodeType === "folder" || nodeType === "root") && onDownload && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-green-500"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDownload(node);
+                }}
+                title="Télécharger vers local"
+              >
+                <Download className="h-3 w-3" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -238,21 +276,22 @@ function TreeNodeItem({
                 <FileJson className="h-3 w-3" />
               </Button>
             )}
-             {isFileNode && onVectorize && (
-               <Button
-                 variant="ghost"
-                 size="icon"
-                 className="h-6 w-6 text-blue-500"
-                 disabled={vectorizing}
-                 onClick={(e) => {
-                   e.stopPropagation();
-                   onVectorize?.(node as LocalNode, nodePath);
-                 }}
-                 title="Vectoriser"
-               >
-                 <Database className="h-3 w-3" />
-               </Button>
-             )}
+              {isFileNode && onVectorize && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-6 w-6 ${isVectorized ? 'text-green-500' : 'text-blue-500'}`}
+                  disabled={vectorizing}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onVectorize?.(node as LocalNode, nodePath);
+                  }}
+                  title={isVectorized ? 'Déjà vectorisé' : 'Vectoriser'}
+                >
+                  <Database className="h-3 w-3" />
+                  {isVectorized && <span className="absolute h-1.5 w-1.5 rounded-full bg-green-500 -top-0.5 -right-0.5" />}
+                </Button>
+              )}
              {isFileNode && onPreview && (
                <Button
                  variant="ghost"
@@ -273,21 +312,23 @@ function TreeNodeItem({
 
        {expanded && node.children.length > 0 && (
          <div>
-           {node.children.map((child) => (
-             <TreeNodeItem
-               key={child.id}
-               node={child}
-               depth={depth + 1}
-                path={nodePath}
-                onDelete={onDelete}
-                onAdd={onAdd}
-                onRename={onRename}
-                onEdit={onEdit}
-                onPreview={onPreview}
-                onVectorize={onVectorize}
-                expandAll={expandAll}
-              />
-          ))}
+            {node.children.map((child) => (
+               <TreeNodeItem
+                 key={child.id}
+                 node={child}
+                 depth={depth + 1}
+                  path={nodePath}
+                  onDelete={onDelete}
+                  onAdd={onAdd}
+                  onRename={onRename}
+                  onEdit={onEdit}
+                  onPreview={onPreview}
+                  onVectorize={onVectorize}
+                  onDownload={onDownload}
+                  vectorizedPaths={vectorizedPaths}
+                  expandAll={expandAll}
+                />
+           ))}
         </div>
       )}
     </div>
@@ -320,6 +361,36 @@ export default function StructureBDDPage() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [activeView, setActiveView] = useState<"web" | "local" | "vector">("web");
+  const [showOnlyVectorized, setShowOnlyVectorized] = useState(false);
+  const [vectorizedPaths, setVectorizedPaths] = useState<Set<string>>(new Set());
+  const [vectorizedCount, setVectorizedCount] = useState(0);
+
+  const handleDownloadDirectory = async (node: WebTreeNode | LocalNode) => {
+    if (!("id" in node) || typeof node.id === "string") return;
+    const numericId = Number(node.id);
+    if (isNaN(numericId)) return;
+
+    try {
+      const response = await fetch("/api/sync/download-directory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ directoryId: numericId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      await loadTrees();
+      toast.success(`✅ "${node.name}" téléchargé (${data.count} éléments)`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Download failed";
+      console.error("[StructureBDD] download directory error", msg);
+      toast.error(`Échec du téléchargement de "${node.name}"`);
+    }
+  };
 
   const loadTrees = useCallback(async () => {
     console.log("[StructureBDD] loadTrees start");
@@ -364,7 +435,19 @@ export default function StructureBDDPage() {
     const vectorPromise = enginePromise
       .then(() => clientEngine.getAllVectorDocuments())
       .then((docs) => {
-        console.log("[StructureBDD] vector docs loaded", { count: docs.length });
+        const paths = new Set<string>();
+        const count = docs.length;
+        for (const doc of docs) {
+          if (doc.relativePath) {
+            paths.add(doc.relativePath);
+          }
+          if (doc.originalPath) {
+            paths.add(doc.originalPath);
+          }
+        }
+        setVectorizedPaths(paths);
+        setVectorizedCount(count);
+        console.log("[StructureBDD] vector docs loaded", { count });
         setVectorDocs(docs.map((d) => ({ id: d.id, name: d.name, chunks: d.chunks })));
         return docs;
       })
@@ -898,6 +981,32 @@ export default function StructureBDDPage() {
     return prune(nodes);
   };
 
+  const filterLocalTreeByVectorized = (nodes: LocalNode[], parentPath = ""): LocalNode[] => {
+    const prune = (items: LocalNode[]): LocalNode[] => {
+      const result: LocalNode[] = [];
+      for (const node of items) {
+        const nodePath = parentPath ? `${parentPath}/${node.name}` : node.name;
+        const isVectorized = vectorizedPaths.has(nodePath);
+        const filteredChildren = prune(node.children);
+
+        if (node.type === "file") {
+          if (!showOnlyVectorized || isVectorized) {
+            result.push(node);
+          }
+        } else if (node.type === "folder") {
+          if (!showOnlyVectorized || filteredChildren.length > 0) {
+            result.push({
+              ...node,
+              children: filteredChildren,
+            });
+          }
+        }
+      }
+      return result;
+    };
+    return prune(nodes);
+  };
+
   const handlePreviewFile = async (node: WebTreeNode | LocalNode) => {
     const isLocal = "path" in node;
 
@@ -1091,7 +1200,8 @@ export default function StructureBDDPage() {
   };
 
   const visibleWebTree = filterWebTree(webTree);
-  const visibleLocalTree = filterLocalTree(localTree);
+  const baseLocalTree = filterLocalTree(localTree);
+  const visibleLocalTree = showOnlyVectorized ? filterLocalTreeByVectorized(baseLocalTree) : baseLocalTree;
   const visibleVectorTree = filterLocalTree(vectorTree);
   const totalNodes = (nodes: (WebTreeNode | LocalNode)[]): number =>
     nodes.reduce((acc, node) => acc + 1 + totalNodes(node.children), 0);
@@ -1128,6 +1238,7 @@ export default function StructureBDDPage() {
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Vue active : {activeView === "web" ? "Hub / PostgreSQL" : activeView === "local" ? "Spoke / SQLite OPFS" : "Spoke / IndexedDB"} · {totalActiveNodes} nœuds
+            {activeView === "local" && showOnlyVectorized && <span className="text-blue-500"> · {vectorizedCount} vectorisés</span>}
             {activeError && <span className="text-red-500"> · Erreur: {activeError}</span>}
           </p>
         </div>
@@ -1168,6 +1279,21 @@ export default function StructureBDDPage() {
               <Badge variant="secondary" className="text-xs">
                 {totalActiveNodes} nœuds
               </Badge>
+              {activeView === "local" && (
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="vectorized-filter"
+                    checked={showOnlyVectorized}
+                    onCheckedChange={setShowOnlyVectorized}
+                  />
+                  <label
+                    htmlFor="vectorized-filter"
+                    className="text-xs text-muted-foreground cursor-pointer select-none"
+                  >
+                    Vectorisés seulement ({vectorizedCount})
+                  </label>
+                </div>
+              )}
               {activeView === "web" && (
                 <Button
                   variant="ghost"
@@ -1224,21 +1350,23 @@ export default function StructureBDDPage() {
               </p>
             ) : (
               activeTree.map((node) => (
-                <TreeNodeItem
-                  key={node.id}
-                  node={node}
-                  depth={0}
-                   onDelete={activeView === "web" ? handleDeleteWeb : activeView === "local" ? handleDeleteLocal : activeView === "vector" ? handleDeleteVectorNode : undefined}
-                   onAdd={activeView === "web" ? handleAddWeb : activeView === "local" ? handleAddLocal : undefined}
-                   onRename={activeView === "web" ? handleRenameWeb : activeView === "local" ? handleRenameLocal : undefined}
-                   onEdit={activeView === "local" ? handleEditJson : undefined}
-                   onPreview={handlePreviewFile}
-                   onVectorize={activeView === "local" ? handleVectorizeLocalFile : undefined}
-                   vectorizing={vectorizing}
-                   expandAll={activeView === "vector"}
+              <TreeNodeItem
+                key={node.id}
+                node={node}
+                depth={0}
+                 onDelete={activeView === "web" ? handleDeleteWeb : activeView === "local" ? handleDeleteLocal : activeView === "vector" ? handleDeleteVectorNode : undefined}
+                 onAdd={activeView === "web" ? handleAddWeb : activeView === "local" ? handleAddLocal : undefined}
+                 onRename={activeView === "web" ? handleRenameWeb : activeView === "local" ? handleRenameLocal : undefined}
+                 onEdit={activeView === "local" ? handleEditJson : undefined}
+                 onPreview={handlePreviewFile}
+                 onVectorize={activeView === "local" ? handleVectorizeLocalFile : undefined}
+                 onDownload={activeView === "web" ? handleDownloadDirectory : undefined}
+                 vectorizedPaths={vectorizedPaths}
+                 vectorizing={vectorizing}
+                 expandAll={activeView === "vector"}
                 />
-              ))
-            )}
+               ))
+             )}
           </div>
           <div className="p-3 border-t border-border flex flex-col gap-2">
             {activeView === "web" && (

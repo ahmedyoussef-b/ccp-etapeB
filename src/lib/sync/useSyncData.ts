@@ -9,8 +9,9 @@ import {
 } from '@/lib/db/db';
 import type { ApiNode, ApiFolderNode, ApiFileNode } from './types';
 
-async function importTree(nodes: ApiNode[], parentId: number | null): Promise<void> {
-  for (const node of nodes) {
+export async function importTree(nodes: ApiNode | ApiNode[], parentId: number | null): Promise<void> {
+  const list = Array.isArray(nodes) ? nodes : [nodes];
+  for (const node of list) {
     if (node.type === 'folder' || node.type === 'root' || node.type === 'directory') {
       await importFolder(node as ApiFolderNode, parentId);
     } else if (node.type === 'file') {
