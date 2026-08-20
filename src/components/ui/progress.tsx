@@ -2,7 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const progressVariants = cva(
-  "relative h-2 w-full overflow-hidden rounded-full bg-primary/20",
+  "relative h-2 w-full overflow-hidden rounded-full bg-primary/20 shadow-3d",
   {
     variants: {
       variant: {

@@ -4,10 +4,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, HelpCircle, FileText, MessageSquare, BookOpen, Image, Database, Video, BarChart3, Users, ClipboardList, Bot, Sun, Moon, GitBranch, CheckCircle2, History, Sparkles, AlertTriangle, Monitor } from "lucide-react";
+import { LayoutDashboard, HelpCircle, FileText, MessageSquare, BookOpen, Image, Database, Video, BarChart3, Users, ClipboardList, Bot, GitBranch, CheckCircle2, History, Sparkles, AlertTriangle, Monitor } from "lucide-react";
 import { NexaFlowLogo } from "@/components/brand/nexaflow-logo";
-import { useTheme } from "@/components/theme-provider";
-import { Button } from "@/components/ui/button";
 
 // ✅ Détection de l'environnement
 const isProduction = process.env.NODE_ENV === 'production';
@@ -40,7 +38,6 @@ const navItems = [
 
 export function DashboardSidebar({ role }: { role: "admin" | "chef-de-quart" | "chef-de-bloc" | "rondier" }) {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
 
   // ✅ Filtrer : rôle + masquer les éléments devOnly en production
   const items = navItems.filter((item) => {
@@ -54,7 +51,7 @@ export function DashboardSidebar({ role }: { role: "admin" | "chef-de-quart" | "
   const isActive = (href: string) => pathname === href || (href !== "/admin" && href !== "/chef-de-quart" && href !== "/chef-de-bloc" && href !== "/rondier" && pathname.startsWith(href));
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-border bg-sidebar">
+    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-sidebar">
       <div className="flex h-16 items-center gap-3 border-b border-border px-5">
         <NexaFlowLogo className="h-9 w-9" />
         <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">NexaFlow</span>
@@ -65,7 +62,7 @@ export function DashboardSidebar({ role }: { role: "admin" | "chef-de-quart" | "
         )}
       </div>
 
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {items.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -94,15 +91,6 @@ export function DashboardSidebar({ role }: { role: "admin" | "chef-de-quart" | "
       </nav>
 
       <div className="p-3 border-t border-border">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start gap-2 rounded-xl"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        >
-          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          {theme === "dark" ? "Mode clair" : "Mode sombre"}
-        </Button>
         <div className="mt-2 text-xs text-muted-foreground/50 px-2 text-center">
           {isProduction ? "🔒 Production" : "🔧 Développement"} · v1.0
         </div>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Pencil, Trash2, RefreshCw, Upload } from "lucide-react";
+import { Pencil, Trash2, RefreshCw, Upload, Loader2 } from "lucide-react";
 import type { QAPairWithRegistry } from "@/lib/qr/client-store";
 import { csrfFetch } from "@/lib/procedures/csrf-fetch"; // ✅ Ajout de l'import
 import { clientEngine } from "@/lib/client-engine";
@@ -30,6 +30,7 @@ export default function QAPage() {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [exportFilename, setExportFilename] = useState("");
   const lastQuestionRef = useRef("");
@@ -57,8 +58,8 @@ export default function QAPage() {
 
   const handleAdd = async () => {
     if (!question.trim() || !answer.trim()) return;
+    setIsAdding(true);
     try {
-      // ✅ REMPLACÉ : fetch → csrfFetch
       const res = await csrfFetch("/api/qr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -72,6 +73,8 @@ export default function QAPage() {
     } catch (err: unknown) {
       console.error("[Q/R] handleAdd error:", err);
       toast.error("Erreur lors de l'ajout");
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -286,8 +289,15 @@ export default function QAPage() {
                 language="fr-FR"
               />
               <div className="flex gap-3 pt-1">
-                <Button type="button" className="flex-1" onClick={handleSubmit}>
-                  {editingId !== null ? "Modifier" : "Ajouter"}
+                <Button type="button" className="flex-1" onClick={handleSubmit} disabled={isAdding}>
+                  {isAdding ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      {editingId !== null ? "Modification..." : "Ajout..."}
+                    </>
+                  ) : (
+                    editingId !== null ? "Modifier" : "Ajouter"
+                  )}
                 </Button>
                 {editingId !== null && (
                   <Button

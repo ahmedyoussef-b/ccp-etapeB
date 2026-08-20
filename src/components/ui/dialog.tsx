@@ -92,7 +92,7 @@ function DialogContent({ className, children, ...props }: DialogContentProps) {
     <DialogPortal>
       <DialogBackdrop />
       <DialogPopup className={cn("overflow-hidden", className)} {...props}>
-        <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl">
+        <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl shadow-3d-lg transform-style-3d depth-2">
           {children}
         </div>
       </DialogPopup>

@@ -655,21 +655,31 @@ export default function StructureBDDPage() {
     }
   };
 
+  const removeNodeById = (nodes: LocalNode[] | WebTreeNode[], id: string | number): LocalNode[] | WebTreeNode[] => {
+    return nodes
+      .filter((node) => node.id !== id)
+      .map((node) => ({
+        ...node,
+        children: removeNodeById(node.children as LocalNode[] | WebTreeNode[], id),
+      })) as LocalNode[] | WebTreeNode[];
+  };
+
   const handleDeleteWeb = async (node: WebTreeNode | LocalNode) => {
     const confirmed = window.confirm(`Supprimer "${node.name}" ?`);
     if (!confirmed) return;
     console.log("[StructureBDD] delete web", { id: node.id, name: node.name });
 
+    setWebTree((prev) => removeNodeById(prev, node.id) as WebTreeNode[]);
     try {
       const res = await fetch(`/api/tree/nodes/${node.id}`, { method: "DELETE" });
       console.log("[StructureBDD] delete web status", res.status);
       if (!res.ok) throw new Error("Failed to delete node");
-      await loadTrees();
       toast.success("Nœud supprimé");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Delete failed";
       console.error("[StructureBDD] delete web error", msg);
       setWebError(msg);
+      await loadTrees();
       toast.error("Erreur lors de la suppression");
     }
   };
@@ -680,19 +690,20 @@ export default function StructureBDDPage() {
     if (!confirmed) return;
     console.log("[StructureBDD] delete local", { id: node.id, name: node.name });
 
+    setLocalTree((prev) => removeNodeById(prev, node.id) as LocalNode[]);
     try {
       const idStr = node.id as string;
       const numericId = parseInt(idStr.replace(/^(folder|file)-/, ""), 10);
       if (!isNaN(numericId)) {
         await deleteLocalTreeNode(numericId);
         console.log("[StructureBDD] delete local done", { numericId });
-        await loadTrees();
         toast.success("Nœud supprimé");
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Delete failed";
       console.error("[StructureBDD] delete local error", msg);
       setLocalError(msg);
+      await loadTrees();
       toast.error("Erreur lors de la suppression");
     }
   };
@@ -1026,19 +1037,21 @@ export default function StructureBDDPage() {
     if (!confirmed) return;
     console.log("[StructureBDD] delete vector node", { id: localNode.id, name: localNode.name });
 
+    setVectorTree((prev) => removeNodeById(prev, localNode.id) as LocalNode[]);
+    setVectorDocs((prev) => prev.filter((d) => d.id !== localNode.docId));
     try {
       if (localNode.docId) {
         await clientEngine.deleteVectorDocument(localNode.docId);
       }
       await clientEngine.deleteVectorTreeNode(localNode.id);
       console.log("[StructureBDD] delete vector node done", { id: localNode.id });
-      await loadTrees();
       toast.success("Nœud vectoriel supprimé");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Delete failed";
       console.error("[StructureBDD] delete vector node error", msg);
+      await loadTrees();
       toast.error("Erreur lors de la suppression");
-     }
+    }
   };
 
   const collectFileNodes = (nodes: LocalNode[], path = ""): { node: LocalNode; path: string }[] => {
