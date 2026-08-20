@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { prisma } from "../src/lib/prisma";
+import { hashPassword } from "../src/lib/auth/password";
 import fs from "fs";
 import path from "path";
 
@@ -128,8 +129,49 @@ async function main() {
 
   await seedQA();
   await seedProcedures();
+  await seedUsers();
 
   console.log("Seed completed successfully");
+}
+
+// Mapping app Role (kebab-case) -> Prisma Role (snake_case)
+const APP_ROLE_TO_PRISMA: Record<string, "admin" | "superviseur" | "chef_de_bloc" | "chef_de_quart" | "rondier"> = {
+  admin: "admin",
+  superviseur: "superviseur",
+  "chef-de-bloc": "chef_de_bloc",
+  "chef-de-quart": "chef_de_quart",
+  rondier: "rondier",
+};
+
+async function seedUsers() {
+  console.log("[seed] Création des utilisateurs de démo...");
+  const demoUsers = [
+    { email: "admin@nexaflow.com", name: "Administrateur", role: "admin" as const },
+    { email: "superviseur@nexaflow.com", name: "Superviseur", role: "superviseur" as const },
+    { email: "chef-bloc@nexaflow.com", name: "Chef de bloc", role: "chef-de-bloc" as const },
+    { email: "chef-quart@nexaflow.com", name: "Chef de quart", role: "chef-de-quart" as const },
+    { email: "rondier@nexaflow.com", name: "Rondier", role: "rondier" as const },
+  ];
+
+  const password = process.env.AUTH_DEMO_PASSWORD || "password123";
+  const passwordHash = await hashPassword(password);
+
+  for (const u of demoUsers) {
+    const existing = await prisma.user.findUnique({ where: { email: u.email } });
+    if (existing) {
+      console.log(`[seed] Utilisateur déjà présent: ${u.email}`);
+      continue;
+    }
+    await prisma.user.create({
+      data: {
+        email: u.email,
+        name: u.name,
+        role: APP_ROLE_TO_PRISMA[u.role],
+        passwordHash,
+      },
+    });
+    console.log(`[seed] Utilisateur créé: ${u.email} (${u.role})`);
+  }
 }
 
 async function seedQA() {

@@ -1,39 +1,85 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { signIn, getSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { NexaFlowLogo } from "@/components/brand/nexaflow-logo";
+import { Role } from "@/lib/auth/roles";
 
-export default function LoginPage() {
+const ROLE_HOME: Record<Role, string> = {
+  admin: "/admin",
+  superviseur: "/admin",
+  "chef-de-bloc": "/chef-de-bloc",
+  "chef-de-quart": "/chef-de-quart",
+  rondier: "/rondier",
+};
+
+function setLegacySession(role: Role, email: string, id: string) {
+  if (typeof window === "undefined") return;
+  const maxAge = 60 * 60 * 24 * 7;
+  try {
+    window.sessionStorage.setItem("dashboardRole", role);
+    window.sessionStorage.setItem("dashboardUserId", id);
+    window.sessionStorage.setItem("dashboardUserEmail", email);
+  } catch {}
+  document.cookie = `role=${role}; path=/; max-age=${maxAge}`;
+  document.cookie = `userId=${id}; path=/; max-age=${maxAge}`;
+  document.cookie = `userEmail=${encodeURIComponent(email)}; path=/; max-age=${maxAge}`;
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
-    const email = (form.querySelector("#email") as HTMLInputElement)?.value || "";
-    const lower = email.toLowerCase();
-    const role = lower.includes("admin")
-      ? "admin"
-      : lower.includes("chef-de-quart")
-        ? "chef-de-quart"
-        : lower.includes("chef-de-bloc")
-          ? "chef-de-bloc"
-          : "rondier";
-    if (typeof window !== "undefined") {
-      const userId = `user_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      sessionStorage.setItem("dashboardRole", role);
-      sessionStorage.setItem("dashboardUserId", userId);
-      sessionStorage.setItem("dashboardUserEmail", email);
-      document.cookie = `role=${role}; path=/; max-age=${60 * 60 * 24 * 7}`;
-      document.cookie = `userId=${userId}; path=/; max-age=${60 * 60 * 24 * 7}`;
-      document.cookie = `userEmail=${encodeURIComponent(email)}; path=/; max-age=${60 * 60 * 24 * 7}`;
+    setError(null);
+    setIsLoading(true);
+
+    console.log("[NexaFlow][Login] Tentative de connexion:", email);
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        console.error("[NexaFlow][Login] Erreur:", result.error);
+        setError("Email ou mot de passe incorrect");
+        setIsLoading(false);
+        return;
+      }
+
+      const session = await getSession();
+      const role = (session?.user?.role ?? "rondier") as Role;
+      const id = session?.user?.id ?? `user_${Date.now()}`;
+      console.log("[NexaFlow][Login] Connexion réussie", { email, role });
+
+      setLegacySession(role, email, id);
+
+      const callbackUrl = searchParams.get("callbackUrl");
+      const target =
+        callbackUrl && callbackUrl.startsWith("/")
+          ? callbackUrl
+          : ROLE_HOME[role];
+
+      router.push(target);
+      router.refresh();
+    } catch (err) {
+      console.error("[NexaFlow][Login] Erreur inattendue:", err);
+      setError("Une erreur est survenue lors de la connexion");
+      setIsLoading(false);
     }
-      console.log("[Login] Connexion réussie", { email, role });
-    const route = role === "admin" ? "/admin" : `/${role}`;
-    router.push(route);
   };
 
   return (
@@ -50,6 +96,12 @@ export default function LoginPage() {
             </p>
           </div>
 
+          {error && (
+            <div className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+              {error}
+            </div>
+          )}
+
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground" htmlFor="email">
@@ -58,8 +110,11 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="vous@exemple.com"
+                placeholder="email@nexaflow.com"
                 autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
                 className="h-11 rounded-xl border-border/60 bg-background/50"
               />
             </div>
@@ -73,6 +128,9 @@ export default function LoginPage() {
                 type="password"
                 placeholder="••••••••"
                 autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
                 className="h-11 rounded-xl border-border/60 bg-background/50"
               />
             </div>
@@ -87,9 +145,13 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            <Button type="submit" className="w-full h-11 rounded-xl text-base font-medium shadow-lg shadow-primary/20">
-              Se connecter
+            <Button type="submit" disabled={isLoading} className="w-full h-11 rounded-xl text-base font-medium shadow-lg shadow-primary/20">
+              {isLoading ? "Connexion..." : "Se connecter"}
             </Button>
+
+            <p className="text-center text-xs text-muted-foreground">
+              Démo : admin@nexaflow.com / password123
+            </p>
 
             <div className="relative py-2">
               <div className="absolute inset-0 flex items-center">
@@ -119,5 +181,13 @@ export default function LoginPage() {
         </Card>
       </section>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Chargement…</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

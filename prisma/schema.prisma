@@ -195,3 +195,35 @@ model IotActuatorState {
   createdAt  DateTime @default(now())
 }
 
+enum Role {
+  admin
+  superviseur
+  chef_de_bloc
+  chef_de_quart
+  rondier
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(rondier)
+  teamId       String?  @map("team_id")
+  team         Team?    @relation(fields: [teamId], references: [id])
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  members   User[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("teams")
+}
+

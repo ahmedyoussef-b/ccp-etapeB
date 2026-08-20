@@ -36,7 +36,7 @@ const navItems = [
   { href: "/ai-hub", label: "Centre IA", icon: Sparkles, roles: ["admin", "chef-de-quart", "chef-de-bloc", "rondier"] },
 ];
 
-export function DashboardSidebar({ role }: { role: "admin" | "chef-de-quart" | "chef-de-bloc" | "rondier" }) {
+export function DashboardSidebar({ role }: { role: "admin" | "superviseur" | "chef-de-quart" | "chef-de-bloc" | "rondier" }) {
   const pathname = usePathname();
 
   // ✅ Filtrer : rôle + masquer les éléments devOnly en production

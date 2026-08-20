@@ -1,15 +1,25 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { Bell, LogOut, User, Sun, Moon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/theme-provider";
+import { useSession } from "@/hooks/useSession";
 
 export function DashboardTopNav() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const { user, role } = useSession();
+
+  const initials = (user?.name || user?.email || "UT")
+    .split(/[\s@.]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
@@ -35,13 +45,18 @@ export function DashboardTopNav() {
           <span className="sr-only">Profile</span>
         </Button>
 
-        <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted" onClick={() => router.push("/login")}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-xl hover:bg-muted"
+          onClick={() => signOut({ callbackUrl: "/login" })}
+        >
           <LogOut className="h-5 w-5 text-foreground/70" />
           <span className="sr-only">Déconnexion</span>
         </Button>
 
-        <Avatar className="h-9 w-9 rounded-xl border border-border">
-          <AvatarFallback className="rounded-xl text-xs font-semibold">AD</AvatarFallback>
+        <Avatar className="h-9 w-9 rounded-xl border border-border" title={role ?? undefined}>
+          <AvatarFallback className="rounded-xl text-xs font-semibold">{initials || "UT"}</AvatarFallback>
         </Avatar>
       </div>
     </header>
