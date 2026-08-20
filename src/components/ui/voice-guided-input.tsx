@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSpeech } from "@/lib/speech/use-speech";
+import { speechLogger } from "@/lib/speech/speech-logger";
 import { Mic, MicOff, Volume2, VolumeX, RefreshCw } from "lucide-react";
 
 type VoiceGuidedInputMode = "input" | "textarea";
@@ -57,6 +58,7 @@ export function VoiceGuidedInput({
 
     guidanceTimerRef.current = setTimeout(() => {
       speak(guidance);
+      speechLogger.trace.guidanceSpoken(guidance);
       hasSpokenGuidanceRef.current = true;
     }, 800);
 
@@ -97,15 +99,17 @@ export function VoiceGuidedInput({
     if (!isListening) {
       setInterimText("");
     }
+    speechLogger.info("userAction", { action: "micClick", isListening, label });
     toggleListening();
-  }, [isListening, toggleListening]);
+  }, [isListening, toggleListening, label]);
 
   const handleSpeakClick = useCallback(() => {
     const textToRead = guidance && !value ? guidance : mergedText;
+    speechLogger.info("userAction", { action: "speakClick", hasText: !!textToRead.trim(), label });
     if (textToRead.trim()) {
       speak(textToRead.trim());
     }
-  }, [mergedText, guidance, value, speak]);
+  }, [mergedText, guidance, value, speak, label]);
 
   const handleReset = useCallback(() => {
     onChange("");

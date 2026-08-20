@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { speechLogger } from "@/lib/speech/speech-logger";
 
 interface UseSpeechOptions {
   language?: string;
@@ -116,6 +117,7 @@ export function useSpeech(
       setError(
         "La reconnaissance vocale n'est pas supportée par ce navigateur."
       );
+      speechLogger.error("recognitionNotSupported");
       return;
     }
 
@@ -134,10 +136,13 @@ export function useSpeech(
           interim += result[0].transcript;
         }
       }
-      setTranscript(finalTranscriptRef.current + interim);
+      const merged = finalTranscriptRef.current + interim;
+      speechLogger.trace.recognitionResult(merged, !interim, event.results[event.results.length - 1]?.[0]?.confidence);
+      setTranscript(merged);
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      speechLogger.trace.recognitionError(event.error, event.message);
       if (event.error === "no-speech") {
         setError("Aucun son détecté. Réessayez.");
       } else if (event.error === "audio-capture") {
@@ -148,6 +153,7 @@ export function useSpeech(
     };
 
     recognition.onend = () => {
+      speechLogger.trace.listeningStop("onend");
       setIsListening(false);
     };
 
@@ -155,6 +161,7 @@ export function useSpeech(
     recognitionRef.current = recognition;
     setIsListening(true);
     setError(null);
+    speechLogger.trace.listeningStart(language, continuous);
   }, [language, continuous, interimResults]);
 
   const stopListening = useCallback(() => {
@@ -163,9 +170,12 @@ export function useSpeech(
       recognitionRef.current = null;
     }
     setIsListening(false);
+    speechLogger.trace.listeningStop("manual");
   }, []);
 
   const toggleListening = useCallback(() => {
+    const next = !isListening;
+    speechLogger.trace.toggle(next);
     if (isListening) {
       stopListening();
     } else {
@@ -181,19 +191,25 @@ export function useSpeech(
         setError(
           "La synthèse vocale n'est pas supportée par ce navigateur."
         );
+        speechLogger.error("speechSynthesisNotSupported");
         return;
       }
 
       speechSynthesisRef.current.cancel();
+      speechLogger.trace.speakStart(text, language);
 
       const utterance = new SpeechSynthesisUtterance(text) as unknown as SpeechSynthesisUtteranceInstance;
       utterance.lang = language;
 
       utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        speechLogger.trace.speakEnd();
+      };
       utterance.onerror = () => {
         setIsSpeaking(false);
         setError("Erreur lors de la synthèse vocale.");
+        speechLogger.trace.speakError("utterance onerror");
       };
 
       speechSynthesisRef.current.speak(utterance);
