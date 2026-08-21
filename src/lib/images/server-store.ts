@@ -73,7 +73,7 @@ export function readItems(): MediaItem[] {
   return items;
 }
 
-function writeItem(item: MediaItem): void {
+function writeItem(item: MediaItem, options?: { preserveData?: boolean }): void {
   const itemDir = getItemDir(item);
   const metadataPath = path.join(itemDir, "metadata.json");
   const dataPath = path.join(itemDir, "data");
@@ -88,6 +88,8 @@ function writeItem(item: MediaItem): void {
   if (dataUrl) {
     const base64Data = dataUrl.replace(/^data:[^;]+;base64,/, "");
     fs.writeFileSync(dataPath, Buffer.from(base64Data, "base64"));
+  } else if (!options?.preserveData && fs.existsSync(dataPath)) {
+    fs.unlinkSync(dataPath);
   }
 }
 
@@ -248,14 +250,27 @@ export async function update(
     updatedAt: new Date().toISOString(),
   };
 
+  const oldItem = items[index];
+  const oldDir = getItemDir(oldItem);
+  const newDir = getItemDir(updatedItem);
+  const oldDataPath = path.join(oldDir, "data");
+
+  if (!updates.dataUrl && fs.existsSync(oldDataPath)) {
+    if (oldDir !== newDir) {
+      if (!fs.existsSync(newDir)) {
+        fs.mkdirSync(newDir, { recursive: true });
+      }
+      fs.copyFileSync(oldDataPath, path.join(newDir, "data"));
+    }
+  }
+
   if (updates.category || updates.title) {
-    const oldItem = items[index];
     if (oldItem.category !== updatedItem.category || oldItem.title !== updatedItem.title) {
       deleteItemDir(oldItem);
     }
   }
 
-  writeItem(updatedItem);
+  writeItem(updatedItem, { preserveData: !updates.dataUrl });
   console.log(`[ServerStore] update() - updated id=${id}`);
   return updatedItem;
 }
@@ -305,7 +320,7 @@ export async function bulkTag(ids: string[], tagsToAdd: string[]): Promise<boole
         item.tags = newTags;
         changed = true;
         affectedCount++;
-        writeItem(item);
+        writeItem(item, { preserveData: true });
       }
     }
   });
@@ -324,7 +339,7 @@ export async function markSynced(ids: string[]): Promise<boolean> {
   items.forEach((item) => {
     if (ids.includes(item.id) && item.syncStatus !== "synced") {
       item.syncStatus = "synced";
-      writeItem(item);
+      writeItem(item, { preserveData: true });
       changed = true;
     }
   });
@@ -345,3 +360,4 @@ export async function getCategories(): Promise<string[]> {
 function delay(ms = 30): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
