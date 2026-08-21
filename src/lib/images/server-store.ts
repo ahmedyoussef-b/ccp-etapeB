@@ -40,7 +40,7 @@ function getItemDir(item: MediaItem): string {
   return path.join(getMediaDir(), safeCategory, `${safeTitle}_${item.id}`);
 }
 
-function readItems(): MediaItem[] {
+export function readItems(): MediaItem[] {
   const mediaDir = getMediaDir();
   if (!fs.existsSync(mediaDir)) {
     return [];

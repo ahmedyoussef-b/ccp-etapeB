@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
+import { readItems } from "@/lib/images/server-store";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 interface TreeNodeWithChildren {
-  id: number;
+  id: number | string;
   name: string;
   type: string;
   metadata: string | null;
-  parentId: number | null;
+  parentId: number | string | null;
   order: number;
   createdAt: string;
   updatedAt: string;
@@ -22,7 +23,7 @@ export async function GET() {
       orderBy: { order: "asc" },
     });
 
-    const nodeMap = new Map<number, TreeNodeWithChildren>();
+    const nodeMap = new Map<number | string, TreeNodeWithChildren>();
     const roots: TreeNodeWithChildren[] = [];
 
     for (const node of nodes) {
@@ -43,7 +44,51 @@ export async function GET() {
       }
     }
 
-    const apiRoots = roots.find((node) => node.type === "root")?.children ?? roots;
+    const images = readItems();
+    const imagesByCategory = new Map<string, typeof images>();
+    for (const img of images) {
+      const cat = img.category || "sans-categorie";
+      if (!imagesByCategory.has(cat)) imagesByCategory.set(cat, []);
+      imagesByCategory.get(cat)!.push(img);
+    }
+
+    const attachImages = (nodes: TreeNodeWithChildren[]): TreeNodeWithChildren[] => {
+      return nodes.map((node) => {
+        if (node.type === "directory" || node.type === "folder") {
+          const matching = imagesByCategory.get(node.name) || [];
+          const imageChildren: TreeNodeWithChildren[] = matching.map((img) => ({
+            id: `image-${img.id}`,
+            name: img.title || img.id,
+            type: "image",
+            metadata: JSON.stringify({
+              id: img.id,
+              title: img.title,
+              category: img.category,
+              mimeType: img.mimeType,
+              size: img.size,
+              createdAt: img.createdAt,
+              updatedAt: img.updatedAt,
+            }),
+            parentId: node.id,
+            order: 0,
+            createdAt: img.createdAt,
+            updatedAt: img.updatedAt,
+            children: [],
+          }));
+          return {
+            ...node,
+            children: [...node.children, ...imageChildren],
+          };
+        }
+        return {
+          ...node,
+          children: attachImages(node.children),
+        };
+      });
+    };
+
+    const mergedRoots = attachImages(roots);
+    const apiRoots = mergedRoots.find((node) => node.type === "root")?.children ?? mergedRoots;
 
     return NextResponse.json({ roots: apiRoots });
   } catch (error) {

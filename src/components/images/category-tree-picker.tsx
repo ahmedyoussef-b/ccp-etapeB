@@ -4,15 +4,15 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ChevronRight, ChevronDown, FolderTree, Loader2 } from "lucide-react";
+import { ChevronRight, ChevronDown, FolderTree, Loader2, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 type WebTreeNode = {
-  id: number;
+  id: number | string;
   name: string;
   type: string;
   metadata: string | null;
-  parentId: number | null;
+  parentId: number | string | null;
   order: number;
   createdAt: string;
   updatedAt: string;
@@ -40,6 +40,7 @@ function TreeNodeItem({
   const isFolder = node.type === "directory" || node.type === "folder" || node.type === "root";
   const hasChildren = node.children.length > 0;
   const nodePath = `${node.name}`;
+  const isImage = node.type === "image";
 
   return (
     <div>
@@ -62,8 +63,15 @@ function TreeNodeItem({
         ) : (
           <span className="w-4 flex-shrink-0" />
         )}
-        <FolderTree className={`h-4 w-4 flex-shrink-0 ${isFolder ? "text-primary" : "text-muted-foreground"}`} />
+        {isImage ? (
+          <ImageIcon className={`h-4 w-4 flex-shrink-0 text-blue-500`} />
+        ) : (
+          <FolderTree className={`h-4 w-4 flex-shrink-0 ${isFolder ? "text-primary" : "text-muted-foreground"}`} />
+        )}
         <span className="text-sm font-medium text-foreground truncate">{node.name}</span>
+        {isImage && (
+          <span className="text-xs text-blue-500 ml-1">image</span>
+        )}
         {selectedPath === nodePath && (
           <span className="ml-auto text-xs text-primary font-medium">Sélectionné</span>
         )}

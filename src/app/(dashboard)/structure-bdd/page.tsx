@@ -28,6 +28,7 @@ import {
   Plus,
   Pencil,
   Download,
+  Image,
   type LucideIcon,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -103,16 +104,20 @@ function buildVectorTree(nodes: VectorTreeNode[]): LocalNode[] {
 }
 
 type WebTreeNode = {
-  id: number;
+  id: number | string;
   name: string;
   type: string;
   metadata: string | null;
-  parentId: number | null;
+  parentId: number | string | null;
   order: number;
   createdAt: string;
   updatedAt: string;
   children: WebTreeNode[];
 };
+
+function isImageNode(node: WebTreeNode | LocalNode | ImageNode): node is ImageNode {
+  return "path" in node && (node as { type: string }).type === "image";
+}
 
 const iconMap: Record<string, LucideIcon> = {
   root: FolderTree,
@@ -122,6 +127,7 @@ const iconMap: Record<string, LucideIcon> = {
   directory: FolderTree,
   folder: FolderTree,
   file: FileJson,
+  image: Image,
 };
 
 function TreeNodeItem({
@@ -156,12 +162,13 @@ function TreeNodeItem({
   const [expanded, setExpanded] = useState(depth < 1 || expandAll);
   const [showActions, setShowActions] = useState(false);
   const isLocal = "path" in node;
-  const nodeType = isLocal ? node.type : node.type;
+  const isImage = isImageNode(node);
+  const nodeType = isImage ? "image" : isLocal ? node.type : node.type;
   const Icon = iconMap[nodeType] ?? FileText;
   const nodePath = path ? `${path}/${node.name}` : node.name;
 
-  const isFileNode = nodeType === "file" || nodeType === "item";
-  const hasLocalContent = isLocal && nodeType === "file" && node.content !== undefined && node.content !== null;
+  const isFileNode = nodeType === "file" || nodeType === "item" || isImage;
+  const hasLocalContent = isLocal && !isImage && nodeType === "file" && node.content !== undefined && node.content !== null;
 
   const isVectorized = (() => {
     if (!vectorizedPaths || !isLocal) return false;
@@ -183,6 +190,7 @@ function TreeNodeItem({
   })();
 
   const getBadgeVariant = () => {
+    if (isImage) return "default";
     if (isLocal) {
       if (nodeType === "folder") return "default";
       return "secondary";
@@ -191,6 +199,7 @@ function TreeNodeItem({
   };
 
   const getBadgeText = () => {
+    if (isImage) return "image";
     if (isLocal) {
       if (nodeType === "folder") return "dossier";
       return "fichier";
@@ -635,6 +644,7 @@ export default function StructureBDDPage() {
 
       while (queue.length > 0) {
         const { node, depth, parentId } = queue.shift()!;
+        if (node.type === "image") continue;
         flatNodes.push({
           remoteId: String(node.id),
           name: node.name,
@@ -647,7 +657,7 @@ export default function StructureBDDPage() {
         });
         if (node.children?.length) {
           for (const child of node.children) {
-            queue.push({ node: child, depth: depth + 1, parentId: node.id });
+            queue.push({ node: child, depth: depth + 1, parentId: node.id as number });
           }
         }
       }
@@ -724,6 +734,7 @@ export default function StructureBDDPage() {
 
       while (queue.length > 0) {
         const { node, depth, parentId } = queue.shift()!;
+        if (node.type === "image") continue;
         flatNodes.push({
           remoteId: String(node.id),
           name: node.name,
@@ -736,7 +747,7 @@ export default function StructureBDDPage() {
         });
         if (node.children?.length) {
           for (const child of node.children) {
-            queue.push({ node: child, depth: depth + 1, parentId: node.id });
+            queue.push({ node: child, depth: depth + 1, parentId: node.id as number });
           }
         }
       }
@@ -786,14 +797,22 @@ export default function StructureBDDPage() {
   const handleDeleteWeb = async (node: WebTreeNode | LocalNode) => {
     const confirmed = window.confirm(`Supprimer "${node.name}" ?`);
     if (!confirmed) return;
-    console.log("[StructureBDD] delete web", { id: node.id, name: node.name });
+    console.log("[StructureBDD] delete web", { id: node.id, name: node.name, type: isImageNode(node) ? "image" : "web" });
 
     setWebTree((prev) => removeNodeById(prev, node.id) as WebTreeNode[]);
     try {
-      const res = await fetch(`/api/tree/nodes/${node.id}`, { method: "DELETE" });
-      console.log("[StructureBDD] delete web status", res.status);
-      if (!res.ok) throw new Error("Failed to delete node");
-      toast.success("Nœud supprimé");
+      if (isImageNode(node)) {
+        const imageId = String(node.id).replace(/^image-/, "");
+        const res = await fetch(`/api/images/${imageId}`, { method: "DELETE" });
+        console.log("[StructureBDD] delete image status", res.status);
+        if (!res.ok) throw new Error("Failed to delete image");
+        toast.success("Image supprimée");
+      } else {
+        const res = await fetch(`/api/tree/nodes/${node.id}`, { method: "DELETE" });
+        console.log("[StructureBDD] delete web status", res.status);
+        if (!res.ok) throw new Error("Failed to delete node");
+        toast.success("Nœud supprimé");
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Delete failed";
       console.error("[StructureBDD] delete web error", msg);
@@ -893,6 +912,7 @@ export default function StructureBDDPage() {
   };
 
   const handleRenameWeb = async (node: WebTreeNode | LocalNode) => {
+    if (isImageNode(node)) return;
     setRenamingNode({ tree: "web", id: node.id, currentName: node.name });
     setRenameValue(node.name);
   };
@@ -1045,6 +1065,33 @@ export default function StructureBDDPage() {
 
   const handlePreviewFile = async (node: WebTreeNode | LocalNode) => {
     const isLocal = "path" in node;
+
+    // Image node in web tree: fetch full item from image API
+    if (isImageNode(node)) {
+      const imageId = String(node.id).replace(/^image-/, "");
+      setPreviewingFile({ name: node.name, tree: "web" });
+      setPreviewData(null);
+      setPreviewLoading(true);
+      try {
+        const res = await fetch(`/api/images/${imageId}`);
+        if (!res.ok) throw new Error("Failed to fetch image");
+        const item = await res.json();
+        setPreviewData({
+          content: item.dataUrl || "",
+          mimeType: item.mimeType || "image/jpeg",
+          name: item.title || node.name,
+          size: item.size || 0,
+          isText: false,
+          dataUrl: item.dataUrl || undefined,
+        });
+      } catch {
+        toast.error("Erreur lors du chargement de l'image");
+        setPreviewingFile(null);
+      } finally {
+        setPreviewLoading(false);
+      }
+      return;
+    }
 
     // BDD Web: read metadata directly from the node (no local file needed)
     if (!isLocal) {
