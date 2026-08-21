@@ -30,7 +30,7 @@ function getDbDir(): string {
   return resolvedDbDir;
 }
 
-function getMediaDir(): string {
+export function getMediaDir(): string {
   return path.join(getDbDir(), "media");
 }
 

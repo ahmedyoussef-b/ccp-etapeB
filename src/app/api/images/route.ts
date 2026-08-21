@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { getAllPaginated, create, getCategories, bulkDelete, bulkTag, markSynced } from "@/lib/images/server-store";
+import { getAllPaginated, create, getCategories, bulkDelete, bulkTag, markSynced, getMediaDir } from "@/lib/images/server-store";
 import fs from "fs";
 import path from "path";
 import type { MediaItem } from "@/lib/images/server-store";
 
-const MEDIA_DIR = path.join(process.cwd(), ".local-db", "images", "media");
+const MEDIA_DIR = getMediaDir();
 
 function resolveDataUrl(item: MediaItem): string {
   if (item.dataUrl) return item.dataUrl;

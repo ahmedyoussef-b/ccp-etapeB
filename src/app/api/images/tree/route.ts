@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { getMediaDir } from "@/lib/images/server-store";
 
 type ImageNode = {
   id: string;
@@ -13,7 +14,7 @@ type ImageNode = {
   updatedAt: string;
 };
 
-const MEDIA_DIR = path.join(process.cwd(), ".local-db", "images", "media");
+const MEDIA_DIR = getMediaDir();
 
 function scanDir(dirPath: string, depth = 0): ImageNode[] {
   if (!fs.existsSync(dirPath)) return [];
