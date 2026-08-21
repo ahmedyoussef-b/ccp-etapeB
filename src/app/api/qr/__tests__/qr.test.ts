@@ -69,7 +69,7 @@ vi.mock("@/lib/client-engine", () => {
       searchVector: vi.fn(),
       getAllVectorDocuments: vi.fn().mockResolvedValue([]),
       deleteVectorDocument: vi.fn(),
-      clearAllData: vi.fn(),
+      factoryReset: vi.fn(),
       getStats: vi.fn(),
       exportPairAsJson: vi.fn(),
       exportPairsAsJson: vi.fn(),

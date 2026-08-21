@@ -75,6 +75,10 @@ function openDb(): Promise<IDBDatabase> {
     };
   });
 
+  initPromise.catch(() => {
+    initPromise = null;
+  });
+
   return initPromise;
 }
 
@@ -282,10 +286,35 @@ export async function getAllVectorTreeNodes(): Promise<VectorTreeNode[]> {
   return promisifyRequest<VectorTreeNode[]>(request);
 }
 
+export async function getVectorTreeNodeById(id: string): Promise<VectorTreeNode | null> {
+  await openDb();
+  const treeStore = tx(TREE_STORE);
+  const result = await promisifyRequest<VectorTreeNode | undefined>(treeStore.get(id));
+  return result ?? null;
+}
+
+export async function countVectorTreeChildren(parentId: string): Promise<number> {
+  await openDb();
+  const treeStore = tx(TREE_STORE);
+  const index = treeStore.index('parentId');
+  const request = index.count(IDBKeyRange.only(parentId));
+  return promisifyRequest(request);
+}
+
 export async function deleteVectorTreeNode(id: string): Promise<void> {
   await openDb();
+  const node = await getVectorTreeNodeById(id);
   const treeStore = tx(TREE_STORE, 'readwrite');
   await promisifyRequest(treeStore.delete(id));
+
+  let currentParentId = node?.parentId ?? null;
+  while (currentParentId) {
+    const childrenCount = await countVectorTreeChildren(currentParentId);
+    if (childrenCount > 0) break;
+    const parentNode = await getVectorTreeNodeById(currentParentId);
+    await promisifyRequest(treeStore.delete(currentParentId));
+    currentParentId = parentNode?.parentId ?? null;
+  }
 }
 
 export async function clearVectorTree(): Promise<void> {

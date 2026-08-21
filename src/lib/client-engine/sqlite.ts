@@ -54,6 +54,10 @@ export async function initSqlite(): Promise<Database> {
     return db as Database;
   })();
 
+  initPromise.catch(() => {
+    initPromise = null;
+  });
+
   return initPromise;
 }
 

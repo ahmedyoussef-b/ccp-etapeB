@@ -131,6 +131,7 @@ interface ChatSessionRow {
 export class ClientEngine {
   private static instance: ClientEngine | null = null;
   private initialized = false;
+  private initStatus: ClientEngineStatus = { sqlite: false, vectorStore: false, jsonStore: false };
 
   static getInstance(): ClientEngine {
     if (!ClientEngine.instance) {
@@ -141,7 +142,7 @@ export class ClientEngine {
 
   async init(): Promise<ClientEngineStatus> {
     if (this.initialized) {
-      return { sqlite: true, vectorStore: true, jsonStore: true };
+      return { ...this.initStatus };
     }
 
     const status: ClientEngineStatus = { sqlite: false, vectorStore: false, jsonStore: false };
@@ -167,7 +168,8 @@ export class ClientEngine {
       console.error('[ClientEngine] JsonStore init failed:', error);
     }
 
-    this.initialized = true;
+    this.initialized = status.sqlite && status.vectorStore && status.jsonStore;
+    this.initStatus = status;
     console.log('[ClientEngine] Initialisation terminée:', status);
     return status;
   }
@@ -429,7 +431,14 @@ export class ClientEngine {
     await clearVectorTree();
   }
 
-  async clearAllData(): Promise<void> {
+  async resetLocalTreeOnly(): Promise<void> {
+    const db = getDb();
+    if (db) {
+      db.exec('DELETE FROM local_tree');
+    }
+  }
+
+  async factoryReset(): Promise<void> {
     const db = getDb();
     if (db) {
       db.exec('DELETE FROM qa_pairs');

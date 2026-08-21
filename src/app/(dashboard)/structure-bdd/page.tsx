@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ import {
   Pencil,
   Download,
   Image,
+  FolderOpen,
   type LucideIcon,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -130,7 +131,7 @@ const iconMap: Record<string, LucideIcon> = {
   image: Image,
 };
 
-function TreeNodeItem({
+const TreeNodeItem = memo(function TreeNodeItem({
   node,
   depth = 0,
   path = "",
@@ -170,23 +171,18 @@ function TreeNodeItem({
   const isFileNode = nodeType === "file" || nodeType === "item" || isImage;
   const hasLocalContent = isLocal && !isImage && nodeType === "file" && node.content !== undefined && node.content !== null;
 
-  const isVectorized = (() => {
-    if (!vectorizedPaths || !isLocal) return false;
-    const localNode = node as LocalNode;
-    if (localNode.type === "file") {
+  const isNodeVectorized = (n: LocalNode, basePath: string): boolean => {
+    if (!vectorizedPaths) return false;
+    const nodePath = basePath ? `${basePath}/${n.name}` : n.name;
+    if (n.type === "file") {
       return vectorizedPaths.has(nodePath);
     }
-    return localNode.children.some((child) => {
-      const childPath = `${nodePath}/${child.name}`;
-      if (vectorizedPaths.has(childPath)) return true;
-      if ((child as LocalNode).children) {
-        return (child as LocalNode).children.some((grandChild) => {
-          const grandPath = `${childPath}/${grandChild.name}`;
-          return vectorizedPaths.has(grandPath);
-        });
-      }
-      return false;
-    });
+    return n.children.some((child) => isNodeVectorized(child as LocalNode, nodePath));
+  };
+
+  const isVectorized = (() => {
+    if (!vectorizedPaths || !isLocal) return false;
+    return isNodeVectorized(node as LocalNode, path);
   })();
 
   const getBadgeVariant = () => {
@@ -356,9 +352,10 @@ function TreeNodeItem({
            ))}
         </div>
       )}
-    </div>
-  );
-}
+      </div>
+    );
+  }
+);
 
 export default function StructureBDDPage() {
   const [webTree, setWebTree] = useState<WebTreeNode[]>([]);
@@ -372,7 +369,7 @@ export default function StructureBDDPage() {
   const [vectorError, setVectorError] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [imageTree, setImageTree] = useState<ImageNode[]>([]);
-  const [search] = useState("");
+  const [search, setSearch] = useState("");
   const [resettingWeb, setResettingWeb] = useState(false);
   const [resettingLocal, setResettingLocal] = useState(false);
   const [clearingData, setClearingData] = useState(false);
@@ -384,6 +381,7 @@ export default function StructureBDDPage() {
   const [editingFile, setEditingFile] = useState<{ tree: "web" | "local"; path: string; content: string } | null>(null);
   const [editContent, setEditContent] = useState("");
   const [previewingFile, setPreviewingFile] = useState<{ path?: string; name: string; tree: "web" | "local" } | null>(null);
+  const [previewingImageId, setPreviewingImageId] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<{ content?: string; dataUrl?: string; mimeType: string; name: string; size: number; isText: boolean } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -429,7 +427,10 @@ export default function StructureBDDPage() {
     const webPromise = fetch("/api/tree")
       .then((res) => {
         console.log("[StructureBDD] /api/tree status", res.status);
-        if (!res.ok) throw new Error("Failed to fetch web tree");
+        if (!res.ok) {
+          if (res.status === 503) throw new Error("La base de données web est indisponible pour le moment.");
+          throw new Error("Failed to fetch web tree");
+        }
         return res.json();
       })
       .then((data) => {
@@ -566,8 +567,7 @@ export default function StructureBDDPage() {
 
     setResettingLocal(true);
     try {
-      await clientEngine.init();
-      await clientEngine.clearAllData();
+      await clientEngine.resetLocalTreeOnly();
       console.log("[StructureBDD] reset local done");
       await loadTrees();
       toast.success("BDD Locale remise à zéro avec succès");
@@ -590,8 +590,7 @@ export default function StructureBDDPage() {
 
     setClearingData(true);
     try {
-      await clientEngine.init();
-      await clientEngine.clearAllData();
+      await clientEngine.resetLocalTreeOnly();
       console.log("[StructureBDD] clear data done");
       await loadTrees();
       toast.success("Contenu de .data supprimé");
@@ -621,70 +620,77 @@ export default function StructureBDDPage() {
 
       await initSqlite();
 
-      await run("DELETE FROM local_tree");
+      await run("BEGIN TRANSACTION");
+      try {
+        await run("DELETE FROM local_tree");
 
-      const normalizeType = (webType: string): "folder" | "file" => {
-        if (webType === "file") return "file";
-        return "folder";
-      };
+        const normalizeType = (webType: string): "folder" | "file" => {
+          if (webType === "file") return "file";
+          return "folder";
+        };
 
-      interface FlatNode {
-        remoteId: string;
-        name: string;
-        type: "folder" | "file";
-        parentId: number | null;
-        nodeOrder: number;
-        content: string | null;
-        size: number;
-        depth: number;
-      }
+        interface FlatNode {
+          remoteId: string;
+          name: string;
+          type: "folder" | "file";
+          parentId: number | null;
+          nodeOrder: number;
+          content: string | null;
+          size: number;
+          depth: number;
+        }
 
-      const flatNodes: FlatNode[] = [];
-      const queue: Array<{ node: WebTreeNode; depth: number; parentId: number | null }> = roots.map((r) => ({ node: r, depth: 0, parentId: null }));
+        const flatNodes: FlatNode[] = [];
+        const queue: Array<{ node: WebTreeNode; depth: number; parentId: number | null }> = roots.map((r) => ({ node: r, depth: 0, parentId: null }));
 
-      while (queue.length > 0) {
-        const { node, depth, parentId } = queue.shift()!;
-        if (node.type === "image") continue;
-        flatNodes.push({
-          remoteId: String(node.id),
-          name: node.name,
-          type: normalizeType(node.type),
-          parentId,
-          nodeOrder: node.order ?? 0,
-          content: node.type === "file" ? node.metadata : null,
-          size: 0,
-          depth,
-        });
-        if (node.children?.length) {
-          for (const child of node.children) {
-            queue.push({ node: child, depth: depth + 1, parentId: node.id as number });
+        while (queue.length > 0) {
+          const { node, depth, parentId } = queue.shift()!;
+          if (node.type === "image") continue;
+          flatNodes.push({
+            remoteId: String(node.id),
+            name: node.name,
+            type: normalizeType(node.type),
+            parentId,
+            nodeOrder: node.order ?? 0,
+            content: node.type === "file" ? node.metadata : null,
+            size: 0,
+            depth,
+          });
+          if (node.children?.length) {
+            for (const child of node.children) {
+              queue.push({ node: child, depth: depth + 1, parentId: node.id as number });
+            }
           }
         }
-      }
 
-      flatNodes.sort((a, b) => a.depth - b.depth || (a.nodeOrder ?? 0) - (b.nodeOrder ?? 0));
+        flatNodes.sort((a, b) => a.depth - b.depth || (a.nodeOrder ?? 0) - (b.nodeOrder ?? 0));
 
-      const localIdMap = new Map<string, number>();
+        const localIdMap = new Map<string, number>();
 
-      for (const node of flatNodes) {
-        const localParentId = node.parentId !== null && localIdMap.has(String(node.parentId))
-          ? localIdMap.get(String(node.parentId))!
-          : null;
+        for (const node of flatNodes) {
+          const localParentId = node.parentId !== null && localIdMap.has(String(node.parentId))
+            ? localIdMap.get(String(node.parentId))!
+            : null;
 
-        const result = await run(
-          `INSERT INTO local_tree (remote_id, name, type, parent_id, node_order, size, content, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-          [node.remoteId, node.name, node.type, localParentId, node.nodeOrder, node.size, node.content]
-        );
+          const result = await run(
+            `INSERT INTO local_tree (remote_id, name, type, parent_id, node_order, size, content, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+            [node.remoteId, node.name, node.type, localParentId, node.nodeOrder, node.size, node.content]
+          );
 
-        if (result.lastInsertRowid) {
-          localIdMap.set(node.remoteId, result.lastInsertRowid);
+          if (result.lastInsertRowid) {
+            localIdMap.set(node.remoteId, result.lastInsertRowid);
+          }
         }
-      }
 
-      console.log("[StructureBDD] sync to local done", { count: flatNodes.length });
-      await loadTrees();
-      toast.success(`Synchronisation miroir terminée (${flatNodes.length} nœuds)`);
+        await run("COMMIT");
+        console.log("[StructureBDD] sync to local done", { count: flatNodes.length });
+        await loadTrees();
+        toast.success(`Synchronisation miroir terminée (${flatNodes.length} nœuds)`);
+      } catch (err) {
+        await run("ROLLBACK");
+        throw err;
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Sync to local failed";
       console.error("[StructureBDD] sync to local error", msg);
@@ -711,70 +717,77 @@ export default function StructureBDDPage() {
 
       await initSqlite();
 
-      await run("DELETE FROM local_tree");
+      await run("BEGIN TRANSACTION");
+      try {
+        await run("DELETE FROM local_tree");
 
-      const normalizeType = (webType: string): "folder" | "file" => {
-        if (webType === "file") return "file";
-        return "folder";
-      };
+        const normalizeType = (webType: string): "folder" | "file" => {
+          if (webType === "file") return "file";
+          return "folder";
+        };
 
-      interface FlatNode {
-        remoteId: string;
-        name: string;
-        type: "folder" | "file";
-        parentId: number | null;
-        nodeOrder: number;
-        content: string | null;
-        size: number;
-        depth: number;
-      }
+        interface FlatNode {
+          remoteId: string;
+          name: string;
+          type: "folder" | "file";
+          parentId: number | null;
+          nodeOrder: number;
+          content: string | null;
+          size: number;
+          depth: number;
+        }
 
-      const flatNodes: FlatNode[] = [];
-      const queue: Array<{ node: WebTreeNode; depth: number; parentId: number | null }> = roots.map((r) => ({ node: r, depth: 0, parentId: null }));
+        const flatNodes: FlatNode[] = [];
+        const queue: Array<{ node: WebTreeNode; depth: number; parentId: number | null }> = roots.map((r) => ({ node: r, depth: 0, parentId: null }));
 
-      while (queue.length > 0) {
-        const { node, depth, parentId } = queue.shift()!;
-        if (node.type === "image") continue;
-        flatNodes.push({
-          remoteId: String(node.id),
-          name: node.name,
-          type: normalizeType(node.type),
-          parentId,
-          nodeOrder: node.order ?? 0,
-          content: node.type === "file" ? node.metadata : null,
-          size: 0,
-          depth,
-        });
-        if (node.children?.length) {
-          for (const child of node.children) {
-            queue.push({ node: child, depth: depth + 1, parentId: node.id as number });
+        while (queue.length > 0) {
+          const { node, depth, parentId } = queue.shift()!;
+          if (node.type === "image") continue;
+          flatNodes.push({
+            remoteId: String(node.id),
+            name: node.name,
+            type: normalizeType(node.type),
+            parentId,
+            nodeOrder: node.order ?? 0,
+            content: node.type === "file" ? node.metadata : null,
+            size: 0,
+            depth,
+          });
+          if (node.children?.length) {
+            for (const child of node.children) {
+              queue.push({ node: child, depth: depth + 1, parentId: node.id as number });
+            }
           }
         }
-      }
 
-      flatNodes.sort((a, b) => a.depth - b.depth || (a.nodeOrder ?? 0) - (b.nodeOrder ?? 0));
+        flatNodes.sort((a, b) => a.depth - b.depth || (a.nodeOrder ?? 0) - (b.nodeOrder ?? 0));
 
-      const localIdMap = new Map<string, number>();
+        const localIdMap = new Map<string, number>();
 
-      for (const node of flatNodes) {
-        const localParentId = node.parentId !== null && localIdMap.has(String(node.parentId))
-          ? localIdMap.get(String(node.parentId))!
-          : null;
+        for (const node of flatNodes) {
+          const localParentId = node.parentId !== null && localIdMap.has(String(node.parentId))
+            ? localIdMap.get(String(node.parentId))!
+            : null;
 
-        const result = await run(
-          `INSERT INTO local_tree (remote_id, name, type, parent_id, node_order, size, content, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-          [node.remoteId, node.name, node.type, localParentId, node.nodeOrder, node.size, node.content]
-        );
+          const result = await run(
+            `INSERT INTO local_tree (remote_id, name, type, parent_id, node_order, size, content, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+            [node.remoteId, node.name, node.type, localParentId, node.nodeOrder, node.size, node.content]
+          );
 
-        if (result.lastInsertRowid) {
-          localIdMap.set(node.remoteId, result.lastInsertRowid);
+          if (result.lastInsertRowid) {
+            localIdMap.set(node.remoteId, result.lastInsertRowid);
+          }
         }
-      }
 
-      console.log("[StructureBDD] reset mirror done", { count: flatNodes.length });
-      await loadTrees();
-      toast.success(`Miroir local réinitialisé (${flatNodes.length} nœuds)`);
+        await run("COMMIT");
+        console.log("[StructureBDD] reset mirror done", { count: flatNodes.length });
+        await loadTrees();
+        toast.success(`Miroir local réinitialisé (${flatNodes.length} nœuds)`);
+      } catch (err) {
+        await run("ROLLBACK");
+        throw err;
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Reset mirror failed";
       console.error("[StructureBDD] reset mirror error", msg);
@@ -832,11 +845,12 @@ export default function StructureBDDPage() {
     try {
       const idStr = node.id as string;
       const numericId = parseInt(idStr.replace(/^(folder|file)-/, ""), 10);
-      if (!isNaN(numericId)) {
-        await deleteLocalTreeNode(numericId);
-        console.log("[StructureBDD] delete local done", { numericId });
-        toast.success("Nœud supprimé");
+      if (isNaN(numericId)) {
+        throw new Error("Invalid local node id");
       }
+      await deleteLocalTreeNode(numericId);
+      console.log("[StructureBDD] delete local done", { numericId });
+      toast.success("Nœud supprimé");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Delete failed";
       console.error("[StructureBDD] delete local error", msg);
@@ -1070,6 +1084,7 @@ export default function StructureBDDPage() {
     if (isImageNode(node)) {
       const imageId = String(node.id).replace(/^image-/, "");
       setPreviewingFile({ name: node.name, tree: "web" });
+      setPreviewingImageId(imageId);
       setPreviewData(null);
       setPreviewLoading(true);
       try {
@@ -1097,6 +1112,7 @@ export default function StructureBDDPage() {
     if (!isLocal) {
       const webNode = node as WebTreeNode;
       setPreviewingFile({ name: webNode.name, tree: "web" });
+      setPreviewingImageId(null);
       setPreviewData(null);
       setPreviewLoading(false);
       try {
@@ -1121,6 +1137,7 @@ export default function StructureBDDPage() {
     // BDD Locale: read content from the synced node
     const localNode = node as LocalNode;
     setPreviewingFile({ name: localNode.name, tree: "local" });
+    setPreviewingImageId(null);
     setPreviewData(null);
     setPreviewLoading(false);
 
@@ -1147,6 +1164,17 @@ export default function StructureBDDPage() {
       size: new TextEncoder().encode(pretty).length,
       isText: true,
     });
+  };
+
+  const handleOpenOnDisk = async () => {
+    if (!previewingImageId) return;
+    try {
+      const res = await fetch(`/api/images/${previewingImageId}/open`, { method: "POST" });
+      if (!res.ok) throw new Error("open failed");
+      toast.success("Dossier ouvert sur le disque");
+    } catch {
+      toast.error("Impossible d'ouvrir le dossier sur le disque");
+    }
   };
 
   const vectorizeLocalFileInternal = async (node: LocalNode, path: string) => {
@@ -1282,12 +1310,43 @@ export default function StructureBDDPage() {
      toast.success(`${count} fichier(s) vectorisé(s)`);
   };
 
-  const visibleWebTree = filterWebTree(webTree);
-  const baseLocalTree = filterLocalTree(localTree);
-  const visibleLocalTree = showOnlyVectorized ? filterLocalTreeByVectorized(baseLocalTree) : baseLocalTree;
-  const visibleVectorTree = filterLocalTree(vectorTree);
-  const totalNodes = (nodes: (WebTreeNode | LocalNode | ImageNode)[]): number =>
-    nodes.reduce((acc, node) => acc + 1 + totalNodes(node.children), 0);
+  const visibleWebTree = useMemo(() => filterWebTree(webTree), [webTree]); // eslint-disable-line react-hooks/exhaustive-deps
+  const baseLocalTree = useMemo(() => filterLocalTree(localTree), [localTree]); // eslint-disable-line react-hooks/exhaustive-deps
+  const visibleLocalTree = useMemo( /* eslint-disable react-hooks/exhaustive-deps */
+    () => (showOnlyVectorized ? filterLocalTreeByVectorized(baseLocalTree) : baseLocalTree),
+    [showOnlyVectorized, baseLocalTree]
+  );
+  const visibleVectorTree = useMemo(() => filterLocalTree(vectorTree), [vectorTree]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const totalNodes = useMemo(() => {
+    const count = (nodes: (WebTreeNode | LocalNode | ImageNode)[]): number =>
+      nodes.reduce((acc, node) => acc + 1 + count(node.children), 0);
+    return count;
+  }, []);
+
+  const activeTree = useMemo(
+    () =>
+      activeView === "web"
+        ? visibleWebTree
+        : activeView === "local"
+          ? visibleLocalTree
+          : activeView === "vector"
+            ? visibleVectorTree
+            : imageTree,
+    [activeView, visibleWebTree, visibleLocalTree, visibleVectorTree, imageTree]
+  );
+  const activeError = useMemo(
+    () =>
+      activeView === "web"
+        ? webError
+        : activeView === "local"
+          ? localError
+          : activeView === "vector"
+            ? vectorError
+            : imageError,
+    [activeView, webError, localError, vectorError, imageError]
+  );
+  const totalActiveNodes = useMemo(() => totalNodes(activeTree), [totalNodes, activeTree]);
 
   if (loading) {
     console.log("[StructureBDD] render loading");
@@ -1308,10 +1367,6 @@ export default function StructureBDDPage() {
     vectorError: !!vectorError,
     imageError: !!imageError,
   });
-
-  const activeTree = activeView === "web" ? visibleWebTree : activeView === "local" ? visibleLocalTree : activeView === "vector" ? visibleVectorTree : imageTree;
-  const activeError = activeView === "web" ? webError : activeView === "local" ? localError : activeView === "vector" ? vectorError : imageError;
-  const totalActiveNodes = totalNodes(activeTree);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -1371,6 +1426,12 @@ export default function StructureBDDPage() {
               <Badge variant="secondary" className="text-xs">
                 {totalActiveNodes} nœuds
               </Badge>
+              <Input
+                placeholder="Rechercher..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-7 w-32 text-xs"
+              />
               {activeView === "local" && (
                 <div className="flex items-center gap-2">
                   <Switch
@@ -1622,6 +1683,17 @@ export default function StructureBDDPage() {
                     <Download className="h-4 w-4 mr-2" />
                     Télécharger
                   </Button>
+                  {previewingImageId && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleOpenOnDisk}
+                      title="Ouvrir le dossier sur le disque"
+                    >
+                      <FolderOpen className="h-4 w-4 mr-2" />
+                      Ouvrir sur le disque
+                    </Button>
+                  )}
                 </div>
                 <div className="rounded-lg border border-border/60 bg-muted/10 overflow-hidden">
                   {previewData.isText && previewData.content !== undefined ? (

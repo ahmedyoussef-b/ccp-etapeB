@@ -34,7 +34,7 @@ export function getMediaDir(): string {
   return path.join(getDbDir(), "media");
 }
 
-function getItemDir(item: MediaItem): string {
+export function getItemDir(item: MediaItem): string {
   const safeCategory = (item.category || "sans-categorie").replace(/[^a-zA-Z0-9_-]/g, "_");
   const safeTitle = (item.title || item.id).replace(/[^a-zA-Z0-9_-]/g, "_");
   return path.join(getMediaDir(), safeCategory, `${safeTitle}_${item.id}`);
