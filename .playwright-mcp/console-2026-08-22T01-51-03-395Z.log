@@ -1,0 +1,193 @@
+[    1507ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:38559
+[   68372ms] [LOG] [NexaFlow][Login] Tentative de connexion: admin@nexaflow.com @ webpack-internal:///(app-pages-browser)/./src/app/login/page.tsx:56
+[   69414ms] [LOG] [NexaFlow][Login] Connexion réussie {email: admin@nexaflow.com, role: admin} @ webpack-internal:///(app-pages-browser)/./src/app/login/page.tsx:76
+[   70300ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[   70301ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[   70325ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   70325ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   70449ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:591
+[   70451ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:464
+[   70461ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:591
+[   70463ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:464
+[   70497ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[   70498ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[   70512ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   70513ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   70521ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:591
+[   70522ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:464
+[   70533ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:591
+[   70534ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:464
+[   72540ms] [WARNING] [SQLite] OPFS SAH Pool indisponible, repli sur IndexedDB (SqlJsDb). Error: Missing required OPFS APIs.
+    at sqlite3.installOpfsSAHPoolVfs (webpack-internal:///(app-pages-browser)/./node_modules/@sqlite.org/sqlite-wasm/dist/index.mjs:15637:284)
+    at openPersistentDatabase (webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:24:44)
+    at eval (webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:51:20) @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:30
+[   72540ms] [WARNING] [SQLite] Aucun stockage OPFS persistant disponible : repli sur localStorage (les données survivront au rechargement dans la limite de stockage du navigateur). @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:34
+[   72749ms] [LOG] [SQLite] Base de données locale initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:52
+[   72817ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[   72817ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[   72817ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[   72817ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[   72821ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[   72821ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[   72822ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[   72822ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[   72822ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[   72822ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[   72822ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[   72822ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[   72850ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:493
+[   72850ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:493
+[   72850ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:493
+[   72851ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:493
+[   72853ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:517
+[   72854ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:517
+[   72855ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:517
+[   72856ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:517
+[   72858ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   72858ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   72859ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:531
+[   72860ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:531
+[   72861ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:531
+[   72861ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:531
+[   72863ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   72863ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   73875ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:558
+[   73876ms] [LOG] [StructureBDD] image tree loaded {count: 1} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:563
+[   73932ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:472
+[   73936ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:480
+[   74491ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:472
+[   74495ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:480
+[   78165ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:558
+[   78166ms] [LOG] [StructureBDD] image tree loaded {count: 1} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:563
+[   78357ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:472
+[   78359ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:480
+[   78361ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   78362ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   78483ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[   78484ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[   78689ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:558
+[   78690ms] [LOG] [StructureBDD] image tree loaded {count: 1} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:563
+[   78692ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   78692ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   78935ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:472
+[   78975ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:480
+[   78976ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   78977ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   80429ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[   80430ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[   80501ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:558
+[   80502ms] [LOG] [StructureBDD] image tree loaded {count: 1} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:563
+[   80508ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   80508ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[   80722ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[   80724ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[   80939ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[   80941ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[   93591ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[   93591ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[  100620ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  100621ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  130650ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  130651ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  152558ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[  152559ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[  154343ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[  154346ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[  160639ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  160640ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  190681ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  190682ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  220742ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  220743ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  250637ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  250638ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  280648ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  280648ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  310676ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  310676ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  340632ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  340633ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  370668ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  370668ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  400747ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  400748ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  430627ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  430628ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  460624ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  460625ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  490641ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  490641ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  520616ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  520616ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  540214ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:186
+[  541693ms] [LOG] [Fast Refresh] done in 1479ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:43
+[  542886ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  542887ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  542896ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[  542897ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[  550609ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  550609ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  552857ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:186
+[  554276ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[  554278ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[  554295ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:591
+[  554298ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:464
+[  554319ms] [LOG] [Fast Refresh] done in 1462ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:43
+[  554323ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:493
+[  554329ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[  554329ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[  554332ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:517
+[  554340ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[  554341ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[  554343ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:531
+[  554345ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[  554346ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[  557927ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:558
+[  557928ms] [LOG] [StructureBDD] image tree loaded {count: 1} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:563
+[  557929ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[  557930ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[  558109ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:472
+[  558111ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:480
+[  558113ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[  558113ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[  559721ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  559721ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  559726ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[  559726ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1463
+[  559784ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[  559786ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1480
+[  570839ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:186
+[  572396ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1485
+[  572397ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1485
+[  572414ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:591
+[  572417ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:464
+[  572427ms] [LOG] [Fast Refresh] done in 1588ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:43
+[  572429ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:493
+[  572431ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1468
+[  572431ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1468
+[  572434ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:517
+[  572437ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1468
+[  572437ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1468
+[  572442ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:531
+[  572445ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1468
+[  572446ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1468
+[  574835ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:558
+[  574837ms] [LOG] [StructureBDD] image tree loaded {count: 1} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:563
+[  574838ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1468
+[  574839ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1468
+[  574907ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:472
+[  574911ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:480
+[  574913ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1468
+[  574914ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1468
+[  575422ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  575422ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  575426ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1468
+[  575427ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1468
+[  575802ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1485
+[  575804ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 1, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1485
+[  580613ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  580613ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  610630ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  610631ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  640626ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  640626ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
