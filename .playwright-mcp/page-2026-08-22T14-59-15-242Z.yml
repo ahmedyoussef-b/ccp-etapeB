@@ -1,0 +1,122 @@
+- generic [active] [ref=f14e1]:
+  - alert [ref=f14e69]
+  - generic [ref=f14e70]:
+    - complementary [ref=f14e72]:
+      - generic [ref=f14e73]: NexaFlow
+      - navigation [ref=f14e80]:
+        - link "Tableau de bord" [ref=f14e81] [cursor=pointer]:
+          - /url: /admin
+        - link "Pipeline DEV" [ref=f14e88] [cursor=pointer]:
+          - /url: /pipeline
+          - generic [ref=f14e93]: Pipeline
+          - generic [ref=f14e94]: DEV
+        - link "Q/R" [ref=f14e95] [cursor=pointer]:
+          - /url: /q-r
+        - link "Actions IA" [ref=f14e100] [cursor=pointer]:
+          - /url: /actions-ia
+        - link "Périphériques" [ref=f14e105] [cursor=pointer]:
+          - /url: /devices
+        - link "Alarmes actives" [ref=f14e109] [cursor=pointer]:
+          - /url: /alarmes-actives
+        - link "Historique IoT" [ref=f14e113] [cursor=pointer]:
+          - /url: /historique-iot
+        - link "Créer une procédure" [ref=f14e119] [cursor=pointer]:
+          - /url: /creer-procedure
+        - link "Guide procédure" [ref=f14e124] [cursor=pointer]:
+          - /url: /guide-procedure
+        - link "Approbations" [ref=f14e128] [cursor=pointer]:
+          - /url: /approvals
+        - link "Historique exécutions" [ref=f14e133] [cursor=pointer]:
+          - /url: /executions
+        - link "Structure BDD" [ref=f14e139] [cursor=pointer]:
+          - /url: /structure-bdd
+        - link "Banque d'images" [ref=f14e145] [cursor=pointer]:
+          - /url: /images
+        - link "Visioconférence" [ref=f14e151] [cursor=pointer]:
+          - /url: /video-conference
+        - link "Rapports" [ref=f14e156] [cursor=pointer]:
+          - /url: /rapports
+        - link "Équipes" [ref=f14e160] [cursor=pointer]:
+          - /url: /equipes
+        - link "État des lieux" [ref=f14e167] [cursor=pointer]:
+          - /url: /etat-des-lieux
+        - link "Chat IA" [ref=f14e172] [cursor=pointer]:
+          - /url: /chat-ia
+        - link "Centre IA" [ref=f14e176] [cursor=pointer]:
+          - /url: /ai-hub
+      - generic [ref=f14e181]: 🔧 Développement · v1.0
+    - main [ref=f14e183]:
+      - generic [ref=f14e184]:
+        - button "Réduire la sidebar" [ref=f14e186] [cursor=pointer]
+        - generic [ref=f14e188]:
+          - button "Toggle theme" [ref=f14e189] [cursor=pointer]
+          - button "2 Notifications" [ref=f14e192] [cursor=pointer]:
+            - generic [ref=f14e193]: "2"
+            - generic [ref=f14e194]: Notifications
+          - button "Profile" [ref=f14e195] [cursor=pointer]
+          - button "Déconnexion" [ref=f14e197] [cursor=pointer]
+          - generic "admin" [ref=f14e199]: A
+      - generic [ref=f14e202]:
+        - generic [ref=f14e203]:
+          - button [ref=f14e204] [cursor=pointer]
+          - generic [ref=f14e205]:
+            - heading "ahmed abbes" [level=1] [ref=f14e206]
+            - paragraph [ref=f14e207]: Image · 2.2 MB · image/jpeg
+          - generic [ref=f14e208]:
+            - button "Télécharger" [ref=f14e209] [cursor=pointer]
+            - button "Supprimer" [ref=f14e210] [cursor=pointer]
+        - generic [ref=f14e211]:
+          - generic [ref=f14e212]:
+            - generic [ref=f14e213]:
+              - generic [ref=f14e218]: Visualisation
+              - generic [ref=f14e219]: En attente
+            - img "ahmed abbes" [ref=f14e221]
+          - generic [ref=f14e222]:
+            - generic [ref=f14e223]: Métadonnées
+            - generic [ref=f14e230]:
+              - tablist [ref=f14e232]:
+                - tab "Métadonnées" [selected] [ref=f14e233] [cursor=pointer]
+                - tab "Vectorisation" [ref=f14e234] [cursor=pointer]
+              - tabpanel "Métadonnées" [ref=f14e235]:
+                - generic [ref=f14e236]:
+                  - generic [ref=f14e237]: Titre *
+                  - textbox "Titre *" [ref=f14e238]:
+                    - /placeholder: Nom du média
+                    - text: ahmed abbes
+                - generic [ref=f14e239]:
+                  - generic [ref=f14e240]: Catégorie *
+                  - button "registry/ressources humaines/equipes/equipe B" [ref=f14e241] [cursor=pointer]
+                - generic [ref=f14e243]:
+                  - generic [ref=f14e244]: Description
+                  - textbox "Description" [ref=f14e245]:
+                    - /placeholder: Décrire le média...
+                - generic [ref=f14e246]:
+                  - generic [ref=f14e247]: Tags
+                  - textbox "Tags" [ref=f14e251]:
+                    - /placeholder: "ex: équipement, bloc B, inspection"
+                    - text: chef de bloc
+                  - paragraph [ref=f14e252]: Séparez les tags par des virgules
+                - generic [ref=f14e253]:
+                  - generic [ref=f14e254]:
+                    - generic [ref=f14e255]: Type de média
+                    - textbox "Type de média" [ref=f14e256]: Image
+                  - generic [ref=f14e257]:
+                    - generic [ref=f14e258]: Format MIME
+                    - textbox "Format MIME" [ref=f14e259]: image/jpeg
+                - generic [ref=f14e260]:
+                  - generic [ref=f14e261]: Taille
+                  - generic [ref=f14e262]: 2.2 MB
+                - generic [ref=f14e267]:
+                  - generic [ref=f14e268]: Géolocalisation
+                  - generic [ref=f14e269]: Aucune position enregistrée
+                - separator
+                - generic [ref=f14e275]:
+                  - generic [ref=f14e276]:
+                    - generic [ref=f14e277]: Créé le
+                    - text: 22/08/2026 15:13:03
+                  - generic [ref=f14e278]:
+                    - generic [ref=f14e279]: Modifié le
+                    - text: 22/08/2026 15:59:14
+                - generic [ref=f14e280]:
+                  - button "Annuler" [ref=f14e281] [cursor=pointer]
+                  - button "Enregistrer" [ref=f14e282] [cursor=pointer]
