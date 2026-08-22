@@ -203,6 +203,52 @@ enum Role {
   rondier
 }
 
+enum RegistrationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum BootstrapStatus {
+  pending
+  approved
+  rejected
+  downloaded
+}
+
+model BootstrapRequest {
+  id            String         @id @default(cuid())
+  userId        String         @map("user_id")
+  user          User           @relation(fields: [userId], references: [id])
+  status        BootstrapStatus @default(pending)
+  requestedAt   DateTime       @default(now()) @map("requested_at")
+  approvedAt    DateTime?      @map("approved_at")
+  downloadedAt  DateTime?      @map("downloaded_at")
+  token         String?
+  reviewedById  String?        @map("reviewed_by_id")
+  reviewedByName String?       @map("reviewed_by_name")
+  reviewComment String?        @map("review_comment")
+
+  @@map("bootstrap_requests")
+}
+
+model RegistrationRequest {
+  id             String            @id @default(cuid())
+  email          String
+  name           String
+  passwordHash   String            @map("password_hash")
+  desiredRole    Role              @map("desired_role")
+  message        String?
+  status         RegistrationStatus @default(pending)
+  reviewedBy     String?
+  reviewedAt     DateTime?         @map("reviewed_at")
+  reviewComment  String?           @map("review_comment")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  @@map("registration_requests")
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -211,6 +257,7 @@ model User {
   role         Role     @default(rondier)
   teamId       String?  @map("team_id")
   team         Team?    @relation(fields: [teamId], references: [id])
+  bootstrapRequests BootstrapRequest[]
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -219,11 +266,36 @@ model User {
 
 model Team {
   id        String   @id @default(cuid())
-  name      String
+  name       String
   members   User[]
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("teams")
+}
+
+model MediaCategory {
+  id         String   @id @default(cuid())
+  name       String
+  description String?
+  parentId   String?  @map("parent_id")
+  order      Int      @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("media_categories")
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  type       String
+  title      String
+  message    String
+  relatedId  String?  @map("related_id")
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("notifications")
 }
 
