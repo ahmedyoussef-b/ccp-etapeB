@@ -1,0 +1,206 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e65]
+  - generic [ref=e66]:
+    - complementary [ref=e68]:
+      - generic [ref=e69]: NexaFlow
+      - navigation [ref=e76]:
+        - link "Tableau de bord" [ref=e77] [cursor=pointer]:
+          - /url: /admin
+        - link "Pipeline DEV" [ref=e84] [cursor=pointer]:
+          - /url: /pipeline
+          - generic [ref=e89]: Pipeline
+          - generic [ref=e90]: DEV
+        - link "Q/R" [ref=e91] [cursor=pointer]:
+          - /url: /q-r
+        - link "Actions IA" [ref=e96] [cursor=pointer]:
+          - /url: /actions-ia
+        - link "Périphériques" [ref=e101] [cursor=pointer]:
+          - /url: /devices
+        - link "Alarmes actives" [ref=e105] [cursor=pointer]:
+          - /url: /alarmes-actives
+        - link "Historique IoT" [ref=e109] [cursor=pointer]:
+          - /url: /historique-iot
+        - link "Créer une procédure" [ref=e115] [cursor=pointer]:
+          - /url: /creer-procedure
+        - link "Guide procédure" [ref=e120] [cursor=pointer]:
+          - /url: /guide-procedure
+        - link "Approbations" [ref=e124] [cursor=pointer]:
+          - /url: /approvals
+        - link "Historique exécutions" [ref=e129] [cursor=pointer]:
+          - /url: /executions
+        - link "Structure BDD" [ref=e135] [cursor=pointer]:
+          - /url: /structure-bdd
+        - link "Banque d'images" [ref=e141] [cursor=pointer]:
+          - /url: /images
+        - link "Visioconférence" [ref=e147] [cursor=pointer]:
+          - /url: /video-conference
+        - link "Rapports" [ref=e152] [cursor=pointer]:
+          - /url: /rapports
+        - link "Équipes" [ref=e156] [cursor=pointer]:
+          - /url: /equipes
+        - link "État des lieux" [ref=e163] [cursor=pointer]:
+          - /url: /etat-des-lieux
+        - link "Chat IA" [ref=e168] [cursor=pointer]:
+          - /url: /chat-ia
+        - link "Centre IA" [ref=e172] [cursor=pointer]:
+          - /url: /ai-hub
+      - generic [ref=e177]: 🔧 Développement · v1.0
+    - main [ref=e179]:
+      - generic [ref=e180]:
+        - button "Réduire la sidebar" [ref=e182] [cursor=pointer]
+        - generic [ref=e184]:
+          - button "Toggle theme" [ref=e185] [cursor=pointer]
+          - button "2 Notifications" [ref=e188] [cursor=pointer]:
+            - generic [ref=e189]: "2"
+            - generic [ref=e190]: Notifications
+          - button "Profile" [ref=e191] [cursor=pointer]
+          - button "Déconnexion" [ref=e193] [cursor=pointer]
+          - generic "admin" [ref=e195]: A
+      - generic [ref=e198]:
+        - generic [ref=e199]:
+          - generic [ref=e200]:
+            - heading "Structure BDD" [level=1] [ref=e206]
+            - paragraph [ref=e207]: "Vue active : Hub / PostgreSQL · 403 nœuds"
+          - generic [ref=e208]:
+            - button "Hub / Web" [ref=e209] [cursor=pointer]
+            - button "SQLite" [ref=e210] [cursor=pointer]
+            - button "Vectorielle" [ref=e211] [cursor=pointer]
+            - button "Médias" [ref=e212] [cursor=pointer]
+        - generic [ref=e213]: Initialisation de la BDD locale en attente d'approbation administrateur.
+        - generic [ref=e218]:
+          - generic [ref=e219]:
+            - generic [ref=e220]:
+              - heading "Arborescence" [level=3] [ref=e227]
+              - generic [ref=e228]:
+                - generic [ref=e229]: 403 nœuds
+                - textbox "Rechercher..." [ref=e230]
+                - button "Remettre à zéro" [ref=e1038] [cursor=pointer]
+            - generic [ref=e232]:
+              - generic [ref=e1040] [cursor=pointer]:
+                - generic [ref=e1046]: bank
+                - generic [ref=e1047]: directory
+                - generic [ref=e1396]:
+                  - button "Ajouter" [ref=e1397]
+                  - button "Télécharger vers local" [ref=e1398]
+                  - button "Renommer" [ref=e1399]
+                  - button "Supprimer" [ref=e1400]
+              - generic [ref=e1048]:
+                - generic [ref=e1049] [cursor=pointer]:
+                  - generic [ref=e1057]: Centrale
+                  - generic [ref=e1058]: directory
+                - generic [ref=e1059]:
+                  - generic [ref=e1061] [cursor=pointer]:
+                    - generic [ref=e1069]: A0
+                    - generic [ref=e1070]: directory
+                  - generic [ref=e1072] [cursor=pointer]:
+                    - generic [ref=e1080]: B0
+                    - generic [ref=e1081]: directory
+                  - generic [ref=e1083] [cursor=pointer]:
+                    - generic [ref=e1091]: B1
+                    - generic [ref=e1092]: directory
+                  - generic [ref=e1094] [cursor=pointer]:
+                    - generic [ref=e1102]: B2
+                    - generic [ref=e1103]: directory
+                  - generic [ref=e1105] [cursor=pointer]:
+                    - generic [ref=e1113]: B3
+                    - generic [ref=e1114]: directory
+              - generic [ref=e1115]:
+                - generic [ref=e1116] [cursor=pointer]:
+                  - generic [ref=e1124]: Groupes
+                  - generic [ref=e1125]: directory
+                - generic [ref=e1126]:
+                  - generic [ref=e1128] [cursor=pointer]:
+                    - generic [ref=e1136]: CHAUDIERE DE RECUPERATION 1
+                    - generic [ref=e1137]: directory
+                  - generic [ref=e1139] [cursor=pointer]:
+                    - generic [ref=e1147]: CHAUDIERE DE RECUPERATION 2
+                    - generic [ref=e1148]: directory
+                  - generic [ref=e1150] [cursor=pointer]:
+                    - generic [ref=e1158]: CONTROSTEAM
+                    - generic [ref=e1159]: directory
+                  - generic [ref=e1161] [cursor=pointer]:
+                    - generic [ref=e1169]: DISTRIBUTION ELECTRIQUE
+                    - generic [ref=e1170]: directory
+                  - generic [ref=e1172] [cursor=pointer]:
+                    - generic [ref=e1178]: Groupes
+                    - generic [ref=e1179]: directory
+                  - generic [ref=e1181] [cursor=pointer]:
+                    - generic [ref=e1189]: ORDINATEUR DE SUPERVISION - TCI
+                    - generic [ref=e1190]: directory
+                  - generic [ref=e1192] [cursor=pointer]:
+                    - generic [ref=e1200]: POSTE D'EAU
+                    - generic [ref=e1201]: directory
+                  - generic [ref=e1203] [cursor=pointer]:
+                    - generic [ref=e1211]: REGULATION ET CALCULS
+                    - generic [ref=e1212]: directory
+                  - generic [ref=e1214] [cursor=pointer]:
+                    - generic [ref=e1222]: SUPERVISION DU BLOC
+                    - generic [ref=e1223]: directory
+                  - generic [ref=e1225] [cursor=pointer]:
+                    - generic [ref=e1233]: TURBINE GAZ 1
+                    - generic [ref=e1234]: directory
+                  - generic [ref=e1236] [cursor=pointer]:
+                    - generic [ref=e1244]: TURBINE GAZ 2
+                    - generic [ref=e1245]: directory
+                  - generic [ref=e1247] [cursor=pointer]:
+                    - generic [ref=e1255]: TURBINE VAPEUR
+                    - generic [ref=e1256]: directory
+              - generic [ref=e1258] [cursor=pointer]:
+                - generic [ref=e1264]: mirror.json
+                - generic [ref=e1265]: file
+              - generic [ref=e1266]:
+                - generic [ref=e1267] [cursor=pointer]:
+                  - generic [ref=e1275]: procedures
+                  - generic [ref=e1276]: directory
+                - generic [ref=e1277]:
+                  - generic [ref=e1279] [cursor=pointer]:
+                    - generic [ref=e1287]: crf-start-001
+                    - generic [ref=e1288]: directory
+                  - generic [ref=e1290] [cursor=pointer]:
+                    - generic [ref=e1296]: procedures
+                    - generic [ref=e1297]: directory
+              - generic [ref=e1298]:
+                - generic [ref=e1299] [cursor=pointer]:
+                  - generic [ref=e1307]: registry
+                  - generic [ref=e1308]: directory
+                - generic [ref=e1309]:
+                  - generic [ref=e1311] [cursor=pointer]:
+                    - generic [ref=e1319]: bank
+                    - generic [ref=e1320]: directory
+                  - generic [ref=e1322] [cursor=pointer]:
+                    - generic [ref=e1328]: Centrale
+                    - generic [ref=e1329]: directory
+                  - generic [ref=e1331] [cursor=pointer]:
+                    - generic [ref=e1339]: items
+                    - generic [ref=e1340]: directory
+                  - generic [ref=e1342] [cursor=pointer]:
+                    - generic [ref=e1350]: procedures
+                    - generic [ref=e1351]: directory
+                  - generic [ref=e1353] [cursor=pointer]:
+                    - generic [ref=e1361]: ressources humaines
+                    - generic [ref=e1362]: directory
+              - generic [ref=e1363]:
+                - generic [ref=e1364] [cursor=pointer]:
+                  - generic [ref=e1372]: ressources humaines
+                  - generic [ref=e1373]: directory
+                - generic [ref=e1374]:
+                  - generic [ref=e1376] [cursor=pointer]:
+                    - generic [ref=e1384]: equipes
+                    - generic [ref=e1385]: directory
+                  - generic [ref=e1387] [cursor=pointer]:
+                    - generic [ref=e1393]: ressources humaines
+                    - generic [ref=e1394]: directory
+            - button "Sync Web → Local" [ref=e1395] [cursor=pointer]
+          - generic [ref=e591]:
+            - generic [ref=e592]:
+              - heading "Visualiseur" [level=3] [ref=e597]
+              - generic [ref=e1026]:
+                - button "Métadonnées" [ref=e1027] [cursor=pointer]
+                - generic [ref=e1028]: ahmed abbes
+            - generic [ref=e1029]:
+              - generic [ref=e1030]:
+                - generic [ref=e1031]:
+                  - generic [ref=e1032]: image/jpeg
+                  - generic [ref=e1033]: 2295.2 KB
+                - button "Télécharger" [ref=e1035] [cursor=pointer]
+              - img "ahmed abbes" [ref=e1037]
