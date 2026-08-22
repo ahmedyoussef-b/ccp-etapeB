@@ -1,5 +1,5 @@
 
-export function getUserFromRequest(request: Request): { role: string } | null {
+export function getUserFromRequest(request: Request): { userId: string; email?: string; role: string } | null {
   const cookieHeader = request.headers.get("cookie");
   if (!cookieHeader) return null;
 
@@ -10,9 +10,13 @@ export function getUserFromRequest(request: Request): { role: string } | null {
   }, {});
 
   const role = cookies["role"];
-  if (!role) return null;
-  return { role };
+  const userId = cookies["userId"];
+  const email = cookies["email"];
+  if (!userId || !role) return null;
+  return { userId, email, role };
 }
+
+export const getRequestUser = getUserFromRequest;
 
 export function hasRole(userRole: string | null | undefined, allowedRoles: string[]): boolean {
   if (!userRole) return false;
