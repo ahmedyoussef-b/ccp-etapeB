@@ -1,0 +1,29 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - heading "Connexion" [level=1] [ref=e11]
+    - paragraph [ref=e12]: Connectez-vous à votre compte NexaFlow
+  - generic [ref=e13]:
+    - generic [ref=e14]:
+      - text: Email
+      - textbox "Email" [ref=e15]:
+        - /placeholder: email@nexaflow.com
+    - generic [ref=e16]:
+      - text: Mot de passe
+      - textbox "Mot de passe" [ref=e17]:
+        - /placeholder: ••••••••
+    - generic [ref=e18]:
+      - generic [ref=e19] [cursor=pointer]:
+        - checkbox "Se souvenir de moi" [ref=e20]
+        - text: Se souvenir de moi
+      - link "Mot de passe oublié ?" [ref=e21] [cursor=pointer]:
+        - /url: "#"
+    - button "Se connecter" [ref=e22] [cursor=pointer]
+    - paragraph [ref=e23]: "Démo : admin@nexaflow.com / password123"
+    - generic [ref=e24]: ou
+    - generic [ref=e29]:
+      - button "Google" [ref=e30] [cursor=pointer]
+      - button "Microsoft" [ref=e31] [cursor=pointer]
+  - paragraph [ref=e32]:
+    - text: Pas encore de compte ?
+    - link "S'inscrire" [ref=e33] [cursor=pointer]:
+      - /url: "#"
