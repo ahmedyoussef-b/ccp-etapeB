@@ -1,0 +1,27 @@
+[     193ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:186
+[    5413ms] [LOG] [Fast Refresh] done in 5220ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:43
+[    8828ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:38559
+[    9267ms] [LOG] [ImagesPage] loadData() - starting load | sortBy=createdAt sortOrder=desc category=Tous search="" @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:167
+[    9270ms] [LOG] [ImageService] getAll() - GET /api/images?limit=24&sortBy=createdAt&sortOrder=desc @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:39
+[    9271ms] [LOG] [ImageService] getCategories() - GET /api/images @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:82
+[    9280ms] [LOG] [ImagesPage] loadData() - starting load | sortBy=createdAt sortOrder=desc category=Tous search="" @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:167
+[    9281ms] [LOG] [ImageService] getAll() - GET /api/images?limit=24&sortBy=createdAt&sortOrder=desc @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:39
+[    9281ms] [LOG] [ImageService] getCategories() - GET /api/images @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:82
+[    9321ms] [LOG] [ImagesPage] loadData() - starting load | sortBy=createdAt sortOrder=desc category=Tous search="" @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:167
+[    9323ms] [LOG] [ImageService] getAll() - GET /api/images?limit=24&sortBy=createdAt&sortOrder=desc @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:39
+[    9323ms] [LOG] [ImageService] getCategories() - GET /api/images @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:82
+[    9325ms] [LOG] [ImagesPage] loadData() - starting load | sortBy=createdAt sortOrder=desc category=Tous search="" @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:167
+[    9325ms] [LOG] [ImageService] getAll() - GET /api/images?limit=24&sortBy=createdAt&sortOrder=desc @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:39
+[    9325ms] [LOG] [ImageService] getCategories() - GET /api/images @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:82
+[   11588ms] [LOG] [ImageService] getCategories() - categories=[Tous] @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:85
+[   11603ms] [LOG] [ImageService] getAll() - received 0/0 items @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:42
+[   11603ms] [LOG] [ImagesPage] loadData() - loaded 0/0 items, 1 categories @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:185
+[   11933ms] [LOG] [ImageService] getCategories() - categories=[Tous] @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:85
+[   11942ms] [LOG] [ImageService] getAll() - received 0/0 items @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:42
+[   11943ms] [LOG] [ImagesPage] loadData() - loaded 0/0 items, 1 categories @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:185
+[   12257ms] [LOG] [ImageService] getCategories() - categories=[Tous] @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:85
+[   12265ms] [LOG] [ImageService] getAll() - received 0/0 items @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:42
+[   12265ms] [LOG] [ImagesPage] loadData() - loaded 0/0 items, 1 categories @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:185
+[   12535ms] [LOG] [ImageService] getCategories() - categories=[Tous] @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:85
+[   12544ms] [LOG] [ImageService] getAll() - received 0/0 items @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:42
+[   12544ms] [LOG] [ImagesPage] loadData() - loaded 0/0 items, 1 categories @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:185
