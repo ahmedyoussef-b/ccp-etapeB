@@ -1,0 +1,61 @@
+[    1271ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:38559
+[    1595ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    1596ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    1695ms] [LOG] [ImagesPage] loadData() - starting load | sortBy=createdAt sortOrder=desc category=Tous search="" @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:176
+[    1697ms] [LOG] [ImageService] getAll() - GET /api/images?limit=24&sortBy=createdAt&sortOrder=desc @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:48
+[    1699ms] [LOG] [ImageService] getCategories() - GET /api/images @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:91
+[    1719ms] [LOG] [ImagesPage] loadData() - starting load | sortBy=createdAt sortOrder=desc category=Tous search="" @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:176
+[    1720ms] [LOG] [ImageService] getAll() - GET /api/images?limit=24&sortBy=createdAt&sortOrder=desc @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:48
+[    1720ms] [LOG] [ImageService] getCategories() - GET /api/images @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:91
+[    1753ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    1754ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    1792ms] [LOG] [ImagesPage] loadData() - starting load | sortBy=createdAt sortOrder=desc category=Tous search="" @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:176
+[    1794ms] [LOG] [ImageService] getAll() - GET /api/images?limit=24&sortBy=createdAt&sortOrder=desc @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:48
+[    1796ms] [LOG] [ImageService] getCategories() - GET /api/images @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:91
+[    1799ms] [LOG] [ImagesPage] loadData() - starting load | sortBy=createdAt sortOrder=desc category=Tous search="" @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:176
+[    1799ms] [LOG] [ImageService] getAll() - GET /api/images?limit=24&sortBy=createdAt&sortOrder=desc @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:48
+[    1800ms] [LOG] [ImageService] getCategories() - GET /api/images @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:91
+[    2019ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    2020ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    2700ms] [WARNING] [SQLite] OPFS SAH Pool indisponible, repli sur IndexedDB (SqlJsDb). Error: Missing required OPFS APIs.
+    at sqlite3.installOpfsSAHPoolVfs (webpack-internal:///(app-pages-browser)/./node_modules/@sqlite.org/sqlite-wasm/dist/index.mjs:15637:284)
+    at openPersistentDatabase (webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:24:44)
+    at eval (webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:51:20) @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:30
+[    2701ms] [WARNING] [SQLite] Aucun stockage OPFS persistant disponible : repli sur localStorage (les données survivront au rechargement dans la limite de stockage du navigateur). @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:34
+[    2787ms] [LOG] [SQLite] Base de données locale initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:52
+[    2812ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[    2812ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[    2812ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[    2813ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[    2814ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[    2814ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[    2814ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[    2814ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[    2814ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[    2814ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[    2815ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[    2815ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[    2816ms] [LOG] [ImagesPage] loadVectorizedImageIds() - loaded 0 vectorized images @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:213
+[    2817ms] [LOG] [ImagesPage] loadVectorizedImageIds() - loaded 0 vectorized images @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:213
+[    2817ms] [LOG] [ImagesPage] loadVectorizedImageIds() - loaded 0 vectorized images @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:213
+[    2817ms] [LOG] [ImagesPage] loadVectorizedImageIds() - loaded 0 vectorized images @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:213
+[    4614ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    4615ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    5055ms] [LOG] [ImageService] getAll() - received 2/2 items @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:51
+[    5224ms] [LOG] [ImageService] getCategories() - categories=[Tous, Équipement, Inspection, Sécurité, Maintenance, Documentation] @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:94
+[    5225ms] [LOG] [ImagesPage] loadData() - loaded 2/2 items, 6 categories @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:194
+[    5350ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    5351ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    5800ms] [LOG] [ImageService] getAll() - received 2/2 items @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:51
+[    5871ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    5872ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    5923ms] [LOG] [ImageService] getCategories() - categories=[Tous, Équipement, Inspection, Sécurité, Maintenance, Documentation] @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:94
+[    5923ms] [LOG] [ImagesPage] loadData() - loaded 2/2 items, 6 categories @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:194
+[    6372ms] [LOG] [ImageService] getAll() - received 2/2 items @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:51
+[    6583ms] [LOG] [ImageService] getCategories() - categories=[Tous, Équipement, Inspection, Sécurité, Maintenance, Documentation] @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:94
+[    6584ms] [LOG] [ImagesPage] loadData() - loaded 2/2 items, 6 categories @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:194
+[    7035ms] [LOG] [ImageService] getAll() - received 2/2 items @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:51
+[    7095ms] [LOG] [ImageService] getCategories() - categories=[Tous, Équipement, Inspection, Sécurité, Maintenance, Documentation] @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:94
+[    7095ms] [LOG] [ImagesPage] loadData() - loaded 2/2 items, 6 categories @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:194
+[   31883ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[   31883ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
