@@ -1,0 +1,134 @@
+- generic [ref=f3e1]:
+  - alert [ref=f3e65]
+  - generic [ref=f3e66]:
+    - complementary [ref=f3e68]:
+      - generic [ref=f3e69]: NexaFlow
+      - navigation [ref=f3e76]:
+        - link [ref=f3e663] [cursor=pointer]:
+          - /url: /admin
+          - generic [ref=f3e83]: Tableau de bord
+        - link [ref=f3e664] [cursor=pointer]:
+          - /url: /pipeline
+          - generic [ref=f3e89]: Pipeline
+          - generic [ref=f3e90]: DEV
+        - link [ref=f3e665] [cursor=pointer]:
+          - /url: /q-r
+          - generic [ref=f3e95]: Q/R
+        - link [ref=f3e666] [cursor=pointer]:
+          - /url: /actions-ia
+          - generic [ref=f3e100]: Actions IA
+        - link [ref=f3e667] [cursor=pointer]:
+          - /url: /devices
+          - generic [ref=f3e104]: Périphériques
+        - link [ref=f3e668] [cursor=pointer]:
+          - /url: /alarmes-actives
+          - generic [ref=f3e108]: Alarmes actives
+        - link [ref=f3e669] [cursor=pointer]:
+          - /url: /historique-iot
+          - generic [ref=f3e114]: Historique IoT
+        - link [ref=f3e670] [cursor=pointer]:
+          - /url: /creer-procedure
+          - generic [ref=f3e119]: Créer une procédure
+        - link [ref=f3e671] [cursor=pointer]:
+          - /url: /guide-procedure
+          - generic [ref=f3e123]: Guide procédure
+        - link [ref=f3e672] [cursor=pointer]:
+          - /url: /approvals
+          - generic [ref=f3e128]: Approbations
+        - link [ref=f3e673] [cursor=pointer]:
+          - /url: /executions
+          - generic [ref=f3e134]: Historique exécutions
+        - link [ref=f3e674] [cursor=pointer]:
+          - /url: /structure-bdd
+          - generic [ref=f3e140]: Structure BDD
+        - link [ref=f3e675] [cursor=pointer]:
+          - /url: /images
+          - generic [ref=f3e146]: Banque d'images
+        - link [ref=f3e676] [cursor=pointer]:
+          - /url: /video-conference
+          - generic [ref=f3e151]: Visioconférence
+        - link [ref=f3e677] [cursor=pointer]:
+          - /url: /rapports
+          - generic [ref=f3e155]: Rapports
+        - link [ref=f3e678] [cursor=pointer]:
+          - /url: /equipes
+          - generic [ref=f3e162]: Équipes
+        - link [ref=f3e679] [cursor=pointer]:
+          - /url: /etat-des-lieux
+          - generic [ref=f3e167]: État des lieux
+        - link [ref=f3e680] [cursor=pointer]:
+          - /url: /chat-ia
+          - generic [ref=f3e171]: Chat IA
+        - link [ref=f3e681] [cursor=pointer]:
+          - /url: /ai-hub
+          - generic [ref=f3e176]: Centre IA
+      - generic [ref=f3e177]: 🔧 Développement · v1.0
+    - main [ref=f3e179]:
+      - generic [ref=f3e180]:
+        - button [ref=f3e682] [cursor=pointer]:
+          - generic [ref=f3e183]: Réduire la sidebar
+        - generic [ref=f3e184]:
+          - button [ref=f3e683] [cursor=pointer]:
+            - generic [ref=f3e186]: Toggle theme
+          - button [ref=f3e684] [cursor=pointer]:
+            - generic [ref=f3e189]: "2"
+            - generic [ref=f3e190]: Notifications
+          - button [ref=f3e685] [cursor=pointer]:
+            - generic [ref=f3e192]: Profile
+          - button [ref=f3e686] [cursor=pointer]:
+            - generic [ref=f3e194]: Déconnexion
+          - generic [ref=f3e687]: A
+      - generic [ref=f3e198]:
+        - generic [ref=f3e199]:
+          - generic [ref=f3e200]:
+            - heading [level=1] [ref=f3e688]: Structure BDD
+            - paragraph [ref=f3e207]: "Vue active : Hub / Médias · 6 nœuds"
+          - generic [ref=f3e208]:
+            - button [ref=f3e689] [cursor=pointer]: Hub / Web
+            - button [ref=f3e690] [cursor=pointer]: SQLite
+            - button [ref=f3e691] [cursor=pointer]: Vectorielle
+            - button [ref=f3e692] [cursor=pointer]: Médias
+        - generic [ref=f3e213]: Initialisation de la BDD locale en attente d'approbation administrateur.
+        - generic [ref=f3e218]:
+          - generic [ref=f3e219]:
+            - generic [ref=f3e220]:
+              - heading [level=3] [ref=f3e693]: Arborescence
+              - generic [ref=f3e228]:
+                - generic [ref=f3e229]: 6 nœuds
+                - textbox [ref=f3e694]:
+                  - /placeholder: Rechercher...
+            - generic [ref=f3e232]:
+              - generic [ref=f3e601] [cursor=pointer]:
+                - generic [ref=f3e607]: bank
+                - generic [ref=f3e608]: dossier
+              - generic [ref=f3e610] [cursor=pointer]:
+                - generic [ref=f3e616]: Documentation
+                - generic [ref=f3e617]: dossier
+              - generic [ref=f3e618]:
+                - generic [ref=f3e619] [cursor=pointer]:
+                  - generic [ref=f3e627]: ressources_humaines_equipes_equipe_B_equipe_B
+                  - generic [ref=f3e628]: dossier
+                - generic [ref=f3e630]:
+                  - generic [ref=f3e631] [cursor=pointer]:
+                    - generic [ref=f3e638]: ahmed abbes
+                    - generic [ref=f3e639]: image
+                  - generic [ref=f3e640]:
+                    - generic [ref=f3e642] [cursor=pointer]:
+                      - generic [ref=f3e648]: ahmed_abbes.jpg
+                      - generic [ref=f3e649]: fichier
+                    - generic [ref=f3e651] [cursor=pointer]:
+                      - generic [ref=f3e657]: metadata-ahmed_abbes.json
+                      - generic [ref=f3e658]: fichier
+            - button [ref=f3e695] [cursor=pointer]: Actualiser l'arborescence
+          - generic [ref=f3e591]:
+            - heading [level=3] [ref=f3e696]: Visualiseur
+            - paragraph [ref=f3e599]: Sélectionnez un nœud dans l'arborescence pour afficher son contenu.
+  - dialog [ref=f3e700]:
+    - generic [ref=f3e701]:
+      - heading "Renommer" [level=2] [ref=f3e703]
+      - generic [ref=f3e704]:
+        - text: Nouveau nom
+        - textbox "Nouveau nom" [active] [ref=f3e705]: bank
+      - generic [ref=f3e706]:
+        - button "Annuler" [ref=f3e707] [cursor=pointer]
+        - button "Renommer" [ref=f3e708] [cursor=pointer]
