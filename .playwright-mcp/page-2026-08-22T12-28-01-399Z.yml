@@ -1,0 +1,102 @@
+- generic [ref=f3e1]:
+  - alert [ref=f3e65]
+  - generic [ref=f3e66]:
+    - complementary [ref=f3e68]:
+      - generic [ref=f3e69]: NexaFlow
+      - navigation [ref=f3e76]:
+        - link "Tableau de bord" [ref=f3e77] [cursor=pointer]:
+          - /url: /admin
+        - link "Pipeline DEV" [ref=f3e84] [cursor=pointer]:
+          - /url: /pipeline
+          - generic [ref=f3e89]: Pipeline
+          - generic [ref=f3e90]: DEV
+        - link "Q/R" [ref=f3e91] [cursor=pointer]:
+          - /url: /q-r
+        - link "Actions IA" [ref=f3e96] [cursor=pointer]:
+          - /url: /actions-ia
+        - link "Périphériques" [ref=f3e101] [cursor=pointer]:
+          - /url: /devices
+        - link "Alarmes actives" [ref=f3e105] [cursor=pointer]:
+          - /url: /alarmes-actives
+        - link "Historique IoT" [ref=f3e109] [cursor=pointer]:
+          - /url: /historique-iot
+        - link "Créer une procédure" [ref=f3e115] [cursor=pointer]:
+          - /url: /creer-procedure
+        - link "Guide procédure" [ref=f3e120] [cursor=pointer]:
+          - /url: /guide-procedure
+        - link "Approbations" [ref=f3e124] [cursor=pointer]:
+          - /url: /approvals
+        - link "Historique exécutions" [ref=f3e129] [cursor=pointer]:
+          - /url: /executions
+        - link "Structure BDD" [ref=f3e135] [cursor=pointer]:
+          - /url: /structure-bdd
+        - link "Banque d'images" [ref=f3e141] [cursor=pointer]:
+          - /url: /images
+        - link "Visioconférence" [ref=f3e147] [cursor=pointer]:
+          - /url: /video-conference
+        - link "Rapports" [ref=f3e152] [cursor=pointer]:
+          - /url: /rapports
+        - link "Équipes" [ref=f3e156] [cursor=pointer]:
+          - /url: /equipes
+        - link "État des lieux" [ref=f3e163] [cursor=pointer]:
+          - /url: /etat-des-lieux
+        - link "Chat IA" [ref=f3e168] [cursor=pointer]:
+          - /url: /chat-ia
+        - link "Centre IA" [ref=f3e172] [cursor=pointer]:
+          - /url: /ai-hub
+      - generic [ref=f3e177]: 🔧 Développement · v1.0
+    - main [ref=f3e179]:
+      - generic [ref=f3e180]:
+        - button "Réduire la sidebar" [ref=f3e182] [cursor=pointer]
+        - generic [ref=f3e184]:
+          - button "Toggle theme" [ref=f3e185] [cursor=pointer]
+          - button "2 Notifications" [ref=f3e188] [cursor=pointer]:
+            - generic [ref=f3e189]: "2"
+            - generic [ref=f3e190]: Notifications
+          - button "Profile" [ref=f3e191] [cursor=pointer]
+          - button "Déconnexion" [ref=f3e193] [cursor=pointer]
+          - generic "admin" [ref=f3e195]: A
+      - generic [ref=f3e198]:
+        - generic [ref=f3e199]:
+          - generic [ref=f3e200]:
+            - heading "Structure BDD" [level=1] [ref=f3e206]
+            - paragraph [ref=f3e207]: "Vue active : Hub / Médias · 6 nœuds"
+          - generic [ref=f3e208]:
+            - button "Hub / Web" [ref=f3e209] [cursor=pointer]
+            - button "SQLite" [ref=f3e210] [cursor=pointer]
+            - button "Vectorielle" [ref=f3e211] [cursor=pointer]
+            - button "Médias" [active] [ref=f3e212] [cursor=pointer]
+        - generic [ref=f3e213]: Initialisation de la BDD locale en attente d'approbation administrateur.
+        - generic [ref=f3e218]:
+          - generic [ref=f3e219]:
+            - generic [ref=f3e220]:
+              - heading "Arborescence" [level=3] [ref=f3e227]
+              - generic [ref=f3e228]:
+                - generic [ref=f3e229]: 6 nœuds
+                - textbox "Rechercher..." [ref=f3e230]
+            - generic [ref=f3e232]:
+              - generic [ref=f3e601] [cursor=pointer]:
+                - generic [ref=f3e607]: bank
+                - generic [ref=f3e608]: dossier
+              - generic [ref=f3e610] [cursor=pointer]:
+                - generic [ref=f3e616]: Documentation
+                - generic [ref=f3e617]: dossier
+              - generic [ref=f3e618]:
+                - generic [ref=f3e619] [cursor=pointer]:
+                  - generic [ref=f3e627]: ressources_humaines_equipes_equipe_B_equipe_B
+                  - generic [ref=f3e628]: dossier
+                - generic [ref=f3e630]:
+                  - generic [ref=f3e631] [cursor=pointer]:
+                    - generic [ref=f3e638]: ahmed abbes
+                    - generic [ref=f3e639]: image
+                  - generic [ref=f3e640]:
+                    - generic [ref=f3e642] [cursor=pointer]:
+                      - generic [ref=f3e648]: ahmed_abbes.jpg
+                      - generic [ref=f3e649]: fichier
+                    - generic [ref=f3e651] [cursor=pointer]:
+                      - generic [ref=f3e657]: metadata-ahmed_abbes.json
+                      - generic [ref=f3e658]: fichier
+            - button "Actualiser l'arborescence" [ref=f3e659] [cursor=pointer]
+          - generic [ref=f3e591]:
+            - heading "Visualiseur" [level=3] [ref=f3e597]
+            - paragraph [ref=f3e599]: Sélectionnez un nœud dans l'arborescence pour afficher son contenu.
