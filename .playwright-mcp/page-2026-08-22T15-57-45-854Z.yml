@@ -1,0 +1,93 @@
+- generic [ref=f17e1]:
+  - alert [ref=f17e123]
+  - generic [ref=f17e124]:
+    - complementary [ref=f17e126]:
+      - generic [ref=f17e127]: NexaFlow
+      - navigation [ref=f17e134]:
+        - link "Tableau de bord" [ref=f17e135] [cursor=pointer]:
+          - /url: /admin
+        - link "Pipeline DEV" [ref=f17e142] [cursor=pointer]:
+          - /url: /pipeline
+          - generic [ref=f17e147]: Pipeline
+          - generic [ref=f17e148]: DEV
+        - link "Q/R" [ref=f17e149] [cursor=pointer]:
+          - /url: /q-r
+        - link "Actions IA" [ref=f17e154] [cursor=pointer]:
+          - /url: /actions-ia
+        - link "Périphériques" [ref=f17e159] [cursor=pointer]:
+          - /url: /devices
+        - link "Alarmes actives" [ref=f17e163] [cursor=pointer]:
+          - /url: /alarmes-actives
+        - link "Historique IoT" [ref=f17e167] [cursor=pointer]:
+          - /url: /historique-iot
+        - link "Créer une procédure" [ref=f17e173] [cursor=pointer]:
+          - /url: /creer-procedure
+        - link "Guide procédure" [ref=f17e178] [cursor=pointer]:
+          - /url: /guide-procedure
+        - link "Approbations" [ref=f17e182] [cursor=pointer]:
+          - /url: /approvals
+        - link "Historique exécutions" [ref=f17e187] [cursor=pointer]:
+          - /url: /executions
+        - link "Structure BDD" [ref=f17e193] [cursor=pointer]:
+          - /url: /structure-bdd
+        - link "Banque d'images" [ref=f17e199] [cursor=pointer]:
+          - /url: /images
+        - link "Visioconférence" [ref=f17e205] [cursor=pointer]:
+          - /url: /video-conference
+        - link "Rapports" [ref=f17e210] [cursor=pointer]:
+          - /url: /rapports
+        - link "Équipes" [ref=f17e214] [cursor=pointer]:
+          - /url: /equipes
+        - link "État des lieux" [ref=f17e221] [cursor=pointer]:
+          - /url: /etat-des-lieux
+        - link "Chat IA" [ref=f17e226] [cursor=pointer]:
+          - /url: /chat-ia
+        - link "Centre IA" [ref=f17e230] [cursor=pointer]:
+          - /url: /ai-hub
+      - generic [ref=f17e235]: 🔧 Développement · v1.0
+    - main [ref=f17e237]:
+      - generic [ref=f17e238]:
+        - button "Réduire la sidebar" [ref=f17e240] [cursor=pointer]
+        - generic [ref=f17e242]:
+          - button "Toggle theme" [ref=f17e243] [cursor=pointer]
+          - button "2 Notifications" [ref=f17e246] [cursor=pointer]:
+            - generic [ref=f17e247]: "2"
+            - generic [ref=f17e248]: Notifications
+          - button "Profile" [ref=f17e249] [cursor=pointer]
+          - button "Déconnexion" [ref=f17e251] [cursor=pointer]
+          - generic "admin" [ref=f17e253]: A
+      - generic [ref=f17e256]:
+        - generic [ref=f17e258]:
+          - generic [ref=f17e265]:
+            - heading "Centre de Commandement IA" [level=1] [ref=f17e266]
+            - paragraph [ref=f17e271]: Super Agent • En ligne
+          - button "Effacer la conversation" [ref=f17e273] [cursor=pointer]
+        - generic [ref=f17e275]:
+          - generic [ref=f17e276]:
+            - generic [ref=f17e277]:
+              - generic [ref=f17e281]: Super Agent Chat
+              - generic [ref=f17e282]: Groq LLM
+            - generic [ref=f17e284]:
+              - generic [ref=f17e317]:
+                - generic [ref=f17e318]: Montre-moi des images de turbine
+                - generic [ref=f17e320]: 16:57
+              - generic [ref=f17e330]:
+                - generic [ref=f17e331]: Désolé, une erreur est survenue lors du traitement de votre demande.
+                - generic [ref=f17e333]: 16:57
+                - button [ref=f17e336] [cursor=pointer]
+            - separator
+            - generic [ref=f17e296]:
+              - generic [ref=f17e298]:
+                - textbox "Envoyez une commande au Super Agent..." [active] [ref=f17e299]
+                - generic [ref=f17e300]:
+                  - button [disabled]
+              - paragraph [ref=f17e301]: Appuyez sur Entrée pour envoyer • Le Super Agent détecte automatiquement l'intention
+          - generic [ref=f17e303]:
+            - tablist [ref=f17e304]:
+              - tab "Mind Map" [ref=f17e305] [cursor=pointer]
+              - tab "Images" [ref=f17e306] [cursor=pointer]
+              - tab "Résultats RAG" [selected] [ref=f17e307] [cursor=pointer]
+            - tabpanel "Résultats RAG" [ref=f17e337]:
+              - generic [ref=f17e338]:
+                - paragraph [ref=f17e343]: Aucune image retournée par le RAG pour le moment.
+                - paragraph [ref=f17e344]: Posez une question liée aux images/médias pour voir des résultats ici.
