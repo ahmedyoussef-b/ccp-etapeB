@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         email,
         name,
         passwordHash,
-        desiredRole,
+        desiredRole: desiredRole as "admin" | "superviseur" | "chef_de_bloc" | "chef_de_quart" | "rondier",
         message: message || null,
       },
     });
