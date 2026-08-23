@@ -77,23 +77,25 @@ export const imageService = {
     return item;
   },
 
-  async create(item: Omit<MediaItem, "id" | "createdAt" | "updatedAt">): Promise<MediaItem> {
+  async create(item: Omit<MediaItem, "id" | "createdAt" | "updatedAt">, signal?: AbortSignal): Promise<MediaItem> {
     console.log(`[ImageService] create() - POST ${API_BASE} | title="${item.title}" category="${item.category}" kind=${item.kind} size=${formatBytes(item.size)}`);
     await delay();
     const result = await fetchJson<MediaItem>(API_BASE, {
       method: "POST",
       body: JSON.stringify(item),
+      signal,
     });
     console.log(`[ImageService] create() - created item id=${result.id}`);
     return result;
   },
 
-  async update(id: string, updates: Partial<Omit<MediaItem, "id" | "createdAt">>): Promise<MediaItem | undefined> {
+  async update(id: string, updates: Partial<Omit<MediaItem, "id" | "createdAt">>, signal?: AbortSignal): Promise<MediaItem | undefined> {
     console.log(`[ImageService] update() - PUT ${API_BASE}/${id} | fields=${Object.keys(updates).join(",")}`);
     await delay();
     const result = await fetchJson<MediaItem>(`${API_BASE}/${id}`, {
       method: "PUT",
       body: JSON.stringify(updates),
+      signal,
     });
     console.log(`[ImageService] update() - updated item: ${result?.title || "null"}`);
     return result;

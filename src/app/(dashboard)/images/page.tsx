@@ -594,18 +594,18 @@ export default function ImagesPage() {
     setIsRecording(false);
   };
 
-  const withTimeout = async <T,>(promise: Promise<T>, ms = 8000): Promise<T> => {
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error("L'enregistrement a expiré. Veuillez réessayer.")), ms);
-    });
-
+  const withTimeout = async <T,>(fn: (signal: AbortSignal) => Promise<T>, ms = 30000): Promise<T> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), ms);
     try {
-      return await Promise.race([promise, timeoutPromise]);
-    } finally {
-      if (timeoutId !== undefined) {
-        clearTimeout(timeoutId);
+      return await fn(controller.signal);
+    } catch (error) {
+      if (controller.signal.aborted) {
+        throw new Error("L'enregistrement a expiré. Veuillez réessayer.");
       }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
     }
   };
 
@@ -641,20 +641,21 @@ export default function ImagesPage() {
       if (editingItem) {
         console.log(`[ImagesPage] handleSave() - UPDATE id=${editingItem.id} title="${formData.title}" save=${currentSave}`);
         const updated = await withTimeout(
-          imageService.update(editingItem.id, {
-            title: formData.title.trim(),
-            category: formData.category,
-            description: formData.description.trim(),
-            tags,
-            kind: formData.kind,
-            dataUrl: formData.dataUrl,
-            thumbnailDataUrl: formData.thumbnailDataUrl,
-            mimeType: formData.mimeType,
-            size: formData.size,
-            geolocation: geoLocation || undefined,
-            syncStatus: "pending",
-          }),
-          8000
+          (signal) =>
+            imageService.update(editingItem.id, {
+              title: formData.title.trim(),
+              category: formData.category,
+              description: formData.description.trim(),
+              tags,
+              kind: formData.kind,
+              dataUrl: formData.dataUrl,
+              thumbnailDataUrl: formData.thumbnailDataUrl,
+              mimeType: formData.mimeType,
+              size: formData.size,
+              geolocation: geoLocation || undefined,
+              syncStatus: "pending",
+            }, signal),
+          30000
         );
         if (currentSave !== saveCounterRef.current) return;
         console.log(`[ImagesPage] handleSave() - UPDATE success save=${currentSave}`);
@@ -667,20 +668,21 @@ export default function ImagesPage() {
       } else {
         console.log(`[ImagesPage] handleSave() - CREATE title="${formData.title}" kind=${formData.kind} size=${formatSize(formData.size)} save=${currentSave}`);
         const created = await withTimeout(
-          imageService.create({
-            title: formData.title.trim(),
-            category: formData.category,
-            description: formData.description.trim(),
-            tags,
-            kind: formData.kind,
-            dataUrl: formData.dataUrl,
-            thumbnailDataUrl: formData.thumbnailDataUrl,
-            mimeType: formData.mimeType,
-            size: formData.size,
-            geolocation: geoLocation || undefined,
-            syncStatus: "pending",
-          }),
-          8000
+          (signal) =>
+            imageService.create({
+              title: formData.title.trim(),
+              category: formData.category,
+              description: formData.description.trim(),
+              tags,
+              kind: formData.kind,
+              dataUrl: formData.dataUrl,
+              thumbnailDataUrl: formData.thumbnailDataUrl,
+              mimeType: formData.mimeType,
+              size: formData.size,
+              geolocation: geoLocation || undefined,
+              syncStatus: "pending",
+            }, signal),
+          30000
         );
         if (currentSave !== saveCounterRef.current) return;
         console.log(`[ImagesPage] handleSave() - CREATE success id=${created?.id} save=${currentSave}`);

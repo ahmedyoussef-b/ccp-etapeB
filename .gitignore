@@ -40,3 +40,5 @@ dist/
 !.data/registry/
 !.data/registry/**
 !.data/mirror_repertoire.json
+
+.vercel
