@@ -590,6 +590,15 @@ export default function ImagesPage() {
     setIsRecording(false);
   };
 
+  const withTimeout = async <T,>(promise: Promise<T>, ms = 15000): Promise<T> => {
+    let timeoutId: NodeJS.Timeout;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error("L'enregistrement a expiré. Veuillez réessayer.")), ms);
+    });
+
+    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+  };
+
   const handleSave = async () => {
     if (!formData.title.trim()) {
       toast.error("Le titre est requis");
@@ -613,19 +622,21 @@ export default function ImagesPage() {
     try {
       if (editingItem) {
         console.log(`[ImagesPage] handleSave() - UPDATE id=${editingItem.id} title="${formData.title}"`);
-        const updated = await imageService.update(editingItem.id, {
-          title: formData.title.trim(),
-          category: formData.category,
-          description: formData.description.trim(),
-          tags,
-          kind: formData.kind,
-          dataUrl: formData.dataUrl,
-          thumbnailDataUrl: formData.thumbnailDataUrl,
-          mimeType: formData.mimeType,
-          size: formData.size,
-          geolocation: geoLocation || undefined,
-          syncStatus: "pending",
-        });
+        const updated = await withTimeout(
+          imageService.update(editingItem.id, {
+            title: formData.title.trim(),
+            category: formData.category,
+            description: formData.description.trim(),
+            tags,
+            kind: formData.kind,
+            dataUrl: formData.dataUrl,
+            thumbnailDataUrl: formData.thumbnailDataUrl,
+            mimeType: formData.mimeType,
+            size: formData.size,
+            geolocation: geoLocation || undefined,
+            syncStatus: "pending",
+          })
+        );
         console.log(`[ImagesPage] handleSave() - UPDATE success`);
         toast.success("Média mis à jour avec succès");
         if (updated) {
@@ -635,30 +646,34 @@ export default function ImagesPage() {
         }
       } else {
         console.log(`[ImagesPage] handleSave() - CREATE title="${formData.title}" kind=${formData.kind} size=${formatSize(formData.size)}`);
-        const created = await imageService.create({
-          title: formData.title.trim(),
-          category: formData.category,
-          description: formData.description.trim(),
-          tags,
-          kind: formData.kind,
-          dataUrl: formData.dataUrl,
-          thumbnailDataUrl: formData.thumbnailDataUrl,
-          mimeType: formData.mimeType,
-          size: formData.size,
-          geolocation: geoLocation || undefined,
-          syncStatus: "pending",
-        });
-        console.log(`[ImagesPage] handleSave() - CREATE success`);
+        const created = await withTimeout(
+          imageService.create({
+            title: formData.title.trim(),
+            category: formData.category,
+            description: formData.description.trim(),
+            tags,
+            kind: formData.kind,
+            dataUrl: formData.dataUrl,
+            thumbnailDataUrl: formData.thumbnailDataUrl,
+            mimeType: formData.mimeType,
+            size: formData.size,
+            geolocation: geoLocation || undefined,
+            syncStatus: "pending",
+          })
+        );
+        console.log(`[ImagesPage] handleSave() - CREATE success id=${created?.id}`);
         toast.success("Média ajouté avec succès");
-        setItems((prev) => [created, ...prev]);
-        setTotalCount((prev) => prev + 1);
+        if (created) {
+          setItems((prev) => [created, ...prev]);
+          setTotalCount((prev) => prev + 1);
+        }
       }
       setDialogOpen(false);
       resetForm();
       await loadVectorizedImageIds();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erreur lors de l'enregistrement";
-      console.log(`[ImagesPage] handleSave() - ERROR: ${message}`);
+      console.error(`[ImagesPage] handleSave() - ERROR: ${message}`, err);
       toast.error(message);
     } finally {
       setSaving(false);
