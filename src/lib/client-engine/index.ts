@@ -431,6 +431,96 @@ export class ClientEngine {
     await clearVectorTree();
   }
 
+  /**
+   * Vectorize a media item and its metadata for RAG AI multimodal / semantic search.
+   * Stores rich metadata with type: 'image_metadata' for ImageRetriever & AI queries.
+   */
+  async vectorizeMediaItem(media: {
+    id: string;
+    title: string;
+    category?: string;
+    description?: string;
+    tags?: string[];
+    kind?: "image" | "video";
+    mimeType?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<void> {
+    const docId = `media-${media.id}`;
+    const tagsStr = Array.isArray(media.tags) ? media.tags.join(" ") : "";
+    const cat = media.category || "sans-categorie";
+    const kind = media.kind || "image";
+    const desc = media.description || "";
+    const title = media.title || media.id;
+
+    const content = `[Média ${kind}: ${title}] Catégorie: ${cat} | Description: ${desc} | Tags: ${tagsStr} | Type: ${media.mimeType || kind}`;
+
+    const chunks = [{
+      documentId: docId,
+      documentName: title,
+      chunkIndex: 0,
+      content,
+      embedding: simpleTokenEmbedding(content),
+      metadata: {
+        type: "image_metadata",
+        imageId: media.id,
+        title,
+        category: cat,
+        kind,
+        description: desc,
+        tags: media.tags || [],
+        mimeType: media.mimeType,
+        ...media.metadata,
+      },
+    }];
+
+    await this.addVectorDocument({
+      id: docId,
+      name: title,
+      originalPath: `${cat}/${title}`,
+      relativePath: `${cat}/${title}`,
+      chunks,
+      metadata: {
+        source: "media",
+        type: "image_metadata",
+        imageId: media.id,
+        kind,
+        category: cat,
+        title,
+      },
+    });
+
+    const pathParts = `${cat}/${title}`.split("/").filter(Boolean);
+    let currentPath = "";
+    let parentId: string | null = null;
+
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      currentPath = currentPath ? `${currentPath}/${pathParts[i]}` : pathParts[i];
+      const treeNodeId = `vf-${currentPath}`;
+      await this.addVectorTreeNode({
+        id: treeNodeId,
+        name: pathParts[i],
+        type: "folder",
+        parentId,
+        order: i,
+        relativePath: currentPath,
+        content: null,
+        docId: null,
+      });
+      parentId = treeNodeId;
+    }
+
+    await this.addVectorTreeNode({
+      id: `vf-${cat}/${title}`,
+      name: title,
+      type: "file",
+      parentId,
+      order: 0,
+      relativePath: `${cat}/${title}`,
+      content,
+      docId,
+    });
+  }
+
   async resetLocalTreeOnly(): Promise<void> {
     const db = getDb();
     if (db) {

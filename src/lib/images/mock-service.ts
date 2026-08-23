@@ -1,4 +1,5 @@
 import { csrfFetch } from "@/lib/procedures/csrf-fetch";
+import { clientEngine } from "@/lib/client-engine";
 
 export type MediaKind = "image" | "video";
 
@@ -86,6 +87,22 @@ export const imageService = {
       signal,
     });
     console.log(`[ImageService] create() - created item id=${result.id}`);
+
+    // Auto-vectorize for RAG
+    try {
+      await clientEngine.vectorizeMediaItem({
+        id: result.id,
+        title: result.title,
+        category: result.category,
+        description: result.description,
+        tags: result.tags,
+        kind: result.kind,
+        mimeType: result.mimeType,
+      });
+    } catch (e) {
+      console.warn("[ImageService] RAG auto-vectorization warning:", e);
+    }
+
     return result;
   },
 
@@ -98,15 +115,42 @@ export const imageService = {
       signal,
     });
     console.log(`[ImageService] update() - updated item: ${result?.title || "null"}`);
+
+    if (result) {
+      try {
+        await clientEngine.vectorizeMediaItem({
+          id: result.id,
+          title: result.title,
+          category: result.category,
+          description: result.description,
+          tags: result.tags,
+          kind: result.kind,
+          mimeType: result.mimeType,
+        });
+      } catch (e) {
+        console.warn("[ImageService] RAG auto-vectorization warning:", e);
+      }
+    }
+
     return result;
   },
 
   async delete(id: string): Promise<boolean> {
     console.log(`[ImageService] delete() - DELETE ${API_BASE}/${id}`);
     await delay();
-    const res = await csrfFetch(`${API_BASE}/${id}`, { method: "DELETE" });
-    console.log(`[ImageService] delete() - result=${res.ok}`);
-    return res.ok;
+    await fetchJson<{ success: boolean }>(`${API_BASE}/${id}`, {
+      method: "DELETE",
+    });
+    console.log(`[ImageService] delete() - deleted item id=${id}`);
+
+    try {
+      await clientEngine.deleteVectorDocument(`media-${id}`);
+      await clientEngine.deleteVectorTreeNode(`vf-${id}`);
+    } catch (e) {
+      // ignore
+    }
+
+    return true;
   },
 
   async getCategories(): Promise<string[]> {

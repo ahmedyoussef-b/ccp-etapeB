@@ -1,4 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import {
+  create as createDiskItem,
+  update as updateDiskItem,
+  remove as removeDiskItem,
+} from "@/lib/images/server-store";
 
 export interface MediaItem {
   id: string;
@@ -81,7 +86,7 @@ export async function createItem(item: Omit<MediaItem, "id" | "createdAt" | "upd
     },
   });
 
-  return {
+  const mediaItem: MediaItem = {
     id: created.id,
     title: created.title,
     category: created.category,
@@ -97,6 +102,18 @@ export async function createItem(item: Omit<MediaItem, "id" | "createdAt" | "upd
     updatedAt: created.updatedAt.toISOString(),
     syncStatus: "synced" as const,
   };
+
+  // Also write to filesystem in .data/registry/<category>/<slug>/
+  try {
+    await createDiskItem({
+      ...item,
+      id: created.id,
+    } as Parameters<typeof createDiskItem>[0]);
+  } catch (err) {
+    console.warn("[ServerStorePrisma] Disk mirror warning:", err);
+  }
+
+  return mediaItem;
 }
 
 export async function updateItem(id: string, updates: Partial<Omit<MediaItem, "id" | "createdAt">>): Promise<MediaItem | undefined> {
@@ -111,7 +128,7 @@ export async function updateItem(id: string, updates: Partial<Omit<MediaItem, "i
     data,
   });
 
-  return {
+  const mediaItem: MediaItem = {
     id: updated.id,
     title: updated.title,
     category: updated.category,
@@ -127,9 +144,23 @@ export async function updateItem(id: string, updates: Partial<Omit<MediaItem, "i
     updatedAt: updated.updatedAt.toISOString(),
     syncStatus: "synced" as const,
   };
+
+  try {
+    await updateDiskItem(id, updates);
+  } catch (err) {
+    console.warn("[ServerStorePrisma] Disk update warning:", err);
+  }
+
+  return mediaItem;
 }
 
 export async function deleteItem(id: string): Promise<boolean> {
+  try {
+    await removeDiskItem(id);
+  } catch (err) {
+    console.warn("[ServerStorePrisma] Disk delete warning:", err);
+  }
+
   const result = await prisma.mediaItem.delete({
     where: { id },
   });

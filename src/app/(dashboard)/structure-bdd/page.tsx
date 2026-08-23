@@ -140,6 +140,7 @@ const TreeNodeItem = memo(function TreeNodeItem({
   onAdd,
   onRename,
   onEdit,
+  onEditMetadata,
   onPreview,
   onVectorize,
   onDownload,
@@ -154,6 +155,7 @@ const TreeNodeItem = memo(function TreeNodeItem({
   onAdd?: (node: WebTreeNode | LocalNode) => void;
   onRename?: (node: WebTreeNode | LocalNode) => void;
   onEdit?: (node: LocalNode) => void;
+  onEditMetadata?: (node: ImageNode) => void;
   onPreview?: (node: WebTreeNode | LocalNode) => void;
   onVectorize?: (node: LocalNode, path: string) => void;
   onDownload?: (node: WebTreeNode | LocalNode) => void;
@@ -182,7 +184,17 @@ const TreeNodeItem = memo(function TreeNodeItem({
   };
 
   const isVectorized = (() => {
-    if (!vectorizedPaths || !isLocal) return false;
+    if (!vectorizedPaths) return false;
+    if (isImage) {
+      const imageId = String(node.id).replace(/^image-/, "");
+      return (
+        vectorizedPaths.has(`media-${imageId}`) ||
+        vectorizedPaths.has(`media-${node.id}`) ||
+        vectorizedPaths.has(nodePath) ||
+        vectorizedPaths.has(node.name)
+      );
+    }
+    if (!isLocal) return false;
     return isNodeVectorized(node as LocalNode, path);
   })();
 
@@ -298,6 +310,20 @@ const TreeNodeItem = memo(function TreeNodeItem({
                 <FileJson className="h-3 w-3" />
               </Button>
             )}
+            {isImage && onEditMetadata && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-amber-500"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditMetadata(node as ImageNode);
+                }}
+                title="Éditer métadonnées JSON"
+              >
+                <FileJson className="h-3 w-3" />
+              </Button>
+            )}
               {isFileNode && onVectorize && (
                 <Button
                   variant="ghost"
@@ -344,6 +370,7 @@ const TreeNodeItem = memo(function TreeNodeItem({
                   onAdd={onAdd}
                   onRename={onRename}
                   onEdit={onEdit}
+                  onEditMetadata={onEditMetadata}
                   onPreview={onPreview}
                   onVectorize={onVectorize}
                   onDownload={onDownload}
@@ -390,6 +417,10 @@ export default function StructureBDDPage() {
   const [showOnlyVectorized, setShowOnlyVectorized] = useState(false);
   const [vectorizedPaths, setVectorizedPaths] = useState<Set<string>>(new Set());
   const [vectorizedCount, setVectorizedCount] = useState(0);
+  // ── Image metadata editor state ──────────────────────────────────────────────
+  const [editingImageMetadata, setEditingImageMetadata] = useState<{ id: string; name: string } | null>(null);
+  const [imageMetadataContent, setImageMetadataContent] = useState("");
+  const [savingImageMetadata, setSavingImageMetadata] = useState(false);
 
   const loadTrees = useCallback(async () => {
     console.log("[StructureBDD] loadTrees start");
@@ -440,12 +471,10 @@ export default function StructureBDDPage() {
         const paths = new Set<string>();
         const count = docs.length;
         for (const doc of docs) {
-          if (doc.relativePath) {
-            paths.add(doc.relativePath);
-          }
-          if (doc.originalPath) {
-            paths.add(doc.originalPath);
-          }
+          if (doc.id) paths.add(doc.id);
+          if (doc.name) paths.add(doc.name);
+          if (doc.relativePath) paths.add(doc.relativePath);
+          if (doc.originalPath) paths.add(doc.originalPath);
         }
         setVectorizedPaths(paths);
         setVectorizedCount(count);
@@ -918,6 +947,139 @@ export default function StructureBDDPage() {
       toast.error("Erreur lors de la suppression");
     }
   }, [loadTrees, removeNodeById]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Metadata editor for image nodes ─────────────────────────────────────────
+  const handleEditImageMetadata = useCallback(async (node: ImageNode) => {
+    const imageId = String(node.id).replace(/^image-/, "");
+    console.log("[StructureBDD] edit image metadata", { imageId, name: node.name });
+    try {
+      const res = await fetch(`/api/images/${encodeURIComponent(imageId)}/metadata`);
+      if (!res.ok) throw new Error("Failed to fetch metadata");
+      const data = await res.json() as { metadata: Record<string, unknown> };
+      setImageMetadataContent(JSON.stringify(data.metadata, null, 2));
+      setEditingImageMetadata({ id: imageId, name: node.name });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erreur lors du chargement";
+      console.error("[StructureBDD] edit image metadata error", msg);
+      toast.error("Impossible de charger les métadonnées");
+    }
+  }, []);
+
+  const confirmEditImageMetadata = async () => {
+    if (!editingImageMetadata) return;
+    setSavingImageMetadata(true);
+    try {
+      const parsed = JSON.parse(imageMetadataContent);
+      const res = await csrfFetch(`/api/images/${encodeURIComponent(editingImageMetadata.id)}/metadata`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed),
+      });
+      if (!res.ok) throw new Error("Failed to save metadata");
+
+      // Auto-vectorize for RAG search
+      try {
+        await clientEngine.vectorizeMediaItem({
+          id: editingImageMetadata.id,
+          title: parsed.title || editingImageMetadata.name,
+          category: parsed.category,
+          description: parsed.description,
+          tags: parsed.tags,
+          kind: parsed.kind,
+          mimeType: parsed.mimeType,
+          metadata: parsed,
+        });
+      } catch (vecErr) {
+        console.warn("[StructureBDD] RAG auto-vectorize warning:", vecErr);
+      }
+
+      toast.success("Métadonnées mises à jour et synchronisées avec le RAG");
+      setEditingImageMetadata(null);
+      setImageMetadataContent("");
+      await loadTrees();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la sauvegarde";
+      console.error("[StructureBDD] confirm edit image metadata error", msg);
+      toast.error(msg);
+    } finally {
+      setSavingImageMetadata(false);
+    }
+  };
+
+  const handleVectorizeMedia = useCallback(async (node: LocalNode | ImageNode | WebTreeNode, path: string) => {
+    const imageId = String(node.id).replace(/^image-/, "");
+    console.log("[StructureBDD] vectorize media start", { imageId, path });
+    try {
+      setVectorizing(true);
+      const res = await fetch(`/api/images/${encodeURIComponent(imageId)}`);
+      let itemData: Record<string, unknown> = {};
+      if (res.ok) {
+        itemData = await res.json();
+      }
+
+      await clientEngine.vectorizeMediaItem({
+        id: imageId,
+        title: (itemData.title as string) || node.name,
+        category: (itemData.category as string) || path,
+        description: itemData.description as string,
+        tags: itemData.tags as string[],
+        kind: (itemData.kind as "image" | "video") || "image",
+        mimeType: itemData.mimeType as string,
+        metadata: itemData,
+      });
+
+      await loadTrees();
+      toast.success(`Média "${node.name}" connecté au RAG pour recherche IA`);
+    } catch (err) {
+      console.error("[StructureBDD] vectorize media error", err);
+      toast.error("Erreur lors de la vectorisation du média");
+    } finally {
+      setVectorizing(false);
+    }
+  }, [loadTrees]);
+
+  const handleVectorizeAllMedia = async () => {
+    setVectorizing(true);
+    let count = 0;
+    try {
+      const res = await fetch("/api/images?limit=500");
+      if (!res.ok) throw new Error("Failed to fetch media");
+      const data = await res.json();
+      const items = (data.items || []) as Array<{
+        id: string;
+        title: string;
+        category: string;
+        description?: string;
+        tags?: string[];
+        kind?: "image" | "video";
+        mimeType?: string;
+      }>;
+
+      for (const item of items) {
+        try {
+          await clientEngine.vectorizeMediaItem({
+            id: item.id,
+            title: item.title,
+            category: item.category,
+            description: item.description,
+            tags: item.tags,
+            kind: item.kind,
+            mimeType: item.mimeType,
+          });
+          count++;
+        } catch (e) {
+          console.warn("[StructureBDD] vectorize media item failed:", item.id, e);
+        }
+      }
+      await loadTrees();
+      toast.success(`${count} média(s) vectorisé(s) et connecté(s) au RAG`);
+    } catch (err) {
+      console.error("[StructureBDD] vectorize all media error:", err);
+      toast.error("Erreur lors de la vectorisation globale des médias");
+    } finally {
+      setVectorizing(false);
+    }
+  };
 
   const handleAddWeb = useCallback((node: WebTreeNode | LocalNode) => {
     if (!("id" in node) || typeof node.id === "string") return;
@@ -1588,8 +1750,9 @@ export default function StructureBDDPage() {
                   onAdd={activeView === "web" ? handleAddWeb : activeView === "local" ? handleAddLocal : undefined}
                   onRename={activeView === "web" ? handleRenameWeb : activeView === "local" ? handleRenameLocal : activeView === "images" ? handleRenameImage : undefined}
                   onEdit={activeView === "local" ? handleEditJson : undefined}
+                  onEditMetadata={handleEditImageMetadata}
                   onPreview={handlePreviewFile}
-                  onVectorize={activeView === "local" ? handleVectorizeLocalFile : undefined}
+                  onVectorize={activeView === "local" ? handleVectorizeLocalFile : activeView === "images" ? handleVectorizeMedia : undefined}
                   onDownload={activeView === "web" ? handleDownloadDirectory : undefined}
                   vectorizedPaths={vectorizedPaths}
                   vectorizing={vectorizing}
@@ -1635,37 +1798,51 @@ export default function StructureBDDPage() {
                   Vectoriser tout
                 </Button>
               )}
+              {activeView === "images" && (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleVectorizeAllMedia}
+                    disabled={vectorizing}
+                    className="w-full"
+                  >
+                    <Database className={`h-4 w-4 mr-2 ${vectorizing ? "animate-spin text-primary" : "text-primary"}`} />
+                    {vectorizing ? "Vectorisation en cours..." : "Connecter tous les médias au RAG"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadTrees}
+                    disabled={loading}
+                    className="w-full"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+                    Actualiser l&apos;arborescence
+                  </Button>
+                </>
+              )}
           </div>
 
           {activeView === "vector" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                if (window.confirm("Vider complètement la vectorielle ?")) {
-                  await clientEngine.clearVectorTree();
-                  await clientEngine.clearAllVectorDocuments();
-                  await loadTrees();
-                  toast.success("Vectorielle vidée");
-                }
-              }}
-              className="w-full"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Vider la vectorielle
-            </Button>
-          )}
-          {activeView === "images" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadTrees}
-              disabled={loading}
-              className="w-full"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-              Actualiser l&apos;arborescence
-            </Button>
+            <div className="p-3 border-t border-border">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  if (window.confirm("Vider complètement la vectorielle ?")) {
+                    await clientEngine.clearVectorTree();
+                    await clientEngine.clearAllVectorDocuments();
+                    await loadTrees();
+                    toast.success("Vectorielle vidée");
+                  }
+                }}
+                className="w-full"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Vider la vectorielle
+              </Button>
+            </div>
           )}
         </Card>
 
@@ -1884,6 +2061,41 @@ export default function StructureBDDPage() {
               Annuler
             </Button>
             <Button onClick={confirmRename}>Renommer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Image Metadata Modal */}
+      <Dialog open={!!editingImageMetadata} onOpenChange={(open) => !open && setEditingImageMetadata(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Éditer les métadonnées JSON : {editingImageMetadata?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Contenu JSON (métadonnées du média)</label>
+              <textarea
+                value={imageMetadataContent}
+                onChange={(e) => setImageMetadataContent(e.target.value)}
+                placeholder='{ "title": "...", "description": "...", "tags": [...] }'
+                className="w-full h-80 p-2 font-mono text-sm border rounded-md resize-none mt-1 bg-muted/20"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingImageMetadata(null)}>
+              Annuler
+            </Button>
+            <Button onClick={confirmEditImageMetadata} disabled={savingImageMetadata}>
+              {savingImageMetadata ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Enregistrement...
+                </>
+              ) : (
+                "Enregistrer"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

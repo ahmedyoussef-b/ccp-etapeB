@@ -1,8 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-const NORMAL_DB_DIR = path.join(process.cwd(), ".local-db", "images");
-const TMP_DB_DIR = path.join("/tmp", ".local-db", "images");
+// ─── MIME extensions ──────────────────────────────────────────────────────────
 
 const MIME_TYPE_EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -21,127 +20,104 @@ function getMimeTypeExtension(mimeType: string): string {
   return MIME_TYPE_EXTENSIONS[mimeType] || "bin";
 }
 
-function getMediaFilePath(item: MediaItem): string {
-  const ext = getMimeTypeExtension(item.mimeType);
-  return path.join(getItemDir(item), `media.${ext}`);
+// ─── Slug helper ──────────────────────────────────────────────────────────────
+
+/**
+ * Produce a safe filesystem slug from a media title.
+ * "ahmed abbes" → "ahmed_abbes"
+ * "Équipement lourd" → "equipement_lourd"
+ */
+export function titleSlug(item: Pick<MediaItem, "title" | "id">): string {
+  return (item.title || item.id)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // strip diacritics
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
+// ─── Base directory ───────────────────────────────────────────────────────────
+
+/**
+ * Root of the media registry on disk.
+ * On Vercel (read-only filesystem) we fall back to /tmp.
+ * Locally we write into the project's .data/registry directory so the
+ * Structure BDD tree can see the files.
+ */
+export function getMediaDir(): string {
+  const dataDir = path.join(process.cwd(), ".data", "registry");
+  try {
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+    const testFile = path.join(dataDir, ".write-test");
+    fs.writeFileSync(testFile, "ok");
+    fs.unlinkSync(testFile);
+    return dataDir;
+  } catch {
+    // Vercel / read-only fs fallback
+    const tmpDir = path.join("/tmp", ".data", "registry");
+    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+    return tmpDir;
+  }
+}
+
+// ─── Path helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Directory for a single media item:
+ *   .data/registry/<category>/<title_slug>/
+ *
+ * e.g. category = "ressources humaines/equipe B", title = "ahmed abbes"
+ *   → .data/registry/ressources humaines/equipe B/ahmed_abbes/
+ */
+export function getItemDir(item: Pick<MediaItem, "title" | "id" | "category">): string {
+  let category = (item.category || "sans-categorie").trim();
+  if (category.startsWith("registry/")) {
+    category = category.slice("registry/".length);
+  } else if (category === "registry") {
+    category = "";
+  }
+  const segments = category ? category.split("/").filter(Boolean) : [];
+  const slug = titleSlug(item as Pick<MediaItem, "title" | "id">);
+  return path.join(getMediaDir(), ...segments, slug);
+}
+
+/** Path to the binary media file: <itemDir>/<title_slug>.<ext> */
+function getMediaFilePath(item: Pick<MediaItem, "title" | "id" | "category" | "mimeType">): string {
+  const ext = getMimeTypeExtension(item.mimeType);
+  return path.join(getItemDir(item), `${titleSlug(item as Pick<MediaItem, "title" | "id">)}.${ext}`);
+}
+
+/** Path to the JSON metadata file: <itemDir>/<title_slug>.json */
+export function getItemMetadataPath(item: Pick<MediaItem, "title" | "id" | "category">): string {
+  return path.join(getItemDir(item), `${titleSlug(item as Pick<MediaItem, "title" | "id">)}.json`);
+}
+
+// ─── resolveDataUrl ───────────────────────────────────────────────────────────
+
 export function resolveDataUrl(item: MediaItem): string {
+  // New naming: <slug>.<ext>
   const mediaPath = getMediaFilePath(item);
   if (fs.existsSync(mediaPath)) {
     const buffer = fs.readFileSync(mediaPath);
     return `data:${item.mimeType};base64,${buffer.toString("base64")}`;
   }
-  const itemDir = getItemDir(item);
-  const legacyDataPath = path.join(itemDir, "data");
-  if (fs.existsSync(legacyDataPath)) {
-    const buffer = fs.readFileSync(legacyDataPath);
+  // Legacy fallback: media.<ext>
+  const ext = getMimeTypeExtension(item.mimeType);
+  const legacyMedia = path.join(getItemDir(item), `media.${ext}`);
+  if (fs.existsSync(legacyMedia)) {
+    const buffer = fs.readFileSync(legacyMedia);
+    return `data:${item.mimeType};base64,${buffer.toString("base64")}`;
+  }
+  // Older fallback: raw "data" file
+  const legacyData = path.join(getItemDir(item), "data");
+  if (fs.existsSync(legacyData)) {
+    const buffer = fs.readFileSync(legacyData);
     return `data:${item.mimeType};base64,${buffer.toString("base64")}`;
   }
   return "";
 }
 
-let resolvedDbDir: string | null = null;
-
-function getDbDir(): string {
-  if (resolvedDbDir) return resolvedDbDir;
-
-  const candidates = [NORMAL_DB_DIR, TMP_DB_DIR];
-
-  for (const dir of candidates) {
-    try {
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-      const testFile = path.join(dir, ".write-test");
-      fs.writeFileSync(testFile, "test");
-      fs.unlinkSync(testFile);
-      resolvedDbDir = dir;
-      return dir;
-    } catch {
-      continue;
-    }
-  }
-
-  resolvedDbDir = NORMAL_DB_DIR;
-  return resolvedDbDir;
-}
-
-export function getMediaDir(): string {
-  return path.join(getDbDir(), "media");
-}
-
-export function getItemDir(item: MediaItem): string {
-  const safeCategory = (item.category || "sans-categorie").replace(/[^a-zA-Z0-9_-]/g, "_");
-  const safeTitle = (item.title || item.id).replace(/[^a-zA-Z0-9_-]/g, "_");
-  return path.join(getMediaDir(), safeCategory, `${safeTitle}_${item.id}`);
-}
-
-export function readItems(): MediaItem[] {
-  const mediaDir = getMediaDir();
-  if (!fs.existsSync(mediaDir)) {
-    return [];
-  }
-
-  const items: MediaItem[] = [];
-  const categories = fs.readdirSync(mediaDir, { withFileTypes: true });
-
-  for (const category of categories) {
-    if (!category.isDirectory()) continue;
-    const categoryPath = path.join(mediaDir, category.name);
-    const itemFolders = fs.readdirSync(categoryPath, { withFileTypes: true });
-
-    for (const itemFolder of itemFolders) {
-      if (!itemFolder.isDirectory()) continue;
-      const metadataPath = path.join(categoryPath, itemFolder.name, "metadata.json");
-      if (!fs.existsSync(metadataPath)) continue;
-
-      try {
-        const raw = fs.readFileSync(metadataPath, "utf-8");
-        const item = JSON.parse(raw) as MediaItem;
-        items.push(item);
-      } catch {
-        console.warn(`[ServerStore] Failed to read metadata: ${metadataPath}`);
-      }
-    }
-  }
-
-  console.log(`[ServerStore] readItems() - loaded ${items.length} items from ${mediaDir}`);
-  return items;
-}
-
-function writeItem(item: MediaItem, options?: { preserveData?: boolean }): void {
-  const itemDir = getItemDir(item);
-  const metadataPath = path.join(itemDir, "metadata.json");
-  const mediaFilePath = getMediaFilePath(item);
-
-  if (!fs.existsSync(itemDir)) {
-    fs.mkdirSync(itemDir, { recursive: true });
-  }
-
-  const { dataUrl, ...metadata } = item as MediaItem & { dataUrl?: string };
-  fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), "utf-8");
-
-  if (dataUrl) {
-    const base64Data = dataUrl.replace(/^data:[^;]+;base64,/, "");
-    fs.writeFileSync(mediaFilePath, Buffer.from(base64Data, "base64"));
-  } else if (!options?.preserveData) {
-    if (fs.existsSync(mediaFilePath)) {
-      fs.unlinkSync(mediaFilePath);
-    }
-    const legacyDataPath = path.join(itemDir, "data");
-    if (fs.existsSync(legacyDataPath)) {
-      fs.unlinkSync(legacyDataPath);
-    }
-  }
-}
-
-function deleteItemDir(item: MediaItem): void {
-  const itemDir = getItemDir(item);
-  if (fs.existsSync(itemDir)) {
-    fs.rmSync(itemDir, { recursive: true, force: true });
-  }
-}
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface MediaItem {
   id: string;
@@ -160,6 +136,8 @@ export interface MediaItem {
   syncStatus?: "pending" | "synced";
 }
 
+// ─── Validation ───────────────────────────────────────────────────────────────
+
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/svg+xml"];
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/ogg", "video/quicktime"];
 const ALLOWED_MIME_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES];
@@ -174,6 +152,86 @@ function validateMediaItem(item: Partial<MediaItem>): string | null {
   if (!ALLOWED_MIME_TYPES.includes(item.mimeType)) return `Type de fichier non autorisé: ${item.mimeType}`;
   return null;
 }
+
+// ─── Read ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Recursively scan the registry directory for *.json files that look like
+ * media metadata (i.e. they have an "id" field).  This replaces the old
+ * flat "metadata.json" approach.
+ */
+export function readItems(): MediaItem[] {
+  const mediaDir = getMediaDir();
+  if (!fs.existsSync(mediaDir)) return [];
+
+  const items: MediaItem[] = [];
+
+  function scanDir(dir: string): void {
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        scanDir(fullPath);
+      } else if (
+        entry.isFile() &&
+        entry.name.endsWith(".json") &&
+        !entry.name.startsWith(".")
+      ) {
+        try {
+          const raw = fs.readFileSync(fullPath, "utf-8");
+          const parsed = JSON.parse(raw) as Partial<MediaItem>;
+          // Only treat as a media item if it has the required fields
+          if (parsed.id && parsed.title && parsed.mimeType) {
+            items.push(parsed as MediaItem);
+          }
+        } catch {
+          console.warn(`[ServerStore] Failed to parse JSON: ${fullPath}`);
+        }
+      }
+    }
+  }
+
+  scanDir(mediaDir);
+  console.log(`[ServerStore] readItems() - loaded ${items.length} items from ${mediaDir}`);
+  return items;
+}
+
+// ─── Write ────────────────────────────────────────────────────────────────────
+
+function writeItem(item: MediaItem, options?: { preserveData?: boolean }): void {
+  const itemDir = getItemDir(item);
+  const metadataPath = getItemMetadataPath(item);
+  const mediaFilePath = getMediaFilePath(item);
+
+  if (!fs.existsSync(itemDir)) {
+    fs.mkdirSync(itemDir, { recursive: true });
+  }
+
+  // Strip the raw dataUrl from the persisted JSON to keep it small
+  const { dataUrl, ...metadata } = item as MediaItem & { dataUrl?: string };
+  fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), "utf-8");
+
+  if (dataUrl) {
+    const base64Data = dataUrl.replace(/^data:[^;]+;base64,/, "");
+    fs.writeFileSync(mediaFilePath, Buffer.from(base64Data, "base64"));
+  } else if (!options?.preserveData) {
+    if (fs.existsSync(mediaFilePath)) fs.unlinkSync(mediaFilePath);
+  }
+}
+
+function deleteItemDir(item: Pick<MediaItem, "title" | "id" | "category">): void {
+  const itemDir = getItemDir(item);
+  if (fs.existsSync(itemDir)) {
+    fs.rmSync(itemDir, { recursive: true, force: true });
+  }
+}
+
+// ─── Sort / search helpers ────────────────────────────────────────────────────
 
 function sortItems(items: MediaItem[], sortBy: string, sortOrder: "asc" | "desc"): MediaItem[] {
   const sorted = [...items];
@@ -195,22 +253,23 @@ function sortItems(items: MediaItem[], sortBy: string, sortOrder: "asc" | "desc"
 }
 
 function searchItems(items: MediaItem[], query: string): MediaItem[] {
-  if (!query.trim()) {
-    return items;
-  }
+  if (!query.trim()) return items;
   const q = query.toLowerCase().trim();
-  const filtered = items.filter(
+  return items.filter(
     (item) =>
       item.title.toLowerCase().includes(q) ||
-      item.description.toLowerCase().includes(q) ||
+      item.description?.toLowerCase().includes(q) ||
       item.tags.some((tag) => tag.toLowerCase().includes(q))
   );
-  return filtered;
 }
+
+// ─── ID generator ─────────────────────────────────────────────────────────────
 
 export function generateId(): string {
   return `media_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
+
+// ─── Public API ───────────────────────────────────────────────────────────────
 
 export async function getAll(): Promise<MediaItem[]> {
   console.log(`[ServerStore] getAll()`);
@@ -218,7 +277,14 @@ export async function getAll(): Promise<MediaItem[]> {
   return readItems();
 }
 
-export async function getAllPaginated(params?: { limit?: number; offset?: number; sortBy?: string; sortOrder?: string; q?: string; category?: string }): Promise<{ items: MediaItem[]; total: number }> {
+export async function getAllPaginated(params?: {
+  limit?: number;
+  offset?: number;
+  sortBy?: string;
+  sortOrder?: string;
+  q?: string;
+  category?: string;
+}): Promise<{ items: MediaItem[]; total: number }> {
   console.log(`[ServerStore] getAllPaginated()`, params);
   await delay(50);
   let items = readItems();
@@ -226,12 +292,12 @@ export async function getAllPaginated(params?: { limit?: number; offset?: number
   if (params?.category && params.category !== "Tous") {
     const beforeCount = items.length;
     items = items.filter((item) => item.category === params.category);
-    console.log(`[ServerStore] getAllPaginated() - category filter "${params.category}": ${items.length}/${beforeCount} items`);
+    console.log(
+      `[ServerStore] getAllPaginated() - category filter "${params.category}": ${items.length}/${beforeCount} items`
+    );
   }
 
-  if (params?.q?.trim()) {
-    items = searchItems(items, params.q);
-  }
+  if (params?.q?.trim()) items = searchItems(items, params.q);
 
   const total = items.length;
   const sortOrder = (params?.sortOrder === "asc" ? "asc" : "desc") as "asc" | "desc";
@@ -239,21 +305,20 @@ export async function getAllPaginated(params?: { limit?: number; offset?: number
 
   const limit = params?.limit || items.length;
   const offset = params?.offset || 0;
-  const paginated = items.slice(offset, offset + limit);
-
-  return { items: paginated, total };
+  return { items: items.slice(offset, offset + limit), total };
 }
 
 export async function getById(id: string): Promise<MediaItem | undefined> {
   console.log(`[ServerStore] getById() - id=${id}`);
   await delay(30);
-  const items = readItems();
-  const item = items.find((item) => item.id === id);
+  const item = readItems().find((i) => i.id === id);
   console.log(`[ServerStore] getById() - found=${!!item} title=${item?.title || "null"}`);
   return item;
 }
 
-export async function create(item: Omit<MediaItem, "id" | "createdAt" | "updatedAt">): Promise<MediaItem> {
+export async function create(
+  item: Omit<MediaItem, "id" | "createdAt" | "updatedAt">
+): Promise<MediaItem> {
   console.log(`[ServerStore] create() - title="${item.title}" category="${item.category}" kind=${item.kind}`);
   const validationError = validateMediaItem(item);
   if (validationError) {
@@ -287,30 +352,29 @@ export async function update(
     return undefined;
   }
 
+  const oldItem = items[index];
   const updatedItem: MediaItem = {
-    ...items[index],
+    ...oldItem,
     ...updates,
     updatedAt: new Date().toISOString(),
   };
 
-  const oldItem = items[index];
   const oldDir = getItemDir(oldItem);
   const newDir = getItemDir(updatedItem);
   const oldMediaPath = getMediaFilePath(oldItem);
 
-  if (!updates.dataUrl && fs.existsSync(oldMediaPath)) {
-    if (oldDir !== newDir) {
-      if (!fs.existsSync(newDir)) {
-        fs.mkdirSync(newDir, { recursive: true });
-      }
-      fs.copyFileSync(oldMediaPath, getMediaFilePath(updatedItem));
-    }
+  // Copy binary file to new location if directory changes
+  if (!updates.dataUrl && fs.existsSync(oldMediaPath) && oldDir !== newDir) {
+    if (!fs.existsSync(newDir)) fs.mkdirSync(newDir, { recursive: true });
+    fs.copyFileSync(oldMediaPath, getMediaFilePath(updatedItem));
   }
 
-  if (updates.category || updates.title) {
-    if (oldItem.category !== updatedItem.category || oldItem.title !== updatedItem.title) {
-      deleteItemDir(oldItem);
-    }
+  // Remove old directory if category or title changed
+  if (
+    (updates.category !== undefined || updates.title !== undefined) &&
+    (oldItem.category !== updatedItem.category || oldItem.title !== updatedItem.title)
+  ) {
+    deleteItemDir(oldItem);
   }
 
   writeItem(updatedItem, { preserveData: !updates.dataUrl });
@@ -321,8 +385,7 @@ export async function update(
 export async function remove(id: string): Promise<boolean> {
   console.log(`[ServerStore] remove() - id=${id}`);
   await delay(50);
-  const items = readItems();
-  const item = items.find((item) => item.id === id);
+  const item = readItems().find((i) => i.id === id);
   if (!item) {
     console.log(`[ServerStore] remove() - item not found id=${id}`);
     return false;
@@ -337,15 +400,10 @@ export async function bulkDelete(ids: string[]): Promise<boolean> {
   await delay(50);
   if (!ids.length) return false;
   const items = readItems();
-  const beforeCount = items.length;
   for (const id of ids) {
     const item = items.find((i) => i.id === id);
-    if (item) {
-      deleteItemDir(item);
-    }
+    if (item) deleteItemDir(item);
   }
-  const deletedCount = beforeCount - items.filter((item) => !ids.includes(item.id)).length;
-  console.log(`[ServerStore] bulkDelete() - deleted ${deletedCount} items`);
   return true;
 }
 
@@ -355,14 +413,12 @@ export async function bulkTag(ids: string[], tagsToAdd: string[]): Promise<boole
   if (!ids.length || !tagsToAdd.length) return false;
   const items = readItems();
   let changed = false;
-  let affectedCount = 0;
   items.forEach((item) => {
     if (ids.includes(item.id)) {
       const newTags = Array.from(new Set([...item.tags, ...tagsToAdd]));
       if (newTags.length !== item.tags.length) {
         item.tags = newTags;
         changed = true;
-        affectedCount++;
         writeItem(item, { preserveData: true });
       }
     }
@@ -371,7 +427,6 @@ export async function bulkTag(ids: string[], tagsToAdd: string[]): Promise<boole
     console.log(`[ServerStore] bulkTag() - no changes needed`);
     return false;
   }
-  console.log(`[ServerStore] bulkTag() - tagged ${affectedCount} items`);
   return true;
 }
 
@@ -403,4 +458,3 @@ export async function getCategories(): Promise<string[]> {
 function delay(ms = 30): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-
