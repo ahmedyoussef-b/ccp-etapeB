@@ -176,6 +176,8 @@ export default function ImagesPage() {
   const [showTagDialog, setShowTagDialog] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [vectorizedImageIds, setVectorizedImageIds] = useState<Set<string>>(new Set());
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const saveCounterRef = useRef(0);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -590,16 +592,23 @@ export default function ImagesPage() {
     setIsRecording(false);
   };
 
-  const withTimeout = async <T,>(promise: Promise<T>, ms = 15000): Promise<T> => {
-    let timeoutId: NodeJS.Timeout;
+  const withTimeout = async <T,>(promise: Promise<T>, ms = 8000): Promise<T> => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => reject(new Error("L'enregistrement a expiré. Veuillez réessayer.")), ms);
     });
 
-    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
+    }
   };
 
   const handleSave = async () => {
+    setSaveError(null);
     if (!formData.title.trim()) {
       toast.error("Le titre est requis");
       return;
@@ -618,10 +627,11 @@ export default function ImagesPage() {
       .map((t) => t.trim())
       .filter((t) => t.length > 0);
 
+    const currentSave = ++saveCounterRef.current;
     setSaving(true);
     try {
       if (editingItem) {
-        console.log(`[ImagesPage] handleSave() - UPDATE id=${editingItem.id} title="${formData.title}"`);
+        console.log(`[ImagesPage] handleSave() - UPDATE id=${editingItem.id} title="${formData.title}" save=${currentSave}`);
         const updated = await withTimeout(
           imageService.update(editingItem.id, {
             title: formData.title.trim(),
@@ -635,9 +645,11 @@ export default function ImagesPage() {
             size: formData.size,
             geolocation: geoLocation || undefined,
             syncStatus: "pending",
-          })
+          }),
+          8000
         );
-        console.log(`[ImagesPage] handleSave() - UPDATE success`);
+        if (currentSave !== saveCounterRef.current) return;
+        console.log(`[ImagesPage] handleSave() - UPDATE success save=${currentSave}`);
         toast.success("Média mis à jour avec succès");
         if (updated) {
           setItems((prev) =>
@@ -645,7 +657,7 @@ export default function ImagesPage() {
           );
         }
       } else {
-        console.log(`[ImagesPage] handleSave() - CREATE title="${formData.title}" kind=${formData.kind} size=${formatSize(formData.size)}`);
+        console.log(`[ImagesPage] handleSave() - CREATE title="${formData.title}" kind=${formData.kind} size=${formatSize(formData.size)} save=${currentSave}`);
         const created = await withTimeout(
           imageService.create({
             title: formData.title.trim(),
@@ -659,9 +671,11 @@ export default function ImagesPage() {
             size: formData.size,
             geolocation: geoLocation || undefined,
             syncStatus: "pending",
-          })
+          }),
+          8000
         );
-        console.log(`[ImagesPage] handleSave() - CREATE success id=${created?.id}`);
+        if (currentSave !== saveCounterRef.current) return;
+        console.log(`[ImagesPage] handleSave() - CREATE success id=${created?.id} save=${currentSave}`);
         toast.success("Média ajouté avec succès");
         if (created) {
           setItems((prev) => [created, ...prev]);
@@ -672,11 +686,15 @@ export default function ImagesPage() {
       resetForm();
       await loadVectorizedImageIds();
     } catch (err) {
+      if (currentSave !== saveCounterRef.current) return;
       const message = err instanceof Error ? err.message : "Erreur lors de l'enregistrement";
-      console.error(`[ImagesPage] handleSave() - ERROR: ${message}`, err);
+      console.error(`[ImagesPage] handleSave() - ERROR save=${currentSave}: ${message}`, err);
+      setSaveError(message);
       toast.error(message);
     } finally {
-      setSaving(false);
+      if (currentSave === saveCounterRef.current) {
+        setSaving(false);
+      }
     }
   };
 
@@ -1064,7 +1082,13 @@ export default function ImagesPage() {
           </div>
         )}
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={(open) => {
+          if (!open && saving) {
+            toast.error("Veuillez attendre la fin de l'enregistrement");
+            return;
+          }
+          setDialogOpen(open);
+        }}>
           <DialogContent className="sm:max-w-[560px]">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -1081,6 +1105,12 @@ export default function ImagesPage() {
                   : "Importez ou capturez un média, puis renseignez les métadonnées."}
               </DialogDescription>
             </DialogHeader>
+
+            {saveError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {saveError}
+              </div>
+            )}
 
             <DialogBody>
               <div className="space-y-5">
