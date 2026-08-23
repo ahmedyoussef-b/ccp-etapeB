@@ -26,8 +26,7 @@ export async function GET(
   const metadataPath = getItemMetadataPath(item);
   if (!fs.existsSync(metadataPath)) {
     // If json file is missing, synthesize from item
-    const cleanMeta = { ...item };
-    delete cleanMeta.dataUrl;
+    const { dataUrl: _dataUrl, ...cleanMeta } = item; // eslint-disable-line @typescript-eslint/no-unused-vars
     return NextResponse.json({ metadata: cleanMeta, path: metadataPath });
   }
 
