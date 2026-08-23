@@ -1,0 +1,7 @@
+{
+  "libelle": "CIRCUITS BASSE PRESSION CR 2",
+  "code": "FLB",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}

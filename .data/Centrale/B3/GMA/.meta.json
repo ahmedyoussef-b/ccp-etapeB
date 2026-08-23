@@ -1,0 +1,7 @@
+{
+  "libelle": "SURVEILLANCE MECANIQUE TV",
+  "code": "GMA",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

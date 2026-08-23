@@ -1,0 +1,10 @@
+{
+  "type": "qa",
+  "title": "New Q?",
+  "pairs": [
+    {
+      "question": "New Q?",
+      "answer": "New A."
+    }
+  ]
+}

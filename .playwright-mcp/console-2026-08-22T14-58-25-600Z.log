@@ -1,0 +1,47 @@
+[    2087ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:38559
+[    2605ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    2605ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    2660ms] [LOG] [ImageService] getById() - GET /api/images/media_1787407983678_firr93l @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:55
+[    2682ms] [LOG] [ImageService] getById() - GET /api/images/media_1787407983678_firr93l @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:55
+[    2716ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    2716ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    2738ms] [LOG] [ImageService] getById() - GET /api/images/media_1787407983678_firr93l @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:55
+[    2741ms] [LOG] [ImageService] getById() - GET /api/images/media_1787407983678_firr93l @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:55
+[    3889ms] [WARNING] [SQLite] OPFS SAH Pool indisponible, repli sur IndexedDB (SqlJsDb). Error: Missing required OPFS APIs.
+    at sqlite3.installOpfsSAHPoolVfs (webpack-internal:///(app-pages-browser)/./node_modules/@sqlite.org/sqlite-wasm/dist/index.mjs:15637:284)
+    at openPersistentDatabase (webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:24:44)
+    at eval (webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:51:20) @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:30
+[    3889ms] [WARNING] [SQLite] Aucun stockage OPFS persistant disponible : repli sur localStorage (les données survivront au rechargement dans la limite de stockage du navigateur). @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:34
+[    4008ms] [LOG] [SQLite] Base de données locale initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:52
+[    4031ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[    4032ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[    4032ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[    4032ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[    4033ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[    4033ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[    4034ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[    4034ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[    4034ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[    4034ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[    4034ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[    4035ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[    7403ms] [LOG] [ImageService] getById() - found item: ahmed abbes @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:58
+[    8286ms] [LOG] [ImageService] getById() - found item: ahmed abbes @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:58
+[    8980ms] [LOG] [ImageService] getById() - found item: ahmed abbes @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:58
+[    9396ms] [LOG] [ImageService] getById() - found item: ahmed abbes @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:58
+[   48461ms] [LOG] [ImageService] update() - PUT /api/images/media_1787407983678_firr93l | fields=title,category,description,tags,kind,mimeType,size,geolocation,syncStatus @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:72
+[   49075ms] [LOG] [ImageService] update() - updated item: ahmed abbes @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:78
+[   50683ms] [LOG] [ImagesPage] loadData() - starting load | sortBy=createdAt sortOrder=desc category=Tous search="" @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:176
+[   50685ms] [LOG] [ImageService] getAll() - GET /api/images?limit=24&sortBy=createdAt&sortOrder=desc @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:48
+[   50686ms] [LOG] [ImageService] getCategories() - GET /api/images @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:91
+[   50687ms] [LOG] [ImagesPage] loadData() - starting load | sortBy=createdAt sortOrder=desc category=Tous search="" @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:176
+[   50688ms] [LOG] [ImageService] getAll() - GET /api/images?limit=24&sortBy=createdAt&sortOrder=desc @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:48
+[   50688ms] [LOG] [ImageService] getCategories() - GET /api/images @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:91
+[   50700ms] [LOG] [ImagesPage] loadVectorizedImageIds() - loaded 0 vectorized images @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:217
+[   50717ms] [LOG] [ImagesPage] loadVectorizedImageIds() - loaded 0 vectorized images @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:217
+[   52721ms] [LOG] [ImageService] getAll() - received 1/1 items @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:51
+[   52818ms] [LOG] [ImageService] getCategories() - categories=[Tous, Équipement, Inspection, Sécurité, Maintenance, Documentation] @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:94
+[   52819ms] [LOG] [ImagesPage] loadData() - loaded 1/1 items, 6 categories @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:198
+[   53353ms] [LOG] [ImageService] getAll() - received 1/1 items @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:51
+[   53417ms] [LOG] [ImageService] getCategories() - categories=[Tous, Équipement, Inspection, Sécurité, Maintenance, Documentation] @ webpack-internal:///(app-pages-browser)/./src/lib/images/mock-service.ts:94
+[   53418ms] [LOG] [ImagesPage] loadData() - loaded 1/1 items, 6 categories @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/images/page.tsx:198

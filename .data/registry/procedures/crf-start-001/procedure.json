@@ -1,0 +1,892 @@
+{
+  "_id": "proc-crf-startup-001",
+  "_version": "1.0",
+  "_type": "industrial_procedure",
+  "metadata": {
+    "title": "Démarrage de la pompe CRF - Système de Réfrigération Principal",
+    "code": "CRF-START-001",
+    "category": "startup",
+    "subcategory": "pump_startup",
+    "department": "Production",
+    "criticality": "critical",
+    "version": "1.0",
+    "author": {
+      "id": "user-maint-001",
+      "name": "Équipe Maintenance CRF",
+      "role": "maintenance_engineer",
+      "department": "Maintenance"
+    },
+    "approvers": [
+      {
+        "id": "user-supervisor-001",
+        "name": "ahmed abbes",
+        "role": "chef de bloc",
+        "approvalDate": "2025-01-15T10:00:00Z"
+      }
+    ],
+    "createdAt": "2026-07-07T17:23:43.786Z",
+    "lastUpdated": "2026-07-07T17:23:43.787Z",
+    "reviewDate": "2025-07-15T00:00:00Z",
+    "tags": [
+      "CRF",
+      "refrigeration",
+      "startup",
+      "critical",
+      "pump"
+    ],
+    "language": "fr-FR"
+  },
+  "prerequisites": {
+    "description": "Conditions obligatoires avant le démarrage de la procédure",
+    "items": [
+      {
+        "id": "pr-001",
+        "description": "Niveau du bassin d'aspiration supérieur à -5,00 m",
+        "condition": "level > -5.00",
+        "expectedState": "OK",
+        "verificationType": "manual",
+        "displayName": "Niveau bassin d'aspiration",
+        "unit": "m",
+        "threshold": -5,
+        "operator": ">",
+        "manualCheckInstruction": "Veuillez vérifier visuellement le niveau du bassin d'aspiration et confirmer qu'il est supérieur à moins cinq mètres"
+      },
+      {
+        "id": "pr-002",
+        "description": "Unité hydraulique 001 GO opérationnelle",
+        "condition": "hydraulic_unit_001 == ON",
+        "expectedState": "OK",
+        "verificationType": "manual",
+        "displayName": "État unité hydraulique",
+        "manualCheckInstruction": "Veuillez vérifier que l'unité hydraulique 001 GO est opérationnelle et confirmer son état"
+      },
+      {
+        "id": "pr-003",
+        "description": "Vanne d'aspiration manuelle ouverte",
+        "condition": "valve_aspiration == OPEN",
+        "expectedState": "OK",
+        "verificationType": "manual",
+        "displayName": "Position vanne aspiration",
+        "expectedPosition": "OPEN",
+        "manualCheckInstruction": "Veuillez vérifier que la vanne d'aspiration manuelle est ouverte et confirmer sa position"
+      },
+      {
+        "id": "pr-004",
+        "description": "Vanne clapet de refoulement initialement fermée",
+        "condition": "valve_discharge == CLOSED",
+        "expectedState": "OK",
+        "verificationType": "manual",
+        "displayName": "Position vanne refoulement",
+        "expectedPosition": "CLOSED",
+        "manualCheckInstruction": "Veuillez vérifier que la vanne clapet de refoulement est fermée et confirmer sa position"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "id": "step-001",
+      "order": 1,
+      "title": "Lavage de la grille rotative CFI",
+      "subtitle": "Séquence automatique de nettoyage",
+      "description": "L'ordre de démarrage lance automatiquement une séquence de lavage de la grille rotative CFI. Le moteur ne sera mis sous tension qu'après 6 minutes de lavage.",
+      "duration": {
+        "value": 360,
+        "unit": "seconds",
+        "display": "6 minutes",
+        "type": "fixed"
+      },
+      "action": {
+        "type": "confirmation",
+        "instruction": "Vérifier que la séquence de lavage CFI est bien en cours d'exécution",
+        "expectedConfirmation": "Séquence de lavage démarrée",
+        "ui": {
+          "component": "confirmation_button",
+          "label": "Confirmer le lavage",
+          "icon": "check_circle"
+        }
+      },
+      "validation": {
+        "conditions": [
+          {
+            "id": "val-001",
+            "description": "Perte de charge à travers la grille rotative",
+            "type": "pressure",
+            "operator": "<",
+            "value": 200,
+            "unit": "mmCE",
+            "displayName": "Perte de charge grille",
+            "monitoring": true
+          }
+        ],
+        "successExpression": "pressure_diff < 200",
+        "timeout": {
+          "value": 420,
+          "unit": "seconds",
+          "action": "abort"
+        }
+      },
+      "alarms": [
+        {
+          "id": "alarm-001",
+          "code": "CFI-001",
+          "type": "warning",
+          "severity": "high",
+          "description": "Perte de charge excessive sur la grille rotative",
+          "condition": "pressure_diff >= 200",
+          "remedy": {
+            "title": "Nettoyage manuel de la grille",
+            "description": "Arrêter la pompe, isoler la section, procéder au nettoyage manuel de la grille rotative",
+            "steps": [
+              "Arrêter la pompe CRF",
+              "Isoler la section de la grille",
+              "Ouvrir le carter d'inspection",
+              "Nettoyer manuellement la grille",
+              "Refermer le carter",
+              "Désisoler la section",
+              "Reprendre la procédure"
+            ],
+            "estimatedTime": 600,
+            "tools": [
+              "Brosse métallique",
+              "Chiffon",
+              "Nettoyant industriel"
+            ],
+            "safety": [
+              "Gants",
+              "Lunettes de protection"
+            ]
+          },
+          "escalation": {
+            "ifPersistsAfter": 2,
+            "contact": "supervisor",
+            "message": "Perte de charge CFI persistante - Inspection requise"
+          },
+          "triggerBeforeEnd": 60
+        }
+      ],
+      "fallbacks": [
+        {
+          "id": "fallback-001",
+          "title": "Dérivation de la grille CFI",
+          "description": "Si le nettoyage manuel ne résout pas le problème, utiliser la ligne de dérivation",
+          "condition": "pressure_diff >= 200 AND manual_cleaning_attempts >= 2",
+          "action": "Ouvrir la vanne de dérivation, fermer les vannes d'isolement de la grille",
+          "estimatedTime": 120
+        }
+      ],
+      "dependencies": {
+        "prerequisites": [
+          "pr-001",
+          "pr-002",
+          "pr-003",
+          "pr-004"
+        ],
+        "dependsOn": [],
+        "requiresConfirmation": true
+      },
+      "media": {
+        "image": {
+          "url": "/media/procedures/crf/grille-cfi.jpg",
+          "caption": "Grille rotative CFI - Vue générale",
+          "alt": "Photo de la grille rotative CFI"
+        },
+        "diagram": {
+          "url": "/media/procedures/crf/cfi-diagram.pdf",
+          "caption": "Schéma de la séquence CFI"
+        },
+        "video": {
+          "url": "/media/procedures/crf/cfi-cleaning.mp4",
+          "caption": "Vidéo de démonstration du lavage CFI"
+        }
+      },
+      "notes": [
+        "Vérifier visuellement le démarrage du lavage",
+        "Écouter les bruits anormaux",
+        "Surveiller les indicateurs de pression"
+      ]
+    },
+    {
+      "id": "step-002",
+      "order": 2,
+      "title": "Mise sous tension du moteur CRF",
+      "subtitle": "Activation du moteur principal",
+      "description": "Mise sous tension du moteur de la pompe CRF après 6 minutes de lavage CFI",
+      "duration": {
+        "value": 10,
+        "unit": "seconds",
+        "display": "10 secondes",
+        "type": "fixed"
+      },
+      "action": {
+        "type": "command",
+        "instruction": "Lancer la mise sous tension du moteur CRF depuis la salle de contrôle",
+        "command": "START_MOTOR",
+        "parameters": {
+          "motorId": "CRF-M-001",
+          "startMode": "automatic"
+        },
+        "ui": {
+          "component": "action_button",
+          "label": "Démarrer le moteur",
+          "icon": "play_arrow",
+          "color": "success"
+        }
+      },
+      "validation": {
+        "conditions": [
+          {
+            "id": "val-002",
+            "description": "Moteur en fonctionnement",
+            "type": "status",
+            "operator": "==",
+            "value": "RUNNING",
+            "displayName": "État du moteur"
+          },
+          {
+            "id": "val-003",
+            "description": "Tension nominale atteinte",
+            "type": "voltage",
+            "operator": ">=",
+            "value": 380,
+            "unit": "V",
+            "displayName": "Tension moteur"
+          }
+        ],
+        "successExpression": "motor_status == RUNNING AND voltage >= 380",
+        "timeout": {
+          "value": 30,
+          "unit": "seconds",
+          "action": "abort"
+        }
+      },
+      "alarms": [
+        {
+          "id": "alarm-002",
+          "code": "CRF-002",
+          "type": "warning",
+          "severity": "medium",
+          "description": "Fin de la mise sous tension imminente",
+          "condition": "time_elapsed >= 5",
+          "remedy": {
+            "title": "Préparation à la fin de la mise sous tension",
+            "description": "La mise sous tension touche à sa fin, préparez-vous pour l'étape suivante",
+            "steps": [
+              "Surveiller les indicateurs de tension",
+              "Préparer les commandes pour l'étape suivante"
+            ],
+            "estimatedTime": 60
+          },
+          "escalation": {
+            "ifPersistsAfter": 1,
+            "contact": "electrical_team",
+            "message": "Fin de mise sous tension - Préparation étape suivante"
+          },
+          "triggerBeforeEnd": 5
+        },
+        {
+          "id": "alarm-002b",
+          "code": "CRF-002B",
+          "type": "critical",
+          "severity": "critical",
+          "description": "Défaut de mise sous tension du moteur CRF",
+          "condition": "motor_status == FAULT OR voltage < 380",
+          "remedy": {
+            "title": "Diagnostic électrique du moteur",
+            "description": "Vérifier les alimentations, les protections et les circuits de commande",
+            "steps": [
+              "Vérifier la présence de tension en amont",
+              "Contrôler les disjoncteurs et fusibles",
+              "Tester les circuits de commande",
+              "Vérifier le SSR (Solid State Relay)",
+              "Contrôler l'enroulement du moteur",
+              "Réarmer si nécessaire"
+            ],
+            "estimatedTime": 300,
+            "tools": [
+              "Multimètre",
+              "Pince ampèremétrique",
+              "Plans électriques"
+            ],
+            "safety": [
+              "Équipement électrique isolé",
+              "Vérifier l'absence de tension"
+            ]
+          },
+          "escalation": {
+            "ifPersistsAfter": 1,
+            "contact": "electrical_team",
+            "message": "Défaut électrique CRF persistant"
+          }
+        }
+      ],
+      "fallbacks": [
+        {
+          "id": "fallback-002",
+          "title": "Démarrage manuel du moteur",
+          "description": "Utilisation du mode manuel pour le démarrage",
+          "condition": "motor_start_automatic FAILED",
+          "action": "Passer en mode manuel, démarrer le moteur via le pupitre local",
+          "estimatedTime": 180
+        }
+      ],
+      "dependencies": {
+        "prerequisites": [],
+        "dependsOn": [
+          "step-001"
+        ],
+        "requiresConfirmation": true
+      },
+      "media": {
+        "video": {
+          "url": "/media/procedures/crf/motor-start.mp4",
+          "caption": "Vidéo de démarrage du moteur CRF"
+        }
+      },
+      "notes": [
+        "Surveiller les courants de démarrage",
+        "Écouter les bruits du moteur",
+        "Vérifier le sens de rotation"
+      ]
+    },
+    {
+      "id": "step-003",
+      "order": 3,
+      "title": "Ouverture vanne de refoulement - Palier 1",
+      "subtitle": "Phase d'ouverture rapide 0→30%",
+      "description": "Ouverture rapide de la vanne de refoulement de 0% à 30% en 54 secondes",
+      "duration": {
+        "value": 54,
+        "unit": "seconds",
+        "display": "54 secondes",
+        "type": "fixed",
+        "animation": true
+      },
+      "action": {
+        "type": "valve_operation",
+        "instruction": "Lancer l'ouverture rapide de la vanne UV-101 vers 30%",
+        "valveId": "UV-101",
+        "operation": "open",
+        "target": 30,
+        "speed": "rapid",
+        "parameters": {
+          "rampTime": 54,
+          "intermediateChecks": true
+        },
+        "ui": {
+          "component": "valve_control",
+          "label": "Ouvrir vanne (30%)",
+          "icon": "valve_open",
+          "showProgress": true,
+          "progressDuration": 54
+        }
+      },
+      "validation": {
+        "conditions": [
+          {
+            "id": "val-004",
+            "description": "Position vanne UV-101",
+            "type": "position",
+            "operator": "==",
+            "value": 30,
+            "unit": "%",
+            "displayName": "Position vanne",
+            "monitoring": true,
+            "tolerance": 2
+          },
+          {
+            "id": "val-005",
+            "description": "Pression refoulement",
+            "type": "pressure",
+            "operator": ">",
+            "value": 0,
+            "unit": "bar",
+            "displayName": "Pression refoulement"
+          }
+        ],
+        "successExpression": "valve_position >= 28 AND valve_position <= 32 AND discharge_pressure > 0",
+        "timeout": {
+          "value": 60,
+          "unit": "seconds",
+          "action": "abort"
+        }
+      },
+      "alarms": [
+        {
+          "id": "alarm-003",
+          "code": "CRF-003",
+          "type": "warning",
+          "severity": "medium",
+          "description": "Fin de l'ouverture de vanne imminente",
+          "condition": "time_elapsed >= 44",
+          "remedy": {
+            "title": "Préparation à la fin d'ouverture",
+            "description": "L'ouverture de la vanne touche à sa fin, préparez-vous pour la phase de stabilisation",
+            "steps": [
+              "Surveiller la position de la vanne",
+              "Préparer les vérifications pour la stabilisation"
+            ],
+            "estimatedTime": 60
+          },
+          "escalation": {
+            "ifPersistsAfter": 1,
+            "contact": "instrumentation_team",
+            "message": "Fin d'ouverture vanne UV-101 - Préparation stabilisation"
+          },
+          "triggerBeforeEnd": 10
+        },
+        {
+          "id": "alarm-003b",
+          "code": "CRF-003B",
+          "type": "critical",
+          "severity": "critical",
+          "description": "Défaut d'ouverture de la vanne UV-101",
+          "condition": "valve_position < 28",
+          "remedy": {
+            "title": "Vérification circuit hydraulique vanne",
+            "description": "Diagnostic du circuit de commande de la vanne",
+            "steps": [
+              "Vérifier la pression hydraulique",
+              "Contrôler les filtres du circuit",
+              "Tester les solénoïdes de commande",
+              "Vérifier l'alimentation 24V",
+              "Contrôler la tige de vanne",
+              "Vérifier la position des fin de course"
+            ],
+            "estimatedTime": 300,
+            "tools": [
+              "Manomètre",
+              "Multimètre",
+              "Clés"
+            ],
+            "safety": [
+              "Éviter les projections d'huile",
+              "Gants"
+            ]
+          },
+          "escalation": {
+            "ifPersistsAfter": 1,
+            "contact": "instrumentation_team",
+            "message": "Défaut vanne UV-101 CRF"
+          }
+        }
+      ],
+      "fallbacks": [
+        {
+          "id": "fallback-003",
+          "title": "Ouverture manuelle de la vanne",
+          "description": "Utilisation de la commande manuelle de secours",
+          "condition": "valve_auto_open FAILED",
+          "action": "Passer en mode manuel, ouvrir la vanne à 30% via la pompe hydraulique manuelle",
+          "estimatedTime": 300
+        }
+      ],
+      "dependencies": {
+        "prerequisites": [],
+        "dependsOn": [
+          "step-002"
+        ],
+        "requiresConfirmation": false
+      },
+      "media": {
+        "image": {
+          "url": "/media/procedures/crf/valve-uv101.jpg",
+          "caption": "Vanne de refoulement UV-101",
+          "alt": "Photo vanne UV-101"
+        }
+      },
+      "notes": [
+        "Surveiller la pression pendant l'ouverture",
+        "Vérifier l'absence de vibrations anormales",
+        "Écouter les bruits d'écoulement"
+      ]
+    },
+    {
+      "id": "step-004",
+      "order": 4,
+      "title": "Stabilisation du remplissage - Palier 2",
+      "subtitle": "Phase de maintien à 30%",
+      "description": "Maintien à 30% pendant 150 secondes pour stabiliser le remplissage de la tuyauterie BONNA et éviter les coups de bélier",
+      "duration": {
+        "value": 150,
+        "unit": "seconds",
+        "display": "2 minutes 30 secondes",
+        "type": "fixed",
+        "countdown": true
+      },
+      "action": {
+        "type": "wait",
+        "instruction": "Maintenir la vanne à 30% pour la phase de stabilisation",
+        "parameters": {
+          "waitMessage": "Stabilisation du remplissage en cours",
+          "autoProceed": true
+        },
+        "ui": {
+          "component": "countdown_timer",
+          "label": "Stabilisation en cours",
+          "duration": 150,
+          "showProgress": true,
+          "showMessage": true
+        }
+      },
+      "validation": {
+        "conditions": [
+          {
+            "id": "val-006",
+            "description": "Pression dans tuyauterie BONNA",
+            "type": "pressure",
+            "operator": ">",
+            "value": 0,
+            "unit": "bar",
+            "displayName": "Pression tuyauterie"
+          },
+          {
+            "id": "val-007",
+            "description": "Absence de coups de bélier",
+            "type": "manual",
+            "displayName": "Stabilité du remplissage",
+            "manualCheckInstruction": "Vérifier l'absence de coups de bélier ou de vibrations anormales"
+          },
+          {
+            "id": "val-008",
+            "description": "Temps de stabilisation écoulé",
+            "type": "time",
+            "operator": ">=",
+            "value": 150,
+            "unit": "seconds",
+            "displayName": "Temps de stabilisation"
+          }
+        ],
+        "successExpression": "time_elapsed >= 150 AND pressure > 0",
+        "timeout": {
+          "value": 180,
+          "unit": "seconds",
+          "action": "warn"
+        }
+      },
+      "alarms": [
+        {
+          "id": "alarm-004",
+          "code": "CRF-004",
+          "type": "warning",
+          "severity": "medium",
+          "description": "Fin de la stabilisation imminente",
+          "condition": "time_elapsed >= 120",
+          "remedy": {
+            "title": "Préparation à la fin de stabilisation",
+            "description": "La phase de stabilisation touche à sa fin, préparez-vous pour l'ouverture finale",
+            "steps": [
+              "Vérifier la pression dans la tuyauterie",
+              "Confirmer l'absence de coups de bélier",
+              "Préparer les commandes pour l'ouverture finale"
+            ],
+            "estimatedTime": 120
+          },
+          "escalation": {
+            "ifPersistsAfter": 1,
+            "contact": "operator",
+            "message": "Fin de stabilisation - Préparation ouverture finale"
+          },
+          "triggerBeforeEnd": 30
+        },
+        {
+          "id": "alarm-004b",
+          "code": "CRF-004B",
+          "type": "critical",
+          "severity": "critical",
+          "description": "Pression excessive dans la tuyauterie BONNA",
+          "condition": "pressure > 50",
+          "remedy": {
+            "title": "Réduction d'urgence de la pression",
+            "description": "Réduction immédiate de la pression pour éviter les dégâts",
+            "steps": [
+              "Réduire l'ouverture de la vanne UV-101",
+              "Ouvrir la vanne de purge",
+              "Vérifier les indicateurs de pression",
+              "Attendre la stabilisation de la pression",
+              "Fermer la vanne de purge"
+            ],
+            "estimatedTime": 120,
+            "tools": [
+              "Clé vanne",
+              "Manomètre"
+            ],
+            "safety": [
+              "Zone sécurisée",
+              "Éviter les projections"
+            ]
+          },
+          "escalation": {
+            "ifPersistsAfter": 1,
+            "contact": "emergency_team",
+            "message": "Surcharge pression CRF - Intervention d'urgence"
+          }
+        }
+      ],
+      "fallbacks": [],
+      "dependencies": {
+        "prerequisites": [],
+        "dependsOn": [
+          "step-003"
+        ],
+        "requiresConfirmation": false
+      },
+      "media": {
+        "image": {
+          "url": "/media/procedures/crf/bonna-piping.jpg",
+          "caption": "Tuyauterie BONNA",
+          "alt": "Photo tuyauterie BONNA"
+        }
+      },
+      "notes": [
+        "Surveiller les indicateurs de pression en continu",
+        "Vérifier l'absence de fuites",
+        "Écouter les bruits d'écoulement"
+      ]
+    },
+    {
+      "id": "step-005",
+      "order": 5,
+      "title": "Ouverture finale vanne - Palier 3",
+      "subtitle": "Phase d'ouverture 30→100%",
+      "description": "Ouverture finale de 30% à 100% en 126 secondes",
+      "duration": {
+        "value": 126,
+        "unit": "seconds",
+        "display": "2 minutes 6 secondes",
+        "type": "fixed"
+      },
+      "action": {
+        "type": "valve_operation",
+        "instruction": "Lancer l'ouverture finale de la vanne UV-101 vers 100%",
+        "valveId": "UV-101",
+        "operation": "open",
+        "target": 100,
+        "speed": "progressive",
+        "parameters": {
+          "rampTime": 126,
+          "intermediateChecks": true,
+          "checkInterval": 30
+        },
+        "ui": {
+          "component": "valve_control",
+          "label": "Ouvrir vanne (100%)",
+          "icon": "valve_open_full",
+          "showProgress": true,
+          "progressDuration": 126
+        }
+      },
+      "validation": {
+        "conditions": [
+          {
+            "id": "val-009",
+            "description": "Position vanne UV-101",
+            "type": "position",
+            "operator": "==",
+            "value": 100,
+            "unit": "%",
+            "displayName": "Position vanne",
+            "monitoring": true,
+            "tolerance": 2
+          },
+          {
+            "id": "val-010",
+            "description": "Température paliers moteur",
+            "type": "temperature",
+            "operator": "<",
+            "value": 90,
+            "unit": "°C",
+            "displayName": "Température paliers",
+            "monitoring": true,
+            "critical": true
+          },
+          {
+            "id": "val-011",
+            "description": "Pression différentielle correcte",
+            "type": "pressure",
+            "operator": "<",
+            "value": 20,
+            "unit": "bar",
+            "displayName": "Pression différentielle"
+          }
+        ],
+        "successExpression": "valve_position >= 98 AND valve_position <= 102 AND bearing_temp < 90 AND diff_pressure < 20",
+        "timeout": {
+          "value": 140,
+          "unit": "seconds",
+          "action": "abort"
+        }
+      },
+      "alarms": [
+        {
+          "id": "alarm-005",
+          "code": "CRF-005",
+          "type": "critical",
+          "severity": "critical",
+          "description": "Température excessive des paliers",
+          "condition": "bearing_temp >= 90",
+          "remedy": {
+            "title": "Refroidissement des paliers",
+            "description": "Réduire la charge et vérifier le refroidissement",
+            "steps": [
+              "Réduire l'ouverture de la vanne",
+              "Vérifier le circuit de lubrification",
+              "Vérifier le refroidisseur d'huile",
+              "Contrôler le débit d'huile",
+              "Augmenter le refroidissement si possible",
+              "Reprendre l'ouverture progressivement"
+            ],
+            "estimatedTime": 600,
+            "tools": [
+              "Thermomètre",
+              "Débitmètre"
+            ],
+            "safety": [
+              "Gants thermiques",
+              "Zone ventilée"
+            ]
+          },
+          "escalation": {
+            "ifPersistsAfter": 1,
+            "contact": "maintenance_team",
+            "message": "Température paliers CRF excessive"
+          }
+        },
+        {
+          "id": "alarm-006",
+          "code": "CRF-006",
+          "type": "warning",
+          "severity": "medium",
+          "description": "Pression différentielle anormale",
+          "condition": "diff_pressure >= 20",
+          "remedy": {
+            "title": "Vérification du circuit",
+            "description": "Vérifier le circuit et les filtres",
+            "steps": [
+              "Vérifier l'encrassement des filtres",
+              "Contrôler les vannes",
+              "Vérifier les prises de pression",
+              "Tester les transmetteurs"
+            ],
+            "estimatedTime": 300
+          },
+          "triggerBeforeEnd": 20
+        }
+      ],
+      "fallbacks": [],
+      "dependencies": {
+        "prerequisites": [],
+        "dependsOn": [
+          "step-004"
+        ],
+        "requiresConfirmation": false
+      },
+      "media": {
+        "video": {
+          "url": "/media/procedures/crf/final-opening.mp4",
+          "caption": "Vidéo de l'ouverture finale",
+          "duration": 126
+        }
+      },
+      "notes": [
+        "Surveiller attentivement les températures",
+        "Écouter les bruits des paliers",
+        "Vérifier la stabilité des pressions"
+      ]
+    }
+  ],
+  "postExecution": {
+    "checks": [
+      {
+        "id": "post-001",
+        "description": "Pression de fonctionnement stable",
+        "condition": "pressure_stable == TRUE",
+        "interval": 60,
+        "monitoring": true
+      },
+      {
+        "id": "post-002",
+        "description": "Température paliers < 90°C",
+        "condition": "bearing_temp < 85",
+        "interval": 30,
+        "monitoring": true
+      },
+      {
+        "id": "post-003",
+        "description": "Absence de fuites",
+        "condition": "no_leaks == TRUE",
+        "interval": 120,
+        "monitoring": false,
+        "manualCheck": true
+      }
+    ],
+    "reporting": {
+      "generateReport": true,
+      "reportFields": [
+        "procedure_code",
+        "start_time",
+        "end_time",
+        "total_duration",
+        "steps_completed",
+        "alarms_triggered",
+        "fallbacks_used",
+        "operator_id",
+        "signature"
+      ]
+    }
+  },
+  "parameters": {
+    "variables": [
+      {
+        "id": "param-001",
+        "name": "level_threshold",
+        "value": -5,
+        "unit": "m",
+        "type": "float",
+        "min": -10,
+        "max": 0,
+        "description": "Seuil minimum niveau bassin"
+      },
+      {
+        "id": "param-002",
+        "name": "bearing_temp_max",
+        "value": 90,
+        "unit": "°C",
+        "type": "float",
+        "min": 0,
+        "max": 120,
+        "description": "Température maximale des paliers"
+      },
+      {
+        "id": "param-003",
+        "name": "valve_opening_rapid",
+        "value": 54,
+        "unit": "seconds",
+        "type": "integer",
+        "min": 30,
+        "max": 120,
+        "description": "Durée d'ouverture rapide"
+      },
+      {
+        "id": "param-004",
+        "name": "valve_stabilization",
+        "value": 150,
+        "unit": "seconds",
+        "type": "integer",
+        "min": 60,
+        "max": 300,
+        "description": "Durée de stabilisation"
+      },
+      {
+        "id": "param-005",
+        "name": "valve_opening_final",
+        "value": 126,
+        "unit": "seconds",
+        "type": "integer",
+        "min": 60,
+        "max": 240,
+        "description": "Durée d'ouverture finale"
+      }
+    ]
+  },
+  "_restored_by": "restore-script"
+}

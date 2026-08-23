@@ -1,0 +1,107 @@
+{
+  "registry": {
+    "title": "Procédure CRF - Démarrage Pompe Réfrigération",
+    "description": "Base de connaissances pour la procédure de démarrage de la pompe CRF du système de réfrigération principal",
+    "category": "industrial_procedure",
+    "department": "Production",
+    "language": "fr-FR"
+  },
+  "pairs": [
+    {
+      "question": "Quelle est la première étape du démarrage de la pompe CRF ?",
+      "answer": "La première étape est le lavage de la grille rotative CFI. L'ordre de démarrage lance automatiquement une séquence de nettoyage. Le moteur ne sera mis sous tension qu'après 6 minutes de lavage."
+    },
+    {
+      "question": "Quel est le code de la procédure de démarrage CRF ?",
+      "answer": "Le code de la procédure est CRF-START-001."
+    },
+    {
+      "question": "Quelles sont les conditions préalables au démarrage de la pompe CRF ?",
+      "answer": "Les conditions préalables sont : 1) Niveau du bassin d'aspiration supérieur à -5,00 m, 2) Unité hydraulique 001 GO opérationnelle, 3) Vanne d'aspiration manuelle ouverte, 4) Vanne clapet de refoulement initialement fermée."
+    },
+    {
+      "question": "Quelle est la durée du lavage de la grille rotative CFI ?",
+      "answer": "La durée du lavage est de 6 minutes (360 secondes)."
+    },
+    {
+      "question": "Quelle action doit être effectuée à l'étape 1 (lavage CFI) ?",
+      "answer": "Vérifier que la séquence de lavage CFI est bien en cours d'exécution. Confirmer que le lavage est démarré. Surveiller la perte de charge à travers la grille rotative qui doit être inférieure à 200 mmCE."
+    },
+    {
+      "question": "Quelle est l'alarme CFI-001 et comment y remédier ?",
+      "answer": "CFI-001 est une alarme de perte de charge excessive sur la grille rotative (≥ 200 mmCE). Remède : Nettoyage manuel de la grille - Arrêter la pompe, isoler la section, nettoyer manuellement la grille rotative, puis reprendre la procédure."
+    },
+    {
+      "question": "Quand le moteur CRF est-il mis sous tension ?",
+      "answer": "Le moteur CRF est mis sous tension après 6 minutes de lavage CFI. C'est l'étape 2 de la procédure."
+    },
+    {
+      "question": "Quelle est la durée de mise sous tension du moteur CRF ?",
+      "answer": "La mise sous tension du moteur dure 10 secondes."
+    },
+    {
+      "question": "Quelles sont les conditions de validation de la mise sous tension du moteur ?",
+      "answer": "Les conditions sont : 1) Le moteur doit être en fonctionnement (status RUNNING), 2) La tension doit être ≥ 380V."
+    },
+    {
+      "question": "Qu'est-ce que l'alarme CRF-002B et comment y remédier ?",
+      "answer": "CRF-002B est une alarme critique de défaut de mise sous tension du moteur. Remède : Diagnostic électrique - Vérifier la tension, les disjoncteurs, fusibles, circuits de commande, SSR, et contrôler l'enroulement du moteur."
+    },
+    {
+      "question": "Que se passe-t-il lors du Palier 1 (étape 3) ?",
+      "answer": "C'est l'ouverture rapide de la vanne de refoulement UV-101 de 0% à 30% en 54 secondes."
+    },
+    {
+      "question": "Quelles sont les conditions de validation de l'ouverture de vanne (Palier 1) ?",
+      "answer": "La position de la vanne UV-101 doit être entre 28% et 32%, et la pression de refoulement doit être > 0 bar."
+    },
+    {
+      "question": "Que se passe-t-il lors du Palier 2 (étape 4) ?",
+      "answer": "C'est la phase de stabilisation du remplissage. La vanne est maintenue à 30% pendant 150 secondes (2 minutes 30) pour stabiliser le remplissage de la tuyauterie BONNA et éviter les coups de bélier."
+    },
+    {
+      "question": "Que se passe-t-il lors du Palier 3 (étape 5) ?",
+      "answer": "C'est l'ouverture finale de la vanne UV-101 de 30% à 100% en 126 secondes (2 minutes 6 secondes)."
+    },
+    {
+      "question": "Quelles sont les conditions de validation du Palier 3 ?",
+      "answer": "Les conditions sont : 1) Position vanne entre 98% et 102%, 2) Température des paliers < 90°C, 3) Pression différentielle < 20 bar."
+    },
+    {
+      "question": "Qu'est-ce que l'alarme CRF-005 et comment y remédier ?",
+      "answer": "CRF-005 est une alarme critique de température excessive des paliers (≥ 90°C). Remède : Réduire l'ouverture de la vanne, vérifier le circuit de lubrification, le refroidisseur d'huile, et le débit d'huile."
+    },
+    {
+      "question": "Quelles sont les vérifications post-exécution de la procédure CRF ?",
+      "answer": "Les vérifications post-exécution sont : 1) Pression de fonctionnement stable, 2) Température des paliers < 85°C, 3) Absence de fuites."
+    },
+    {
+      "question": "Quels sont les paramètres configurables de la procédure CRF ?",
+      "answer": "Les paramètres sont : 1) Niveau bassin (-5 m), 2) Température max paliers (90°C), 3) Durée ouverture rapide (54s), 4) Durée stabilisation (150s), 5) Durée ouverture finale (126s)."
+    },
+    {
+      "question": "Qui approuve la procédure CRF-START-001 ?",
+      "answer": "La procédure est approuvée par Ahmed Abbes, Chef de Bloc, approuvée le 15 janvier 2025."
+    },
+    {
+      "question": "Quels sont les tags associés à la procédure CRF ?",
+      "answer": "Les tags sont : CRF, refrigeration, startup, critical, pump."
+    },
+    {
+      "question": "Quel est le département responsable de la procédure CRF ?",
+      "answer": "La procédure est gérée par le département Production, avec le support de l'équipe Maintenance."
+    },
+    {
+      "question": "Quelle est la durée totale estimée du démarrage de la pompe CRF ?",
+      "answer": "La durée totale estimée est de : 6 min (lavage) + 10s (moteur) + 54s (ouverture 30%) + 150s (stabilisation) + 126s (ouverture 100%) = environ 11 minutes 40 secondes."
+    },
+    {
+      "question": "Quel est le fallback en cas d'échec de l'ouverture automatique de la vanne ?",
+      "answer": "Le fallback prévu est l'ouverture manuelle de la vanne via la pompe hydraulique manuelle en passant en mode manuel."
+    },
+    {
+      "question": "Qu'est-ce que l'alarme CRF-006 et comment y remédier ?",
+      "answer": "CRF-006 est une alarme de pression différentielle anormale (≥ 20 bar). Remède : Vérifier l'encrassement des filtres, contrôler les vannes, vérifier les prises de pression et tester les transmetteurs."
+    }
+  ]
+}

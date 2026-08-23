@@ -1,0 +1,58 @@
+- generic [ref=f17e2]:
+  - complementary [ref=f17e4]:
+    - generic [ref=f17e5]: NexaFlow
+    - navigation [ref=f17e12]:
+      - link "Mon espace" [ref=f17e13] [cursor=pointer]:
+        - /url: /rondier
+      - link "Guide procédure" [ref=f17e20] [cursor=pointer]:
+        - /url: /guide-procedure
+      - link "Visioconférence" [ref=f17e24] [cursor=pointer]:
+        - /url: /video-conference
+      - link "État des lieux" [ref=f17e29] [cursor=pointer]:
+        - /url: /etat-des-lieux
+      - link "Chat IA" [ref=f17e34] [cursor=pointer]:
+        - /url: /chat-ia
+      - link "Centre IA" [ref=f17e38] [cursor=pointer]:
+        - /url: /ai-hub
+    - generic [ref=f17e43]: 🔧 Développement · v1.0
+  - main [ref=f17e45]:
+    - generic [ref=f17e46]:
+      - button "Réduire la sidebar" [ref=f17e48] [cursor=pointer]
+      - generic [ref=f17e50]:
+        - button "Toggle theme" [ref=f17e51] [cursor=pointer]
+        - button "Notifications" [ref=f17e54] [cursor=pointer]
+        - button "Profile" [ref=f17e56] [cursor=pointer]
+        - button "Déconnexion" [ref=f17e58] [cursor=pointer]
+        - generic [ref=f17e60]: U
+    - generic [ref=f17e63]:
+      - generic [ref=f17e65]:
+        - generic [ref=f17e72]:
+          - heading "Centre de Commandement IA" [level=1] [ref=f17e73]
+          - paragraph [ref=f17e78]: Super Agent • En ligne
+        - button "Effacer la conversation" [ref=f17e80] [cursor=pointer]
+      - generic [ref=f17e82]:
+        - generic [ref=f17e83]:
+          - generic [ref=f17e84]:
+            - generic [ref=f17e88]: Super Agent Chat
+            - generic [ref=f17e89]: Groq LLM
+          - generic [ref=f17e92]:
+            - paragraph [ref=f17e97]: Bienvenue dans le Centre de Commandement IA
+            - paragraph [ref=f17e98]: Je peux répondre à vos questions, générer des mind maps, ou rechercher des images similaires.
+            - generic [ref=f17e99]:
+              - button "Résume ce document" [ref=f17e100] [cursor=pointer]
+              - button "Génère une mind map" [ref=f17e101] [cursor=pointer]
+              - button "Cherche une image similaire" [ref=f17e102] [cursor=pointer]
+          - separator
+          - generic [ref=f17e103]:
+            - generic [ref=f17e105]:
+              - textbox "Envoyez une commande au Super Agent..." [ref=f17e106]
+              - generic [ref=f17e107]:
+                - button [disabled]
+            - paragraph [ref=f17e108]: Appuyez sur Entrée pour envoyer • Le Super Agent détecte automatiquement l'intention
+        - generic [ref=f17e110]:
+          - tablist [ref=f17e111]:
+            - tab "Mind Map" [selected] [ref=f17e112] [cursor=pointer]
+            - tab "Images" [ref=f17e113] [cursor=pointer]
+            - tab "Résultats RAG" [ref=f17e114] [cursor=pointer]
+          - tabpanel [ref=f17e115]:
+            - paragraph [ref=f17e122]: Demandez une mind map pour visualiser une structure hiérarchique

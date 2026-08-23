@@ -1,0 +1,7 @@
+{
+  "libelle": "POSTE BLOC A",
+  "code": "LJP",
+  "type": "sous_centrale",
+  "parentId": "A0",
+  "syncState": "local-only"
+}

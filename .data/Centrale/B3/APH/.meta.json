@@ -1,0 +1,7 @@
+{
+  "libelle": "EAU ALIMENTAIRE HAUTE PRESSION",
+  "code": "APH",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

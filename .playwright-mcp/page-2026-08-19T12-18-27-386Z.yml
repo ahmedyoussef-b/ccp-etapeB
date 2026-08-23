@@ -1,0 +1,111 @@
+- generic [ref=f3e1]:
+  - alert [ref=f3e138]
+  - generic [ref=f3e139]:
+    - complementary [ref=f3e140]:
+      - generic [ref=f3e141]: NexaFlow
+      - navigation [ref=f3e148]:
+        - link [ref=f3e240] [cursor=pointer]:
+          - /url: /rondier
+          - text: Mon espace
+        - link [ref=f3e241] [cursor=pointer]:
+          - /url: /guide-procedure
+          - text: Guide procédure
+        - link [ref=f3e242] [cursor=pointer]:
+          - /url: /video-conference
+          - text: Visioconférence
+        - link [ref=f3e243] [cursor=pointer]:
+          - /url: /etat-des-lieux
+          - text: État des lieux
+        - link [ref=f3e244] [cursor=pointer]:
+          - /url: /chat-ia
+          - text: Chat IA
+        - link [ref=f3e245] [cursor=pointer]:
+          - /url: /ai-hub
+          - text: Centre IA
+      - generic [ref=f3e173]:
+        - button [ref=f3e246] [cursor=pointer]: Mode sombre
+        - generic [ref=f3e175]: 🔧 Développement · v1.0
+    - main [ref=f3e176]:
+      - generic [ref=f3e178]:
+        - button [ref=f3e247] [cursor=pointer]:
+          - generic [ref=f3e180]: Toggle theme
+        - button [ref=f3e248] [cursor=pointer]:
+          - generic [ref=f3e182]: "3"
+          - generic [ref=f3e183]: Notifications
+        - button [ref=f3e249] [cursor=pointer]:
+          - generic [ref=f3e185]: Profile
+        - button [ref=f3e250] [cursor=pointer]:
+          - generic [ref=f3e187]: Déconnexion
+        - generic [ref=f3e188]: AD
+      - generic [ref=f3e192]:
+        - generic [ref=f3e194]:
+          - generic [ref=f3e199]:
+            - heading [level=1] [ref=f3e251]: Banque d'images
+            - paragraph [ref=f3e201]: "Gérez vos médias : photos et vidéos"
+          - button [ref=f3e252] [cursor=pointer]: Ajouter un média
+        - generic [ref=f3e203]:
+          - generic [ref=f3e204]: 0 images
+          - generic [ref=f3e210]: 0 vidéos
+          - generic [ref=f3e214]: 0 B
+          - generic [ref=f3e218]: 0 total
+        - generic [ref=f3e220]:
+          - generic [ref=f3e221]:
+            - combobox [ref=f3e222] [cursor=pointer]:
+              - generic [ref=f3e224]: createdAt-desc
+            - textbox [ref=f3e228]: createdAt-desc
+          - textbox [ref=f3e253]:
+            - /placeholder: Rechercher par titre, description ou tag...
+        - generic [ref=f3e234]:
+          - paragraph [ref=f3e238]: Aucun média trouvé
+          - paragraph [ref=f3e239]: Ajoutez votre premier média en cliquant sur le bouton ci-dessous.
+  - dialog [ref=f3e257]:
+    - generic [ref=f3e258]:
+      - generic [ref=f3e259]:
+        - heading "Ajouter un média" [level=2] [ref=f3e260]
+        - paragraph [ref=f3e262]: Importez ou capturez un média, puis renseignez les métadonnées.
+      - generic [ref=f3e264]:
+        - generic [ref=f3e265]:
+          - generic [ref=f3e266]: Source du média
+          - generic [ref=f3e267]:
+            - button "Importer" [active] [ref=f3e268] [cursor=pointer]
+            - button "Capturer" [ref=f3e269] [cursor=pointer]
+        - generic [ref=f3e270] [cursor=pointer]:
+          - paragraph [ref=f3e275]: Glissez-déposez un fichier
+          - paragraph [ref=f3e276]: ou parcourez vos fichiers — Images et vidéos acceptées
+        - generic [ref=f3e277]:
+          - generic [ref=f3e278]:
+            - generic [ref=f3e279]: Titre *
+            - textbox "Titre *" [ref=f3e280]:
+              - /placeholder: Nom du média
+          - generic [ref=f3e281]:
+            - generic [ref=f3e282]: Catégorie *
+            - combobox "Catégorie *" [ref=f3e283] [cursor=pointer]:
+              - generic [ref=f3e284]: Sélectionner
+            - textbox [ref=f3e288]
+        - generic [ref=f3e289]:
+          - generic [ref=f3e290]: Description
+          - textbox "Description" [ref=f3e291]:
+            - /placeholder: Décrire le média...
+        - generic [ref=f3e292]:
+          - generic [ref=f3e293]: Tags
+          - textbox "Tags" [ref=f3e297]:
+            - /placeholder: "ex: équipement, bloc B, inspection"
+          - paragraph [ref=f3e298]: Séparez les tags par des virgules
+        - generic [ref=f3e299]:
+          - generic [ref=f3e300]:
+            - generic [ref=f3e301]: Type de média
+            - combobox "Type de média" [ref=f3e302] [cursor=pointer]:
+              - generic [ref=f3e303]: image
+            - textbox [ref=f3e307]: image
+          - generic [ref=f3e308]:
+            - generic [ref=f3e309]: Format MIME
+            - textbox [ref=f3e310]: —
+        - generic [ref=f3e311]:
+          - generic [ref=f3e312]: Taille
+          - generic [ref=f3e317]: 0 B
+        - generic [ref=f3e319]:
+          - generic [ref=f3e320]: Géolocalisation
+          - button "Capturer" [ref=f3e325] [cursor=pointer]
+      - generic [ref=f3e326]:
+        - button "Annuler" [ref=f3e327] [cursor=pointer]
+        - button "Ajouter" [ref=f3e328] [cursor=pointer]

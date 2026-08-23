@@ -1,0 +1,29 @@
+- generic [ref=f13e2]:
+  - complementary [ref=f13e4]:
+    - generic [ref=f13e5]: NexaFlow
+    - navigation [ref=f13e12]:
+      - link "Mon espace" [ref=f13e13] [cursor=pointer]:
+        - /url: /rondier
+      - link "Guide procédure" [ref=f13e20] [cursor=pointer]:
+        - /url: /guide-procedure
+      - link "Visioconférence" [ref=f13e24] [cursor=pointer]:
+        - /url: /video-conference
+      - link "État des lieux" [ref=f13e29] [cursor=pointer]:
+        - /url: /etat-des-lieux
+      - link "Chat IA" [ref=f13e34] [cursor=pointer]:
+        - /url: /chat-ia
+      - link "Centre IA" [ref=f13e38] [cursor=pointer]:
+        - /url: /ai-hub
+    - generic [ref=f13e43]: 🔧 Développement · v1.0
+  - main [ref=f13e45]:
+    - generic [ref=f13e46]:
+      - button "Réduire la sidebar" [ref=f13e48] [cursor=pointer]
+      - generic [ref=f13e50]:
+        - button "Toggle theme" [ref=f13e51] [cursor=pointer]
+        - button "Notifications" [ref=f13e54] [cursor=pointer]
+        - button "Profile" [ref=f13e56] [cursor=pointer]
+        - button "Déconnexion" [ref=f13e58] [cursor=pointer]
+        - generic [ref=f13e60]: U
+    - generic [ref=f13e64]:
+      - button [disabled]
+      - paragraph [ref=f13e65]: Chargement du média...

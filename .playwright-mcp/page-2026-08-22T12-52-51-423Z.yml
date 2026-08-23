@@ -1,0 +1,59 @@
+- generic [active] [ref=f5e1]:
+  - alert [ref=f5e65]
+  - generic [ref=f5e66]:
+    - complementary [ref=f5e68]:
+      - generic [ref=f5e69]: NexaFlow
+      - navigation [ref=f5e76]:
+        - link "Tableau de bord" [ref=f5e1436] [cursor=pointer]:
+          - /url: /admin
+        - link "Pipeline DEV" [ref=f5e1437] [cursor=pointer]:
+          - /url: /pipeline
+          - generic [ref=f5e89]: Pipeline
+          - generic [ref=f5e90]: DEV
+        - link "Q/R" [ref=f5e1438] [cursor=pointer]:
+          - /url: /q-r
+        - link "Actions IA" [ref=f5e1439] [cursor=pointer]:
+          - /url: /actions-ia
+        - link "Périphériques" [ref=f5e1440] [cursor=pointer]:
+          - /url: /devices
+        - link "Alarmes actives" [ref=f5e1441] [cursor=pointer]:
+          - /url: /alarmes-actives
+        - link "Historique IoT" [ref=f5e1442] [cursor=pointer]:
+          - /url: /historique-iot
+        - link "Créer une procédure" [ref=f5e1443] [cursor=pointer]:
+          - /url: /creer-procedure
+        - link "Guide procédure" [ref=f5e1444] [cursor=pointer]:
+          - /url: /guide-procedure
+        - link "Approbations" [ref=f5e1445] [cursor=pointer]:
+          - /url: /approvals
+        - link "Historique exécutions" [ref=f5e1446] [cursor=pointer]:
+          - /url: /executions
+        - link "Structure BDD" [ref=f5e1447] [cursor=pointer]:
+          - /url: /structure-bdd
+        - link "Banque d'images" [ref=f5e1448] [cursor=pointer]:
+          - /url: /images
+        - link "Visioconférence" [ref=f5e1449] [cursor=pointer]:
+          - /url: /video-conference
+        - link "Rapports" [ref=f5e1450] [cursor=pointer]:
+          - /url: /rapports
+        - link "Équipes" [ref=f5e1451] [cursor=pointer]:
+          - /url: /equipes
+        - link "État des lieux" [ref=f5e1452] [cursor=pointer]:
+          - /url: /etat-des-lieux
+        - link "Chat IA" [ref=f5e1453] [cursor=pointer]:
+          - /url: /chat-ia
+        - link "Centre IA" [ref=f5e1454] [cursor=pointer]:
+          - /url: /ai-hub
+      - generic [ref=f5e177]: 🔧 Développement · v1.0
+    - main [ref=f5e179]:
+      - generic [ref=f5e180]:
+        - button "Réduire la sidebar" [ref=f5e1455] [cursor=pointer]
+        - generic [ref=f5e184]:
+          - button "Toggle theme" [ref=f5e1456] [cursor=pointer]
+          - button "2 Notifications" [ref=f5e1457] [cursor=pointer]:
+            - generic [ref=f5e189]: "2"
+            - generic [ref=f5e190]: Notifications
+          - button "Profile" [ref=f5e1458] [cursor=pointer]
+          - button "Déconnexion" [ref=f5e1459] [cursor=pointer]
+          - generic "admin" [ref=f5e1460]: A
+      - paragraph [ref=f5e1461]: Chargement de la structure...

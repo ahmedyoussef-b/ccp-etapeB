@@ -1,0 +1,27 @@
+- generic [ref=f5e2]:
+  - complementary [ref=f5e4]:
+    - generic [ref=f5e5]: NexaFlow
+    - navigation [ref=f5e12]:
+      - link "Mon espace" [ref=f5e13] [cursor=pointer]:
+        - /url: /rondier
+      - link "Guide procédure" [ref=f5e20] [cursor=pointer]:
+        - /url: /guide-procedure
+      - link "Visioconférence" [ref=f5e24] [cursor=pointer]:
+        - /url: /video-conference
+      - link "État des lieux" [ref=f5e29] [cursor=pointer]:
+        - /url: /etat-des-lieux
+      - link "Chat IA" [ref=f5e34] [cursor=pointer]:
+        - /url: /chat-ia
+      - link "Centre IA" [ref=f5e38] [cursor=pointer]:
+        - /url: /ai-hub
+    - generic [ref=f5e43]: 🔧 Développement · v1.0
+  - main [ref=f5e45]:
+    - generic [ref=f5e46]:
+      - button "Réduire la sidebar" [ref=f5e48] [cursor=pointer]
+      - generic [ref=f5e50]:
+        - button "Toggle theme" [ref=f5e51] [cursor=pointer]
+        - button "Notifications" [ref=f5e54] [cursor=pointer]
+        - button "Profile" [ref=f5e56] [cursor=pointer]
+        - button "Déconnexion" [ref=f5e58] [cursor=pointer]
+        - generic [ref=f5e60]: U
+    - paragraph [ref=f5e64]: Chargement de la structure...

@@ -1,0 +1,7 @@
+{
+  "libelle": "VERROUILLAGE REF VITESSE",
+  "code": "2_120",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}

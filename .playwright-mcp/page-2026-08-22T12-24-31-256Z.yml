@@ -1,0 +1,99 @@
+- generic [ref=e1]:
+  - alert [ref=e65]
+  - generic [ref=e66]:
+    - complementary [ref=e68]:
+      - generic [ref=e69]: NexaFlow
+      - navigation [ref=e76]:
+        - link "Tableau de bord" [ref=e1452] [cursor=pointer]:
+          - /url: /admin
+        - link "Pipeline DEV" [ref=e1453] [cursor=pointer]:
+          - /url: /pipeline
+          - generic [ref=e89]: Pipeline
+          - generic [ref=e90]: DEV
+        - link "Q/R" [ref=e1454] [cursor=pointer]:
+          - /url: /q-r
+        - link "Actions IA" [ref=e1455] [cursor=pointer]:
+          - /url: /actions-ia
+        - link "Périphériques" [ref=e1456] [cursor=pointer]:
+          - /url: /devices
+        - link "Alarmes actives" [ref=e1457] [cursor=pointer]:
+          - /url: /alarmes-actives
+        - link "Historique IoT" [ref=e1458] [cursor=pointer]:
+          - /url: /historique-iot
+        - link "Créer une procédure" [ref=e1459] [cursor=pointer]:
+          - /url: /creer-procedure
+        - link "Guide procédure" [ref=e1460] [cursor=pointer]:
+          - /url: /guide-procedure
+        - link "Approbations" [ref=e1461] [cursor=pointer]:
+          - /url: /approvals
+        - link "Historique exécutions" [ref=e1462] [cursor=pointer]:
+          - /url: /executions
+        - link "Structure BDD" [ref=e1463] [cursor=pointer]:
+          - /url: /structure-bdd
+        - link "Banque d'images" [ref=e1464] [cursor=pointer]:
+          - /url: /images
+        - link "Visioconférence" [ref=e1465] [cursor=pointer]:
+          - /url: /video-conference
+        - link "Rapports" [ref=e1466] [cursor=pointer]:
+          - /url: /rapports
+        - link "Équipes" [ref=e1467] [cursor=pointer]:
+          - /url: /equipes
+        - link "État des lieux" [ref=e1468] [cursor=pointer]:
+          - /url: /etat-des-lieux
+        - link "Chat IA" [ref=e1469] [cursor=pointer]:
+          - /url: /chat-ia
+        - link "Centre IA" [ref=e1470] [cursor=pointer]:
+          - /url: /ai-hub
+      - generic [ref=e177]: 🔧 Développement · v1.0
+    - main [ref=e179]:
+      - generic [ref=e180]:
+        - button "Réduire la sidebar" [ref=e1471] [cursor=pointer]
+        - generic [ref=e184]:
+          - button "Toggle theme" [ref=e1472] [cursor=pointer]
+          - button "2 Notifications" [ref=e1473] [cursor=pointer]:
+            - generic [ref=e189]: "2"
+            - generic [ref=e190]: Notifications
+          - button "Profile" [ref=e1474] [cursor=pointer]
+          - button "Déconnexion" [ref=e1475] [cursor=pointer]
+          - generic "admin" [ref=e1476]: A
+      - generic [ref=e198]:
+        - generic [ref=e199]:
+          - generic [ref=e200]:
+            - heading "Structure BDD" [level=1] [ref=e1477]
+            - paragraph [ref=e207]: "Vue active : Spoke / SQLite OPFS · 0 nœuds"
+          - generic [ref=e208]:
+            - button "Hub / Web" [ref=e1478] [cursor=pointer]
+            - button "SQLite" [active] [ref=e1479] [cursor=pointer]
+            - button "Vectorielle" [ref=e1480] [cursor=pointer]
+            - button "Médias" [ref=e1481] [cursor=pointer]
+        - generic [ref=e213]: Initialisation de la BDD locale en attente d'approbation administrateur.
+        - generic [ref=e218]:
+          - generic [ref=e219]:
+            - generic [ref=e220]:
+              - heading "Arborescence" [level=3] [ref=e1482]
+              - generic [ref=e228]:
+                - generic [ref=e229]: 0 nœuds
+                - textbox "Rechercher..." [ref=e1483]
+                - generic [ref=e1490]:
+                  - switch "Vectorisés seulement (0)" [ref=e1491] [cursor=pointer]
+                  - generic [ref=e1492] [cursor=pointer]: Vectorisés seulement (0)
+                - button "Remettre à zéro" [ref=e1493] [cursor=pointer]
+                - button "Supprimer (.data)" [ref=e1494] [cursor=pointer]
+                - button "Réinitialiser le miroir" [ref=e1495] [cursor=pointer]
+            - paragraph [ref=e1496]: Aucune donnée.
+            - generic [ref=e589]:
+              - button "Réinitialiser le miroir" [ref=e1497] [cursor=pointer]
+              - button "Vectoriser tout" [ref=e1498] [cursor=pointer]
+          - generic [ref=e591]:
+            - generic [ref=e592]:
+              - heading "Visualiseur" [level=3] [ref=e1486]
+              - generic [ref=e1026]:
+                - button "Métadonnées" [ref=e1487] [cursor=pointer]
+                - generic [ref=e1028]: ahmed abbes
+            - generic [ref=e1029]:
+              - generic [ref=e1030]:
+                - generic [ref=e1031]:
+                  - generic [ref=e1032]: image/jpeg
+                  - generic [ref=e1033]: 2295.2 KB
+                - button "Télécharger" [ref=e1488] [cursor=pointer]
+              - img "ahmed abbes" [ref=e1489]

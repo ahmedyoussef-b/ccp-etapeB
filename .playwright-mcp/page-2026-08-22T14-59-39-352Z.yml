@@ -1,0 +1,94 @@
+- generic [active] [ref=f14e1]:
+  - alert [ref=f14e69]
+  - generic [ref=f14e70]:
+    - complementary [ref=f14e72]:
+      - generic [ref=f14e73]: NexaFlow
+      - navigation [ref=f14e80]:
+        - link "Tableau de bord" [ref=f14e81] [cursor=pointer]:
+          - /url: /admin
+        - link "Pipeline DEV" [ref=f14e88] [cursor=pointer]:
+          - /url: /pipeline
+          - generic [ref=f14e93]: Pipeline
+          - generic [ref=f14e94]: DEV
+        - link "Q/R" [ref=f14e95] [cursor=pointer]:
+          - /url: /q-r
+        - link "Actions IA" [ref=f14e100] [cursor=pointer]:
+          - /url: /actions-ia
+        - link "Périphériques" [ref=f14e105] [cursor=pointer]:
+          - /url: /devices
+        - link "Alarmes actives" [ref=f14e109] [cursor=pointer]:
+          - /url: /alarmes-actives
+        - link "Historique IoT" [ref=f14e113] [cursor=pointer]:
+          - /url: /historique-iot
+        - link "Créer une procédure" [ref=f14e119] [cursor=pointer]:
+          - /url: /creer-procedure
+        - link "Guide procédure" [ref=f14e124] [cursor=pointer]:
+          - /url: /guide-procedure
+        - link "Approbations" [ref=f14e128] [cursor=pointer]:
+          - /url: /approvals
+        - link "Historique exécutions" [ref=f14e133] [cursor=pointer]:
+          - /url: /executions
+        - link "Structure BDD" [ref=f14e139] [cursor=pointer]:
+          - /url: /structure-bdd
+        - link "Banque d'images" [ref=f14e145] [cursor=pointer]:
+          - /url: /images
+        - link "Visioconférence" [ref=f14e151] [cursor=pointer]:
+          - /url: /video-conference
+        - link "Rapports" [ref=f14e156] [cursor=pointer]:
+          - /url: /rapports
+        - link "Équipes" [ref=f14e160] [cursor=pointer]:
+          - /url: /equipes
+        - link "État des lieux" [ref=f14e167] [cursor=pointer]:
+          - /url: /etat-des-lieux
+        - link "Chat IA" [ref=f14e172] [cursor=pointer]:
+          - /url: /chat-ia
+        - link "Centre IA" [ref=f14e176] [cursor=pointer]:
+          - /url: /ai-hub
+      - generic [ref=f14e181]: 🔧 Développement · v1.0
+    - main [ref=f14e183]:
+      - generic [ref=f14e184]:
+        - button "Réduire la sidebar" [ref=f14e186] [cursor=pointer]
+        - generic [ref=f14e188]:
+          - button "Toggle theme" [ref=f14e189] [cursor=pointer]
+          - button "2 Notifications" [ref=f14e192] [cursor=pointer]:
+            - generic [ref=f14e193]: "2"
+            - generic [ref=f14e194]: Notifications
+          - button "Profile" [ref=f14e195] [cursor=pointer]
+          - button "Déconnexion" [ref=f14e197] [cursor=pointer]
+          - generic "admin" [ref=f14e199]: A
+      - generic [ref=f14e284]:
+        - generic [ref=f14e286]:
+          - generic [ref=f14e291]:
+            - heading "Banque d'images" [level=1] [ref=f14e292]
+            - paragraph [ref=f14e293]: "Gérez vos médias : photos et vidéos"
+          - button "Ajouter un média" [ref=f14e294] [cursor=pointer]
+        - generic [ref=f14e295]:
+          - generic [ref=f14e296]: 1 images
+          - generic [ref=f14e302]: 0 vidéos
+          - generic [ref=f14e306]: 2.2 MB
+          - generic [ref=f14e310]: 1 total
+        - generic [ref=f14e312]:
+          - generic [ref=f14e313]:
+            - combobox [ref=f14e314] [cursor=pointer]:
+              - generic [ref=f14e316]: createdAt-desc
+            - textbox [ref=f14e320]: createdAt-desc
+            - button "Équipement" [ref=f14e321] [cursor=pointer]
+            - button "Inspection" [ref=f14e322] [cursor=pointer]
+            - button "Sécurité" [ref=f14e323] [cursor=pointer]
+            - button "Maintenance" [ref=f14e324] [cursor=pointer]
+            - button "Documentation" [ref=f14e325] [cursor=pointer]
+          - textbox "Rechercher par titre, description ou tag..." [ref=f14e330]
+        - generic [ref=f14e332]:
+          - button [ref=f14e334] [cursor=pointer]
+          - generic "En attente de synchronisation" [ref=f14e336]
+          - img "ahmed abbes" [ref=f14e341] [cursor=pointer]
+          - generic [ref=f14e342]:
+            - paragraph [ref=f14e343]: ahmed abbes
+            - generic [ref=f14e344]:
+              - generic [ref=f14e345]: registry/ressources humaines/equipes/equipe B
+              - generic [ref=f14e346]: 2.2 MB
+          - generic [ref=f14e347]:
+            - button "Aperçu" [ref=f14e348] [cursor=pointer]
+            - button "Télécharger" [ref=f14e349] [cursor=pointer]
+            - button "Modifier" [ref=f14e350] [cursor=pointer]
+            - button "Supprimer" [ref=f14e351] [cursor=pointer]

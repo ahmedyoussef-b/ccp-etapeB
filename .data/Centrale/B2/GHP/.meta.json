@@ -1,0 +1,7 @@
+{
+  "libelle": "CONTOURNEMENT HP CR 2",
+  "code": "GHP",
+  "type": "sous_centrale",
+  "parentId": "B2",
+  "syncState": "local-only"
+}

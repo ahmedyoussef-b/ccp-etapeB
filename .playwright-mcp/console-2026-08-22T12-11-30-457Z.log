@@ -1,0 +1,417 @@
+[    1467ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:38559
+[    1789ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    1790ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    1821ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    1822ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    1845ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:620
+[    1847ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:489
+[    1871ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:620
+[    1873ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:489
+[    1891ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    1892ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[    1903ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    1903ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    1911ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:620
+[    1913ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:489
+[    1919ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:620
+[    1921ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:489
+[    3811ms] [WARNING] [SQLite] OPFS SAH Pool indisponible, repli sur IndexedDB (SqlJsDb). Error: Missing required OPFS APIs.
+    at sqlite3.installOpfsSAHPoolVfs (webpack-internal:///(app-pages-browser)/./node_modules/@sqlite.org/sqlite-wasm/dist/index.mjs:15637:284)
+    at openPersistentDatabase (webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:24:44)
+    at eval (webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:51:20) @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:30
+[    3811ms] [WARNING] [SQLite] Aucun stockage OPFS persistant disponible : repli sur localStorage (les données survivront au rechargement dans la limite de stockage du navigateur). @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:34
+[    3964ms] [LOG] [SQLite] Base de données locale initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:52
+[    3996ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[    3996ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[    3996ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[    3996ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[    3997ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[    3998ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[    3998ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[    3998ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[    3998ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[    3998ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[    3998ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[    3999ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[    4025ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:518
+[    4025ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:518
+[    4026ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:518
+[    4026ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:518
+[    4027ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:542
+[    4028ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:542
+[    4028ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:542
+[    4029ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:542
+[    4031ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    4032ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    4033ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:556
+[    4034ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:556
+[    4035ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:556
+[    4036ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:556
+[    4038ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    4038ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    5087ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:583
+[    5088ms] [LOG] [StructureBDD] image tree loaded {count: 3} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:588
+[    5280ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:497
+[    5282ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:505
+[    5701ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:497
+[    5706ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:505
+[    7896ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:583
+[    7897ms] [LOG] [StructureBDD] image tree loaded {count: 3} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:588
+[    8069ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:497
+[    8070ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:505
+[    8072ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    8073ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    8335ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:583
+[    8336ms] [LOG] [StructureBDD] image tree loaded {count: 3} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:588
+[    8339ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    8340ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    8398ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:497
+[    8401ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:505
+[    8402ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    8402ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    8629ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:583
+[    8629ms] [LOG] [StructureBDD] image tree loaded {count: 3} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:588
+[    8631ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    8632ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[    8704ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[    8706ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[    8889ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[    8891ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[   74276ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[   74276ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  338214ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  338215ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  340007ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  340009ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  669496ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  669497ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  719593ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  719593ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  744581ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  744582ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  780225ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  780226ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  801215ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:186
+[  803932ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  803934ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  803950ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:620
+[  803952ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:489
+[  803970ms] [LOG] [Fast Refresh] done in 2756ms @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:43
+[  803972ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:518
+[  803974ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[  803975ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[  803979ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:542
+[  803985ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[  803986ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[  803988ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:556
+[  803990ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[  803990ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[  804405ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[  804405ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[  806174ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:497
+[  806178ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:505
+[  806179ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[  806180ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[  806538ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:583
+[  806546ms] [LOG] [StructureBDD] image tree loaded {count: 3} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:588
+[  806548ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[  806548ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1668
+[  807657ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  807657ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1685
+[  816313ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:186
+[  816813ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (54:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:32
+[  826274ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (59:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:32
+[  827145ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (59:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:32
+[  828204ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (54:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:32
+[  828348ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (59:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:32
+[  828913ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (54:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:32
+[  831661ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (59:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:32
+[  831670ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (54:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:32
+[  832159ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (54:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:32
+[  832236ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/structure-bdd?_rsc=1dh86:0
+[  832468ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/structure-bdd?_rsc=1dh86:0
+[  832824ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/structure-bdd:0
+[  833793ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///./node_modules/react-dom/cjs/react-dom.development.js:29889
+[  833916ms] ModuleParseError: Module parse failed: Export 'updateFile' is not defined (59:64)
+File was processed with these loaders:
+ * ./node_modules/next/dist/compiled/@next/react-refresh-utils/dist/loader.js
+ * ./node_modules/next/dist/build/webpack/loaders/next-flight-client-module-loader.js
+ * ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+You may need an additional loader to handle the result of these loaders.
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+| 
+    at <unknown> (File was processed with these loaders:)
+    at handleParseError (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\webpack\bundle5.js:28:403799)
+    at <unknown> (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\webpack\bundle5.js:28:405546)
+    at processResult (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\webpack\bundle5.js:28:401241)
+    at <unknown> (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\webpack\bundle5.js:28:402302)
+    at <unknown> (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:8727)
+    at iterateNormalLoaders (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:5565)
+    at iterateNormalLoaders (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:5650)
+    at <unknown> (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:5879)
+    at r.callback (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:4039)
+    at Object.ReactRefreshLoader (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\@next\react-refresh-utils\dist\loader.js:14:10)
+    at LOADER_EXECUTION (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:4134)
+    at runSyncOrAsync (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:4145)
+    at iterateNormalLoaders (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:5782)
+    at iterateNormalLoaders (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:5650)
+    at <unknown> (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:5879)
+    at r.callback (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:4039)
+    at Object.transformSource (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\build\webpack\loaders\next-flight-client-module-loader.js:34:17)
+    at LOADER_EXECUTION (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:4134)
+    at runSyncOrAsync (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:4145)
+    at iterateNormalLoaders (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:5782)
+    at <unknown> (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:5142)
+    at r.callback (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\compiled\loader-runner\LoaderRunner.js:1:4039)
+    at <unknown> (file://C:\ahmed\ETAPE-B-CCP\app-version2\app\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js:197:23)
+[  833915ms] [LOG] [HMR] connected @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/websocket.js:38
+[  833919ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (54:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/internal/helpers/hydration-error-info.js:62
+[  840247ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (59:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/internal/helpers/hydration-error-info.js:62
+[  841347ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (59:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/internal/helpers/hydration-error-info.js:62
+[  841995ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (54:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/internal/helpers/hydration-error-info.js:62
+[  853027ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (59:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/internal/helpers/hydration-error-info.js:62
+[  854032ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (59:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/internal/helpers/hydration-error-info.js:62
+[  854698ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (54:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/internal/helpers/hydration-error-info.js:62
+[  906430ms] [ERROR] ./src/lib/db/tree.ts
+Module parse failed: Export 'updateFile' is not defined (59:64)
+|     return sortRecursively(roots);
+| }
+> export { deleteLocalTreeNode, addFolder, updateFolder, addFile, updateFile };
+| 
+| 
+
+Import trace for requested module:
+./src/lib/db/tree.ts
+./src/app/(dashboard)/structure-bdd/page.tsx @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/internal/helpers/hydration-error-info.js:62
+[  906431ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/hot-reloader-client.js:221
+[  909232ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/hot-reloader-client.js:221
+[  915129ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:38559
+[  915467ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  915467ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  915493ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  915493ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  915511ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:620
+[  915513ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:489
+[  915533ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:620
+[  915535ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:489
+[  915563ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  915564ms] [LOG] [Auth] Utilisateur connecté détecté {userId: cmt3i6d290000qn8stnmxf460, role: admin, email: admin@nexaflow.com} @ webpack-internal:///(app-pages-browser)/./src/lib/procedures/client-auth.ts:15
+[  915574ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  915574ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  915583ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:620
+[  915584ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:489
+[  915590ms] [LOG] [StructureBDD] mount @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:620
+[  915591ms] [LOG] [StructureBDD] loadTrees start @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:489
+[  916271ms] [WARNING] [SQLite] OPFS SAH Pool indisponible, repli sur IndexedDB (SqlJsDb). Error: Missing required OPFS APIs.
+    at sqlite3.installOpfsSAHPoolVfs (webpack-internal:///(app-pages-browser)/./node_modules/@sqlite.org/sqlite-wasm/dist/index.mjs:15637:284)
+    at openPersistentDatabase (webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:24:44)
+    at eval (webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:51:20) @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:30
+[  916272ms] [WARNING] [SQLite] Aucun stockage OPFS persistant disponible : repli sur localStorage (les données survivront au rechargement dans la limite de stockage du navigateur). @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:34
+[  916417ms] [LOG] [SQLite] Base de données locale initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/sqlite.ts:52
+[  916448ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[  916448ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[  916449ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[  916449ms] [LOG] [VectorStore] Base de données vectorielle IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/vector-store.ts:92
+[  916450ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[  916450ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[  916450ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[  916450ms] [LOG] [JsonStore] Base de données JSON IndexedDB initialisée @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/json-store.ts:50
+[  916450ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[  916450ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[  916451ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[  916451ms] [LOG] [ClientEngine] Initialisation terminée: {sqlite: true, vectorStore: true, jsonStore: true} @ webpack-internal:///(app-pages-browser)/./src/lib/client-engine/index.ts:77
+[  916476ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:518
+[  916476ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:518
+[  916476ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:518
+[  916477ms] [LOG] [StructureBDD] local tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:518
+[  916478ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:542
+[  916479ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:542
+[  916479ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:542
+[  916480ms] [LOG] [StructureBDD] vector docs loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:542
+[  916483ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  916484ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  916486ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:556
+[  916487ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:556
+[  916487ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:556
+[  916488ms] [LOG] [StructureBDD] vector tree loaded {count: 0} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:556
+[  916489ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  916490ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  921475ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:583
+[  921476ms] [LOG] [StructureBDD] image tree loaded {count: 3} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:588
+[  921774ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:497
+[  921781ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:505
+[  924140ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:583
+[  924144ms] [LOG] [StructureBDD] image tree loaded {count: 3} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:588
+[  924203ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:497
+[  924207ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:505
+[  924800ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:583
+[  924801ms] [LOG] [StructureBDD] image tree loaded {count: 3} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:588
+[  924803ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  924803ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  924857ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:497
+[  924875ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:505
+[  924879ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  924880ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  925392ms] [LOG] [StructureBDD] /api/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:497
+[  925395ms] [LOG] [StructureBDD] web tree loaded {count: 7} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:505
+[  925396ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  925396ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  925458ms] [LOG] [StructureBDD] /api/images/tree status 200 @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:583
+[  925460ms] [LOG] [StructureBDD] image tree loaded {count: 3} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:588
+[  925462ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  925463ms] [LOG] [StructureBDD] render loading @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1673
+[  925533ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1690
+[  925535ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1690
+[  925676ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1690
+[  925678ms] [LOG] [StructureBDD] render result {web: 7, local: 0, vector: 0, images: 3, webError: false} @ webpack-internal:///(app-pages-browser)/./src/app/(dashboard)/structure-bdd/page.tsx:1690

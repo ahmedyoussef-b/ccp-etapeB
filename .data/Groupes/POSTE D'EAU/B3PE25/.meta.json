@@ -1,0 +1,7 @@
+{
+  "libelle": "SYSTEME EAU DE REFRIGERATION",
+  "code": "B3PE25",
+  "type": "groupe",
+  "parentId": "POSTE D'EAU",
+  "syncState": "local-only"
+}

@@ -1,0 +1,145 @@
+- generic [ref=f16e1]:
+  - alert [ref=f16e65]
+  - generic [ref=f16e66]:
+    - complementary [ref=f16e68]:
+      - generic [ref=f16e69]: NexaFlow
+      - navigation [ref=f16e76]:
+        - link "Tableau de bord" [ref=f16e77] [cursor=pointer]:
+          - /url: /admin
+        - link "Pipeline DEV" [ref=f16e84] [cursor=pointer]:
+          - /url: /pipeline
+          - generic [ref=f16e89]: Pipeline
+          - generic [ref=f16e90]: DEV
+        - link "Q/R" [ref=f16e91] [cursor=pointer]:
+          - /url: /q-r
+        - link "Actions IA" [ref=f16e96] [cursor=pointer]:
+          - /url: /actions-ia
+        - link "Périphériques" [ref=f16e101] [cursor=pointer]:
+          - /url: /devices
+        - link "Alarmes actives" [ref=f16e105] [cursor=pointer]:
+          - /url: /alarmes-actives
+        - link "Historique IoT" [ref=f16e109] [cursor=pointer]:
+          - /url: /historique-iot
+        - link "Créer une procédure" [ref=f16e115] [cursor=pointer]:
+          - /url: /creer-procedure
+        - link "Guide procédure" [ref=f16e120] [cursor=pointer]:
+          - /url: /guide-procedure
+        - link "Approbations" [ref=f16e124] [cursor=pointer]:
+          - /url: /approvals
+        - link "Historique exécutions" [ref=f16e129] [cursor=pointer]:
+          - /url: /executions
+        - link "Structure BDD" [ref=f16e135] [cursor=pointer]:
+          - /url: /structure-bdd
+        - link "Banque d'images" [ref=f16e141] [cursor=pointer]:
+          - /url: /images
+        - link "Visioconférence" [ref=f16e147] [cursor=pointer]:
+          - /url: /video-conference
+        - link "Rapports" [ref=f16e152] [cursor=pointer]:
+          - /url: /rapports
+        - link "Équipes" [ref=f16e156] [cursor=pointer]:
+          - /url: /equipes
+        - link "État des lieux" [ref=f16e163] [cursor=pointer]:
+          - /url: /etat-des-lieux
+        - link "Chat IA" [ref=f16e168] [cursor=pointer]:
+          - /url: /chat-ia
+        - link "Centre IA" [ref=f16e172] [cursor=pointer]:
+          - /url: /ai-hub
+      - generic [ref=f16e177]: 🔧 Développement · v1.0
+    - main [ref=f16e179]:
+      - generic [ref=f16e180]:
+        - button "Réduire la sidebar" [ref=f16e182] [cursor=pointer]
+        - generic [ref=f16e184]:
+          - button "Toggle theme" [ref=f16e185] [cursor=pointer]
+          - button "2 Notifications" [ref=f16e188] [cursor=pointer]:
+            - generic [ref=f16e189]: "2"
+            - generic [ref=f16e190]: Notifications
+          - button "Profile" [ref=f16e191] [cursor=pointer]
+          - button "Déconnexion" [ref=f16e193] [cursor=pointer]
+          - generic "admin" [ref=f16e195]: A
+      - generic [ref=f16e198]:
+        - generic [ref=f16e715]:
+          - generic [ref=f16e716]:
+            - heading "Structure BDD" [level=1] [ref=f16e722]
+            - paragraph [ref=f16e723]: "Vue active : Hub / Médias · 8 nœuds"
+          - generic [ref=f16e724]:
+            - button "Hub / Web" [ref=f16e725] [cursor=pointer]
+            - button "SQLite" [ref=f16e726] [cursor=pointer]
+            - button "Vectorielle" [ref=f16e727] [cursor=pointer]
+            - button "Médias" [ref=f16e728] [cursor=pointer]
+        - generic [ref=f16e729]: Initialisation de la BDD locale en attente d'approbation administrateur.
+        - generic [ref=f16e734]:
+          - generic [ref=f16e735]:
+            - generic [ref=f16e736]:
+              - heading "Arborescence" [level=3] [ref=f16e743]
+              - generic [ref=f16e744]:
+                - generic [ref=f16e745]: 8 nœuds
+                - textbox "Rechercher..." [ref=f16e746]
+            - generic [ref=f16e747]:
+              - generic [ref=f16e748]:
+                - generic [ref=f16e749] [cursor=pointer]:
+                  - generic [ref=f16e757]: bank
+                  - generic [ref=f16e758]: dossier
+                - generic [ref=f16e763]:
+                  - generic [ref=f16e764] [cursor=pointer]:
+                    - generic [ref=f16e771]: ahmed abbes
+                    - generic [ref=f16e772]: image
+                  - generic [ref=f16e777]:
+                    - generic [ref=f16e779] [cursor=pointer]:
+                      - generic [ref=f16e785]: ahmed_abbes.jpg
+                      - generic [ref=f16e786]: fichier
+                    - generic [ref=f16e788] [cursor=pointer]:
+                      - generic [ref=f16e794]: metadata-ahmed_abbes.json
+                      - generic [ref=f16e795]: fichier
+              - generic [ref=f16e796]:
+                - generic [ref=f16e797] [cursor=pointer]:
+                  - generic [ref=f16e805]: Documentation
+                  - generic [ref=f16e806]: dossier
+                - generic [ref=f16e808]:
+                  - generic [ref=f16e809] [cursor=pointer]:
+                    - generic [ref=f16e816]: ahmed abbes
+                    - generic [ref=f16e817]: image
+                  - generic [ref=f16e818]:
+                    - generic [ref=f16e820] [cursor=pointer]:
+                      - generic [ref=f16e826]: ahmed_abbes.jpg
+                      - generic [ref=f16e827]: fichier
+                    - generic [ref=f16e829] [cursor=pointer]:
+                      - generic [ref=f16e835]: metadata-ahmed_abbes.json
+                      - generic [ref=f16e836]: fichier
+            - button "Actualiser l'arborescence" [ref=f16e838] [cursor=pointer]
+          - generic [ref=f16e839]:
+            - generic [ref=f16e840]:
+              - heading "Métadonnées" [level=3] [ref=f16e874]
+              - generic [ref=f16e846]:
+                - button "Aperçu" [ref=f16e875] [cursor=pointer]
+                - generic [ref=f16e847]: ahmed abbes
+            - generic [ref=f16e849]:
+              - generic [ref=f16e860]:
+                - generic [ref=f16e861]:
+                  - text: Titre
+                  - textbox [ref=f16e888]: ahmed abbes
+                - generic [ref=f16e864]:
+                  - text: Catégorie
+                  - textbox [ref=f16e889]: bank
+              - generic [ref=f16e867]:
+                - text: Description
+                - textbox [ref=f16e876]
+              - generic [ref=f16e877]:
+                - text: Tags
+                - 'textbox "ex: équipement, bloc B, inspection" [ref=f16e890]': chef de bloc
+                - paragraph [ref=f16e878]: Séparez les tags par des virgules
+              - generic [ref=f16e879]:
+                - generic [ref=f16e880]:
+                  - text: Type
+                  - textbox [disabled]: Image
+                - generic [ref=f16e881]:
+                  - text: Format MIME
+                  - textbox [disabled]: image/jpeg
+              - generic [ref=f16e882]:
+                - text: Taille
+                - generic [ref=f16e883]: 2295.2 KB
+              - generic [ref=f16e885]:
+                - text: Géolocalisation
+                - textbox "lat, lng" [ref=f16e891]
+              - generic [ref=f16e886]:
+                - button "Annuler" [active] [ref=f16e892] [cursor=pointer]
+                - button "Enregistrer" [ref=f16e893] [cursor=pointer]

@@ -1,0 +1,94 @@
+- generic [active] [ref=f1e1]:
+  - alert [ref=f1e65]
+  - generic [ref=f1e66]:
+    - complementary [ref=f1e68]:
+      - generic [ref=f1e69]: NexaFlow
+      - navigation [ref=f1e76]:
+        - link "Tableau de bord" [ref=f1e77] [cursor=pointer]:
+          - /url: /admin
+        - link "Pipeline DEV" [ref=f1e84] [cursor=pointer]:
+          - /url: /pipeline
+          - generic [ref=f1e89]: Pipeline
+          - generic [ref=f1e90]: DEV
+        - link "Q/R" [ref=f1e91] [cursor=pointer]:
+          - /url: /q-r
+        - link "Actions IA" [ref=f1e96] [cursor=pointer]:
+          - /url: /actions-ia
+        - link "Périphériques" [ref=f1e101] [cursor=pointer]:
+          - /url: /devices
+        - link "Alarmes actives" [ref=f1e105] [cursor=pointer]:
+          - /url: /alarmes-actives
+        - link "Historique IoT" [ref=f1e109] [cursor=pointer]:
+          - /url: /historique-iot
+        - link "Créer une procédure" [ref=f1e115] [cursor=pointer]:
+          - /url: /creer-procedure
+        - link "Guide procédure" [ref=f1e120] [cursor=pointer]:
+          - /url: /guide-procedure
+        - link "Approbations" [ref=f1e124] [cursor=pointer]:
+          - /url: /approvals
+        - link "Historique exécutions" [ref=f1e129] [cursor=pointer]:
+          - /url: /executions
+        - link "Structure BDD" [ref=f1e135] [cursor=pointer]:
+          - /url: /structure-bdd
+        - link "Banque d'images" [ref=f1e141] [cursor=pointer]:
+          - /url: /images
+        - link "Visioconférence" [ref=f1e147] [cursor=pointer]:
+          - /url: /video-conference
+        - link "Rapports" [ref=f1e152] [cursor=pointer]:
+          - /url: /rapports
+        - link "Équipes" [ref=f1e156] [cursor=pointer]:
+          - /url: /equipes
+        - link "État des lieux" [ref=f1e163] [cursor=pointer]:
+          - /url: /etat-des-lieux
+        - link "Chat IA" [ref=f1e168] [cursor=pointer]:
+          - /url: /chat-ia
+        - link "Centre IA" [ref=f1e172] [cursor=pointer]:
+          - /url: /ai-hub
+      - generic [ref=f1e177]: 🔧 Développement · v1.0
+    - main [ref=f1e179]:
+      - generic [ref=f1e180]:
+        - button "Réduire la sidebar" [ref=f1e182] [cursor=pointer]
+        - generic [ref=f1e184]:
+          - button "Toggle theme" [ref=f1e185] [cursor=pointer]
+          - button "2 Notifications" [ref=f1e188] [cursor=pointer]:
+            - generic [ref=f1e189]: "2"
+            - generic [ref=f1e190]: Notifications
+          - button "Profile" [ref=f1e191] [cursor=pointer]
+          - button "Déconnexion" [ref=f1e193] [cursor=pointer]
+          - generic "admin" [ref=f1e195]: A
+      - generic [ref=f1e198]:
+        - generic [ref=f1e199]:
+          - generic [ref=f1e200]:
+            - heading "Structure BDD" [level=1] [ref=f1e206]
+            - paragraph [ref=f1e207]: "Vue active : Hub / Médias · 4 nœuds"
+          - generic [ref=f1e208]:
+            - button "Hub / Web" [ref=f1e209] [cursor=pointer]
+            - button "SQLite" [ref=f1e210] [cursor=pointer]
+            - button "Vectorielle" [ref=f1e211] [cursor=pointer]
+            - button "Médias" [ref=f1e212] [cursor=pointer]
+        - generic [ref=f1e213]: Initialisation de la BDD locale en attente d'approbation administrateur.
+        - generic [ref=f1e218]:
+          - generic [ref=f1e219]:
+            - generic [ref=f1e220]:
+              - heading "Arborescence" [level=3] [ref=f1e227]
+              - generic [ref=f1e228]:
+                - generic [ref=f1e229]: 4 nœuds
+                - textbox "Rechercher..." [ref=f1e230]
+            - generic [ref=f1e611]:
+              - generic [ref=f1e612] [cursor=pointer]:
+                - generic [ref=f1e620]: bank
+                - generic [ref=f1e621]: dossier
+                - generic [ref=f1e653]:
+                  - button "Renommer" [ref=f1e654]
+                  - button "Supprimer" [ref=f1e655]
+              - generic [ref=f1e624] [cursor=pointer]:
+                - generic [ref=f1e631]: ahmed abbes
+                - generic [ref=f1e632]: image
+                - generic [ref=f1e658]:
+                  - button "Renommer" [ref=f1e659]
+                  - button "Supprimer" [ref=f1e660]
+                  - button "Aperçu" [ref=f1e661]
+            - button "Actualiser l'arborescence" [ref=f1e652] [cursor=pointer]
+          - generic [ref=f1e602]:
+            - heading "Visualiseur" [level=3] [ref=f1e608]
+            - paragraph [ref=f1e610]: Sélectionnez un nœud dans l'arborescence pour afficher son contenu.

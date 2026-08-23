@@ -1,0 +1,7 @@
+{
+  "libelle": "BOUCLE DE POSITION HP1",
+  "code": "2_171",
+  "type": "sous_centrale",
+  "parentId": "B3",
+  "syncState": "local-only"
+}
