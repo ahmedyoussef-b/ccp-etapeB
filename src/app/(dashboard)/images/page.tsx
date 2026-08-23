@@ -385,9 +385,11 @@ export default function ImagesPage() {
     setDragActive(false);
     setGeoLocation(null);
     setIsCapturingGeo(false);
+    setSaveError(null);
   };
 
   const openEditDialog = async (item: MediaItem) => {
+    setSaveError(null);
     setEditingItem(item);
     setFormData({
       title: item.title,
@@ -610,15 +612,21 @@ export default function ImagesPage() {
   const handleSave = async () => {
     setSaveError(null);
     if (!formData.title.trim()) {
-      toast.error("Le titre est requis");
+      const msg = "Le titre est requis";
+      setSaveError(msg);
+      toast.error(msg);
       return;
     }
     if (!formData.category) {
-      toast.error("La catégorie est requise");
+      const msg = "La catégorie est requise";
+      setSaveError(msg);
+      toast.error(msg);
       return;
     }
     if (!formData.dataUrl) {
-      toast.error("Veuillez fournir un média (upload ou capture)");
+      const msg = "Veuillez fournir un média (upload ou capture)";
+      setSaveError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -914,6 +922,18 @@ export default function ImagesPage() {
                 ? "Essayez de modifier vos filtres ou votre recherche."
                 : "Ajoutez votre premier média en cliquant sur le bouton ci-dessous."}
             </p>
+            {!search && filterCategory === "Tous" && (
+              <Button
+                onClick={() => {
+                  resetForm();
+                  setDialogOpen(true);
+                }}
+                className="mt-4 gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Ajouter un média
+              </Button>
+            )}
           </div>
         ) : (
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
@@ -1005,15 +1025,14 @@ export default function ImagesPage() {
                   </div>
 
                   <div className="p-3">
-                    <p className="truncate text-sm font-medium text-foreground">
+                    <h3 className="truncate text-xs font-medium text-foreground" title={item.title}>
                       {item.title}
-                    </p>
-                    <div className="mt-1.5 flex items-center justify-between">
+                    </h3>
+                    <div className="mt-1.5 flex items-center justify-between gap-1">
                       <Badge
-                        variant="outline"
-                        className={`text-[10px] border ${
-                          CATEGORY_COLORS[item.category] ||
-                          "bg-muted text-muted-foreground border-muted"
+                        variant="secondary"
+                        className={`text-[10px] px-1.5 py-0 border truncate max-w-[90px] ${
+                          CATEGORY_COLORS[item.category] || "bg-muted text-muted-foreground"
                         }`}
                       >
                         {item.category}
@@ -1028,16 +1047,16 @@ export default function ImagesPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-9 w-9 rounded-full bg-white/15 text-white hover:bg-white/25 backdrop-blur"
+                      className="h-9 w-9 rounded-full bg-white/20 text-white hover:bg-white/30 backdrop-blur"
                       onClick={() => openLightbox(item)}
-                      title="Aperçu"
+                      title="Agrandir"
                     >
                       <Maximize2 className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-9 w-9 rounded-full bg-white/15 text-white hover:bg-white/25 backdrop-blur"
+                      className="h-9 w-9 rounded-full bg-white/20 text-white hover:bg-white/30 backdrop-blur"
                       onClick={() => handleDownload(item)}
                       title="Télécharger"
                     >
@@ -1046,7 +1065,7 @@ export default function ImagesPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-9 w-9 rounded-full bg-white/15 text-white hover:bg-white/25 backdrop-blur"
+                      className="h-9 w-9 rounded-full bg-white/20 text-white hover:bg-white/30 backdrop-blur"
                       onClick={() => router.push(`/images/${item.id}`)}
                       title="Modifier"
                     >
@@ -1106,14 +1125,14 @@ export default function ImagesPage() {
               </DialogDescription>
             </DialogHeader>
 
-            {saveError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {saveError}
-              </div>
-            )}
-
             <DialogBody>
               <div className="space-y-5">
+                {saveError && (
+                  <div className="flex items-center gap-2.5 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+                    <XCircle className="h-4 w-4 flex-shrink-0 text-red-500" />
+                    <span className="font-medium">{saveError}</span>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>Source du média</Label>
                   <div className="flex gap-2">
