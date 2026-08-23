@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
+import path from "path";
 import { getById as getDiskById, getItemMetadataPath } from "@/lib/images/server-store";
 import { getItemById as getPrismaById } from "@/lib/images/server-store-prisma";
 
@@ -25,7 +26,8 @@ export async function GET(
   const metadataPath = getItemMetadataPath(item);
   if (!fs.existsSync(metadataPath)) {
     // If json file is missing, synthesize from item
-    const { dataUrl, ...cleanMeta } = item;
+    const cleanMeta = { ...item };
+    delete cleanMeta.dataUrl;
     return NextResponse.json({ metadata: cleanMeta, path: metadataPath });
   }
 
@@ -64,7 +66,7 @@ export async function PUT(
   }
 
   const metadataPath = getItemMetadataPath(item);
-  const metadataDir = require("path").dirname(metadataPath);
+  const metadataDir = path.dirname(metadataPath);
   if (!fs.existsSync(metadataDir)) {
     fs.mkdirSync(metadataDir, { recursive: true });
   }

@@ -146,7 +146,7 @@ export const imageService = {
     try {
       await clientEngine.deleteVectorDocument(`media-${id}`);
       await clientEngine.deleteVectorTreeNode(`vf-${id}`);
-    } catch (e) {
+    } catch {
       // ignore
     }
 
