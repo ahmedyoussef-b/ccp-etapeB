@@ -613,7 +613,7 @@ export default function ImagesPage() {
     try {
       if (editingItem) {
         console.log(`[ImagesPage] handleSave() - UPDATE id=${editingItem.id} title="${formData.title}"`);
-        await imageService.update(editingItem.id, {
+        const updated = await imageService.update(editingItem.id, {
           title: formData.title.trim(),
           category: formData.category,
           description: formData.description.trim(),
@@ -628,9 +628,14 @@ export default function ImagesPage() {
         });
         console.log(`[ImagesPage] handleSave() - UPDATE success`);
         toast.success("Média mis à jour avec succès");
+        if (updated) {
+          setItems((prev) =>
+            prev.map((item) => (item.id === updated.id ? updated : item))
+          );
+        }
       } else {
         console.log(`[ImagesPage] handleSave() - CREATE title="${formData.title}" kind=${formData.kind} size=${formatSize(formData.size)}`);
-        await imageService.create({
+        const created = await imageService.create({
           title: formData.title.trim(),
           category: formData.category,
           description: formData.description.trim(),
@@ -645,10 +650,11 @@ export default function ImagesPage() {
         });
         console.log(`[ImagesPage] handleSave() - CREATE success`);
         toast.success("Média ajouté avec succès");
+        setItems((prev) => [created, ...prev]);
+        setTotalCount((prev) => prev + 1);
       }
       setDialogOpen(false);
       resetForm();
-      await loadData();
       await loadVectorizedImageIds();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erreur lors de l'enregistrement";
