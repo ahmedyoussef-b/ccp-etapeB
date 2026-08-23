@@ -38,6 +38,7 @@ import { getLocalTree, deleteLocalTreeNode, addFolder, updateFolder, addFile } f
 import { clientEngine, initSqlite, run, simpleTokenEmbedding } from "@/lib/client-engine";
 import type { VectorTreeNode } from "@/lib/client-engine";
 import { toast } from "sonner";
+import { csrfFetch } from "@/lib/procedures/csrf-fetch";
 
 type LocalNode = {
   id: string;
@@ -508,7 +509,7 @@ export default function StructureBDDPage() {
     if (isNaN(numericId)) return;
 
     try {
-      const response = await fetch("/api/sync/download-directory", {
+      const response = await csrfFetch("/api/sync/download-directory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ directoryId: numericId }),
@@ -543,7 +544,7 @@ export default function StructureBDDPage() {
 
     setResettingWeb(true);
     try {
-      const res = await fetch("/api/tree/reset", { method: "POST" });
+      const res = await csrfFetch("/api/tree/reset", { method: "POST" });
       console.log("[StructureBDD] reset web status", res.status);
       if (!res.ok) throw new Error("Failed to reset web tree");
       await loadTrees();
@@ -842,12 +843,12 @@ export default function StructureBDDPage() {
     try {
       if (isImageNode(node)) {
         const imageId = String(node.id).replace(/^image-/, "");
-        const res = await fetch(`/api/images/${imageId}`, { method: "DELETE" });
+        const res = await csrfFetch(`/api/images/${imageId}`, { method: "DELETE" });
         console.log("[StructureBDD] delete image status", res.status);
         if (!res.ok) throw new Error("Failed to delete image");
         toast.success("Image supprimée");
       } else {
-        const res = await fetch(`/api/tree/nodes/${node.id}`, { method: "DELETE" });
+        const res = await csrfFetch(`/api/tree/nodes/${node.id}`, { method: "DELETE" });
         console.log("[StructureBDD] delete web status", res.status);
         if (!res.ok) throw new Error("Failed to delete node");
         toast.success("Nœud supprimé");
@@ -902,7 +903,7 @@ export default function StructureBDDPage() {
     try {
       const imageId = String(node.id).replace(/^image-/, "");
       console.log("[StructureBDD] delete image api", { imageId });
-      const res = await fetch(`/api/images/${encodeURIComponent(imageId)}`, { method: "DELETE" });
+      const res = await csrfFetch(`/api/images/${encodeURIComponent(imageId)}`, { method: "DELETE" });
       console.log("[StructureBDD] delete image status", res.status);
       const responseText = await res.text();
       console.log("[StructureBDD] delete image response", responseText);
@@ -937,7 +938,7 @@ export default function StructureBDDPage() {
 
     try {
       if (addingNode.tree === "web") {
-        const res = await fetch(`/api/tree/nodes/${addingNode.parentId}`, {
+        const res = await csrfFetch(`/api/tree/nodes/${addingNode.parentId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: newNodeName, type: newNodeType }),
@@ -1006,7 +1007,7 @@ export default function StructureBDDPage() {
 
     try {
       if (renamingNode.tree === "web") {
-        const res = await fetch(`/api/tree/nodes/${renamingNode.id}`, {
+        const res = await csrfFetch(`/api/tree/nodes/${renamingNode.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: renameValue }),
@@ -1014,7 +1015,7 @@ export default function StructureBDDPage() {
         if (!res.ok) throw new Error("Failed to rename node");
       } else if (renamingNode.tree === "images") {
         const imageId = String(renamingNode.id).replace(/^image-/, "");
-        const res = await fetch(`/api/images/${imageId}`, {
+        const res = await csrfFetch(`/api/images/${imageId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title: renameValue }),
@@ -1067,7 +1068,7 @@ export default function StructureBDDPage() {
           toast.success("Fichier JSON modifié localement");
         }
       } else {
-        const res = await fetch(`/api/tree/nodes/${editingFile.path}`, {
+        const res = await csrfFetch(`/api/tree/nodes/${editingFile.path}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ metadata: editContent }),
@@ -1240,7 +1241,7 @@ export default function StructureBDDPage() {
   const handleOpenOnDisk = async () => {
     if (!previewingImageId) return;
     try {
-      const res = await fetch(`/api/images/${previewingImageId}/open`, { method: "POST" });
+      const res = await csrfFetch(`/api/images/${previewingImageId}/open`, { method: "POST" });
       if (!res.ok) throw new Error("open failed");
       toast.success("Dossier ouvert sur le disque");
     } catch {
