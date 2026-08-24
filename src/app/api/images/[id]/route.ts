@@ -35,6 +35,8 @@ export async function PUT(
   } catch (error) {
     const message = error instanceof Error ? error.message : "Invalid data";
     console.error(`[API][PUT /api/images/${params.id}] - ERROR:`, message, error);
+    const stack = error instanceof Error ? error.stack : undefined;
+    if (stack) console.error(`[API][PUT /api/images/${params.id}] - STACK:`, stack);
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

@@ -126,6 +126,9 @@ export async function updateItem(id: string, updates: Partial<Omit<MediaItem, "i
   const updated = await prisma.mediaItem.update({
     where: { id },
     data,
+  }).catch((err) => {
+    console.error(`[ServerStorePrisma] updateItem Prisma error for id=${id}:`, err);
+    throw err;
   });
 
   const mediaItem: MediaItem = {
@@ -148,7 +151,7 @@ export async function updateItem(id: string, updates: Partial<Omit<MediaItem, "i
   try {
     await updateDiskItem(id, updates);
   } catch (err) {
-    console.warn("[ServerStorePrisma] Disk update warning:", err);
+    console.error("[ServerStorePrisma] Disk update warning:", err);
   }
 
   return mediaItem;
