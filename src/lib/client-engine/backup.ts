@@ -187,7 +187,7 @@ export async function exportBackup(): Promise<Blob> {
       relativePath: doc.relativePath,
       chunks: doc.chunks.map((chunk) => ({
         documentId: chunk.documentId,
-        documentName: chunk.documentName,
+        documentName: chunk.documentName ?? '',
         chunkIndex: chunk.chunkIndex,
         content: chunk.content,
         embedding: chunk.embedding,

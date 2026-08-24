@@ -94,7 +94,9 @@ try {
     globalForPrisma.prisma = prisma;
   }
 
-  void ensureConnected();
+  void ensureConnected().catch((err) => {
+    logger.postgresError("init_connection", err);
+  });
 } catch (err) {
   logger.postgresError("init", err);
   throw err;

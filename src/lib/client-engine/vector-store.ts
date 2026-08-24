@@ -7,8 +7,8 @@ const logger = {
     console.error(`[DB:INDEXEDDB] [ERROR] ${action}`, error)
 };
 
-export interface VectorChunk { id?: number; documentId: string; documentName?: string; chunkIndex: number; content: string; embedding: number[]; metadata?: Record<string, unknown>; createdAt: number; syncStatus?: string; }
-export interface VectorDocument { id: string; name: string; originalPath: string; relativePath: string; chunks: VectorChunk[]; metadata: Record<string, unknown>; createdAt: number; content?: string; embedding?: number[]; updatedAt?: number; syncStatus?: string; }
+export interface VectorChunk { id?: number; documentId: string; documentName?: string; chunkIndex: number; content: string; embedding: number[]; metadata?: Record<string, unknown>; createdAt?: number; syncStatus?: string; }
+export interface VectorDocument { id: string; name: string; originalPath: string; relativePath: string; chunks: VectorChunk[]; metadata: Record<string, unknown>; createdAt?: number; content?: string; embedding?: number[]; updatedAt?: number; syncStatus?: string; }
 export interface VectorTreeNode { id: string; name: string; type: 'folder' | 'file'; parentId: string | null; order: number; relativePath: string; content: string | null; docId: string | null; syncStatus?: string; createdAt: number; updatedAt?: number; }
 
 class VectorDB extends Dexie {
@@ -158,4 +158,115 @@ export const vectorSyncHelpers = {
     logger.indexeddb('getSyncStatus', { store, id, status });
     return status;
   }
+};
+
+// ==================== EXPORTS DESCENDANTS ====================
+export const addDocument = async (doc: VectorDocument): Promise<void> => {
+  return vectorStore.addDocument(doc);
+};
+
+export const getDocument = async (id: string): Promise<VectorDocument | null> => {
+  return vectorStore.getDocument(id);
+};
+
+export const deleteDocument = async (id: string): Promise<void> => {
+  return vectorStore.deleteDocument(id);
+};
+
+export const getChunksByDocumentId = async (documentId: string): Promise<VectorChunk[]> => {
+  return vectorStore.getChunks(documentId);
+};
+
+export const getAllDocuments = async (): Promise<VectorDocument[]> => {
+  const db = getVectorDB();
+  if (!db) throw new Error('VectorStore not initialized');
+  const docs = await db.documents.toArray();
+  const result: VectorDocument[] = [];
+  for (const doc of docs) {
+    const chunks = (await db.chunks.where('documentId').equals(doc.id).toArray())
+      .map(c => ({ ...c, documentName: c.documentName ?? doc.name }));
+    result.push({ ...doc, chunks });
+  }
+  logger.indexeddb('getAllDocuments', { count: result.length });
+  return result;
+};
+
+export const clearVectorStore = async (): Promise<void> => {
+  const db = getVectorDB();
+  if (!db) throw new Error('VectorStore not initialized');
+  await db.transaction('rw', [db.documents, db.chunks], async () => {
+    await db.documents.clear();
+    await db.chunks.clear();
+  });
+  logger.indexeddb('clearVectorStore');
+};
+
+export const getStats = async (): Promise<{ documentCount: number; chunkCount: number }> => {
+  const db = getVectorDB();
+  if (!db) throw new Error('VectorStore not initialized');
+  const documentCount = await db.documents.count();
+  const chunkCount = await db.chunks.count();
+  logger.indexeddb('getStats', { documentCount, chunkCount });
+  return { documentCount, chunkCount };
+};
+
+export const simpleTokenEmbedding = (text: string): number[] => {
+  const EMBEDDING_DIM = 384;
+  const vec = new Array(EMBEDDING_DIM).fill(0);
+  const tokens = text.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
+  for (const token of tokens) {
+    let hash = 0;
+    for (let i = 0; i < token.length; i++) {
+      hash = (hash * 31 + token.charCodeAt(i)) | 0;
+    }
+    const idx = Math.abs(hash) % EMBEDDING_DIM;
+    vec[idx] += 1;
+  }
+  const norm = Math.sqrt(vec.reduce((sum, v) => sum + v * v, 0));
+  if (norm > 0) {
+    for (let i = 0; i < EMBEDDING_DIM; i++) {
+      vec[i] /= norm;
+    }
+  }
+  return vec;
+};
+
+export const searchByEmbedding = async (embedding: number[] | Float32Array, limit = 10): Promise<Array<VectorChunk & { score: number }>> => {
+  const db = getVectorDB();
+  if (!db) throw new Error('VectorStore not initialized');
+  const embedArray = Array.from(embedding);
+  const chunks = await db.chunks.toArray();
+  const scored = chunks
+    .map(c => ({ chunk: c, score: cosineSimilarity(embedArray, c.embedding) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+  logger.indexeddb('searchByEmbedding', { limit, results: scored.length });
+  return scored.map(s => ({ ...s.chunk, score: s.score }));
+};
+
+export const getAllVectorTreeNodes = async (): Promise<VectorTreeNode[]> => {
+  const db = getVectorDB();
+  if (!db) throw new Error('VectorStore not initialized');
+  return db.vectorTree.toArray();
+};
+
+export const addVectorTreeNode = async (node: Omit<VectorTreeNode, 'createdAt'>): Promise<void> => {
+  const db = getVectorDB();
+  if (!db) throw new Error('VectorStore not initialized');
+  await db.vectorTree.put({ ...node, syncStatus: node.syncStatus ?? 'pending' } as VectorTreeNode);
+  logger.indexeddb('addVectorTreeNode', { id: node.id, name: node.name });
+};
+
+export const deleteVectorTreeNode = async (id: string): Promise<void> => {
+  const db = getVectorDB();
+  if (!db) throw new Error('VectorStore not initialized');
+  await db.vectorTree.delete(id);
+  logger.indexeddb('deleteVectorTreeNode', { id });
+};
+
+export const clearVectorTree = async (): Promise<void> => {
+  const db = getVectorDB();
+  if (!db) throw new Error('VectorStore not initialized');
+  await db.vectorTree.clear();
+  logger.indexeddb('clearVectorTree');
 };
