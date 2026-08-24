@@ -408,3 +408,5 @@ if (typeof window !== 'undefined') {
   (window as unknown as Record<string, unknown>).initSQLite = initSQLite;
   console.log('[DB:SQLITE] [GLOBAL] window.resetSQLite() and window.initSQLite() are now available');
 }
+/ /   f o r c e   r e b u i l d   0 8 / 2 4 / 2 0 2 6   2 3 : 5 8 : 1 7  
+ 
