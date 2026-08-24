@@ -117,7 +117,8 @@ export async function createItem(item: Omit<MediaItem, "id" | "createdAt" | "upd
 }
 
 export async function updateItem(id: string, updates: Partial<Omit<MediaItem, "id" | "createdAt">>): Promise<MediaItem | undefined> {
-  const data: Record<string, unknown> = { ...updates };
+  const { syncStatus, ...prismaUpdates } = updates as Record<string, unknown>;
+  const data: Record<string, unknown> = { ...prismaUpdates };
 
   if (updates.geolocation) {
     data.geolocation = JSON.stringify(updates.geolocation);
