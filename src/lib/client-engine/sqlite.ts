@@ -145,7 +145,7 @@ async function _migrate(db: Database): Promise<void> {
   await db.exec(`CREATE TABLE IF NOT EXISTS _schema_version (version INTEGER PRIMARY KEY)`);
   const currentVersion = await queryOne<{ version: number }>(`SELECT version FROM _schema_version LIMIT 1`);
   const version = currentVersion?.version ?? 0;
-  if (version >= 1) return;
+  if (version >= 2) return;
   const migrations: Record<number, string[]> = {
     1: [
       `ALTER TABLE procedures ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
@@ -177,15 +177,18 @@ async function _migrate(db: Database): Promise<void> {
       `ALTER TABLE sync_logs ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
       `ALTER TABLE sync_logs ADD COLUMN deleted_at DATETIME`,
     ],
+    2: [
+      `ALTER TABLE sync_logs ADD COLUMN deleted_at DATETIME`,
+    ],
   };
-  for (let v = version + 1; v <= 1; v++) {
+  for (let v = version + 1; v <= 2; v++) {
     const stmts = migrations[v];
     if (!stmts) continue;
     for (const sql of stmts) {
       try { await db.exec(sql); } catch { /* ignore if column already exists */ }
     }
   }
-  await db.exec(`INSERT OR REPLACE INTO _schema_version (version) VALUES (1)`);
+  await db.exec(`INSERT OR REPLACE INTO _schema_version (version) VALUES (2)`);
 }
 
 export const initSqlite = initSQLite;
