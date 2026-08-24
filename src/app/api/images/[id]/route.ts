@@ -34,7 +34,7 @@ export async function PUT(
     return NextResponse.json(item);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Invalid data";
-    console.log(`[API][PUT /api/images/${params.id}] - ERROR: ${message}`);
+    console.error(`[API][PUT /api/images/${params.id}] - ERROR:`, message, error);
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
