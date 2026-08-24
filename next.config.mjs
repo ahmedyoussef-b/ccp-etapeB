@@ -1,8 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
+  images: {
+    unoptimized: true,
+  },
+  experimental: {
+    outputFileTracingExcludes: ['**/node_modules/@sqlite.org/sqlite-wasm/**/*'],
+  },
   webpack: (config, { isServer }) => {
     if (isServer) {
-      config.externals = [...(config.externals || []), 'onnxruntime-node'];
+      config.externals = [...(config.externals || []), 'onnxruntime-node', '@sqlite.org/sqlite-wasm'];
     } else {
       config.resolve.fallback = {
         ...(config.resolve.fallback || {}),
