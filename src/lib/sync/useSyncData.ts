@@ -112,12 +112,16 @@ export function useSyncData() {
 
   const syncMutation = useMutation({
     mutationFn: async (): Promise<ApiNode[]> => {
-      const response = await fetch('/api/sync/get-all-data');
+      const params = new URLSearchParams()
+      params.set('models', 'tree_nodes')
+      params.set('limit', '500')
+
+      const response = await fetch(`/api/sync/pull?${params.toString()}`);
       if (!response.ok) {
         throw new Error(`Sync failed: ${response.status} ${response.statusText}`);
       }
-      const data = (await response.json()) as { tree: ApiNode[]; lastSyncTimestamp: string };
-      return data.tree;
+      const data = (await response.json()) as { models: { tree_nodes: { records: ApiNode[] } } };
+      return data.models?.tree_nodes?.records || [];
     },
     onSuccess: async (tree) => {
       await importTree(tree, null);

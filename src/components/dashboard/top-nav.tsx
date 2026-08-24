@@ -8,6 +8,44 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/components/theme-provider";
 import { useSession } from "@/hooks/useSession";
+import { useSync } from "@/hooks/useSync";
+import { SyncButton } from "@/components/sync/SyncButton";
+import { Tooltip, TooltipContent } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+
+function SyncStatusIndicator() {
+  const { status, isSyncing } = useSync()
+  const pendingCount = status?.pendingCount ?? 0
+  const hasConflicts = (status?.conflicts?.length ?? 0) > 0
+
+  let color = 'bg-green-500'
+  let label = 'Synchronisé'
+
+  if (isSyncing) {
+    color = 'bg-blue-500 animate-pulse'
+    label = 'Synchronisation en cours...'
+  } else if (hasConflicts) {
+    color = 'bg-red-500 animate-pulse'
+    label = `${status?.conflicts.length} conflit(s) détecté(s)`
+  } else if (pendingCount > 0) {
+    color = 'bg-yellow-500'
+    label = `${pendingCount} élément(s) en attente de synchronisation`
+  }
+
+  return (
+    <Tooltip content={label}>
+      <div className="flex items-center gap-2">
+        <div className={cn('h-3 w-3 rounded-full', color)} />
+        {pendingCount > 0 && !isSyncing && (
+          <span className="text-xs font-medium text-muted-foreground">
+            {pendingCount}
+          </span>
+        )}
+      </div>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  )
+}
 
 export function DashboardTopNav() {
   const router = useRouter();
@@ -27,6 +65,8 @@ export function DashboardTopNav() {
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2">
+        <SyncStatusIndicator />
+        <SyncButton />
         <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
           {theme === "light" ? <Moon className="h-5 w-5 text-foreground/70" /> : <Sun className="h-5 w-5 text-foreground/70" />}
           <span className="sr-only">Toggle theme</span>
