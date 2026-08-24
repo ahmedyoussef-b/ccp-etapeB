@@ -145,50 +145,43 @@ async function _migrate(db: Database): Promise<void> {
   await db.exec(`CREATE TABLE IF NOT EXISTS _schema_version (version INTEGER PRIMARY KEY)`);
   const currentVersion = await queryOne<{ version: number }>(`SELECT version FROM _schema_version LIMIT 1`);
   const version = currentVersion?.version ?? 0;
-  if (version >= 2) return;
-  const migrations: Record<number, string[]> = {
-    1: [
-      `ALTER TABLE procedures ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE procedures ADD COLUMN deleted_at DATETIME`,
-      `ALTER TABLE procedure_required_roles ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE procedure_required_roles ADD COLUMN deleted_at DATETIME`,
-      `ALTER TABLE procedure_safety_instructions ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE procedure_safety_instructions ADD COLUMN deleted_at DATETIME`,
-      `ALTER TABLE procedure_tags ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE procedure_tags ADD COLUMN deleted_at DATETIME`,
-      `ALTER TABLE procedure_versions ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE procedure_versions ADD COLUMN deleted_at DATETIME`,
-      `ALTER TABLE approvals ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE approvals ADD COLUMN deleted_at DATETIME`,
-      `ALTER TABLE tree_nodes ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE tree_nodes ADD COLUMN deleted_at DATETIME`,
-      `ALTER TABLE qa_registries ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE qa_registries ADD COLUMN deleted_at DATETIME`,
-      `ALTER TABLE qa_pairs ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE qa_pairs ADD COLUMN deleted_at DATETIME`,
-      `ALTER TABLE media_items ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE media_items ADD COLUMN deleted_at DATETIME`,
-      `ALTER TABLE media_item_tags ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE media_item_tags ADD COLUMN deleted_at DATETIME`,
-      `ALTER TABLE iot_sensor_states ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE iot_sensor_states ADD COLUMN deleted_at DATETIME`,
-      `ALTER TABLE iot_actuator_states ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE iot_actuator_states ADD COLUMN deleted_at DATETIME`,
-      `ALTER TABLE sync_logs ADD COLUMN sync_status TEXT DEFAULT 'pending'`,
-      `ALTER TABLE sync_logs ADD COLUMN deleted_at DATETIME`,
-    ],
-    2: [
-      `ALTER TABLE sync_logs ADD COLUMN deleted_at DATETIME`,
-    ],
-  };
-  for (let v = version + 1; v <= 2; v++) {
-    const stmts = migrations[v];
-    if (!stmts) continue;
-    for (const sql of stmts) {
-      try { await db.exec(sql); } catch { /* ignore if column already exists */ }
+  if (version >= 3) return;
+
+  const addColumnIfExists = async (table: string, column: string, definition: string): Promise<void> => {
+    const colCheck = await queryOne<{ cid: number }>(
+      `SELECT cid FROM pragma_table_info('${table}') WHERE name = '${column}'`
+    );
+    if (!colCheck) {
+      try { await db.exec(`ALTER TABLE ${table} ADD COLUMN ${definition}`); } catch { /* ignore */ }
     }
+  };
+
+  if (version < 1) {
+    const tables = [
+      'procedures', 'procedure_required_roles', 'procedure_safety_instructions', 'procedure_tags', 'procedure_versions',
+      'approvals', 'tree_nodes', 'qa_registries', 'qa_pairs', 'media_items', 'media_item_tags',
+      'iot_sensor_states', 'iot_actuator_states',
+      'procedure_executions', 'execution_steps', 'execution_media', 'execution_completed_steps', 'execution_anomalies',
+    ];
+    for (const table of tables) {
+      await addColumnIfExists(table, 'sync_status', `sync_status TEXT DEFAULT 'pending'`);
+      await addColumnIfExists(table, 'deleted_at', `deleted_at DATETIME`);
+    }
+    await db.exec(`INSERT OR REPLACE INTO _schema_version (version) VALUES (1)`);
   }
-  await db.exec(`INSERT OR REPLACE INTO _schema_version (version) VALUES (2)`);
+
+  if (version < 2) {
+    await addColumnIfExists('sync_logs', 'deleted_at', `deleted_at DATETIME`);
+    await addColumnIfExists('sync_logs', 'sync_status', `sync_status TEXT DEFAULT 'pending'`);
+    await db.exec(`INSERT OR REPLACE INTO _schema_version (version) VALUES (2)`);
+  }
+
+  if (version < 3) {
+    await addColumnIfExists('sync_logs', 'status', `status TEXT DEFAULT 'pending'`);
+    await db.exec(`INSERT OR REPLACE INTO _schema_version (version) VALUES (3)`);
+  }
+
+  logger.sqlite('migration', { fromVersion: version, toVersion: 3 });
 }
 
 export const initSqlite = initSQLite;
