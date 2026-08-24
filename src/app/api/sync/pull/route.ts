@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 // ==================== TYPES ====================
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ModelRecords = any[]
