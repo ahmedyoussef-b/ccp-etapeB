@@ -55,6 +55,7 @@ model TreeNode {
   @@index([syncStatus])
   @@index([deletedAt])
   @@unique([name, type, parentId])
+  @@map("TreeNode")
 }
 
 model QARegistry {

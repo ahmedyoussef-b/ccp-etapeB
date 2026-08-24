@@ -1,6 +1,5 @@
 // ==================== IMPORTS ====================
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { prisma, syncHelpers, generateUUID } from '@/lib/prisma'
+import { syncHelpers, generateUUID } from '@/lib/prisma'
 import { getDb, sqliteSyncHelpers, sqliteCrud, initSqlite } from '@/lib/client-engine'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { initVectorStore, vectorSyncHelpers } from '@/lib/client-engine/vector-store'
