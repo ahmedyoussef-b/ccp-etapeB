@@ -36,7 +36,6 @@ import { Switch } from "@/components/ui/switch";
 
 import { getLocalTree, deleteLocalTreeNode, addFolder, updateFolder, addFile } from "@/lib/db/tree";
 import { clientEngine, initSqlite, run, simpleTokenEmbedding } from "@/lib/client-engine";
-import type { VectorTreeNode } from "@/lib/client-engine";
 import { toast } from "sonner";
 import { csrfFetch } from "@/lib/procedures/csrf-fetch";
 
@@ -66,44 +65,6 @@ type ImageNode = {
   parentId?: number | string | null;
   docId?: string | null;
 };
-
-function buildVectorTree(nodes: VectorTreeNode[]): LocalNode[] {
-  const nodeMap = new Map<string, LocalNode>();
-  const roots: LocalNode[] = [];
-
-  for (const n of nodes) {
-    nodeMap.set(n.id, {
-      id: n.id,
-      name: n.name,
-      type: n.type,
-      children: [],
-      path: n.relativePath,
-      order: n.order ?? 0,
-      content: n.content,
-      docId: n.docId,
-    });
-  }
-
-  for (const n of nodes) {
-    const node = nodeMap.get(n.id)!;
-    if (n.parentId && nodeMap.has(n.parentId)) {
-      nodeMap.get(n.parentId)!.children.push(node);
-    } else {
-      roots.push(node);
-    }
-  }
-
-  const sortByOrder = (nodes: LocalNode[]): LocalNode[] =>
-    nodes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-  const sortRecursively = (nodes: LocalNode[]): LocalNode[] =>
-    sortByOrder(nodes).map((node) => ({
-      ...node,
-      children: sortRecursively(node.children),
-    }));
-
-  return sortRecursively(roots);
-}
 
 type WebTreeNode = {
   id: number | string;
@@ -482,31 +443,21 @@ export default function StructureBDDPage() {
         setVectorDocs(docs.map((d) => ({ id: d.id, name: d.name, chunks: d.chunks })));
         return docs;
       })
-      .then((docs) => clientEngine.getAllVectorTreeNodes().then((nodes) => ({ docs, nodes })))
-      .then(({ docs, nodes }) => {
-        console.log("[StructureBDD] vector tree loaded", { count: nodes.length });
-        if (nodes.length === 0 && docs.length > 0) {
-          const fallbackNodes: VectorTreeNode[] = docs.map((doc) => ({
-            id: doc.id,
-            name: doc.name,
-            type: "file",
-            parentId: null,
-            order: 0,
-            relativePath: doc.relativePath || doc.id,
-            content: doc.chunks.map((c) => c.content).join("\n\n"),
-            docId: doc.id,
-            createdAt: Date.now(),
-          }));
-          setVectorTree(buildVectorTree(fallbackNodes));
-        } else {
-          setVectorTree(buildVectorTree(nodes));
-        }
+      .then(() => fetch("/api/registry/tree"))
+      .then((res) => {
+        console.log("[StructureBDD] /api/registry/tree status", res.status);
+        if (!res.ok) throw new Error("Failed to fetch registry tree");
+        return res.json();
+      })
+      .then((data) => {
+        const roots = (data as { roots: LocalNode[] }).roots;
+        console.log("[StructureBDD] registry tree loaded", { count: roots.length });
+        setVectorTree(roots);
       })
       .catch((err) => {
         const msg = err instanceof Error ? err.message : "Unknown error";
-        console.error("[StructureBDD] vector error", msg);
+        console.error("[StructureBDD] registry tree error", msg);
         setVectorError(msg);
-        setVectorDocs([]);
         setVectorTree([]);
       });
 
