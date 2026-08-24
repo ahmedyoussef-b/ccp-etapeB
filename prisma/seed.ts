@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { prisma } from "../src/lib/prisma";
+import { prisma, generateUUID } from "../src/lib/prisma";
 import { hashPassword } from "../src/lib/auth/password";
 import fs from "fs";
 import path from "path";
@@ -21,6 +21,7 @@ async function importMirror(nodes: MirrorNode[], parentId: number | null): Promi
     if (node.type === "directory" || node.type === "root") {
       const record = await prisma.treeNode.create({
         data: {
+          uuid: generateUUID(),
           name: node.name,
           type: node.type === "root" ? "root" : "directory",
           parentId,
@@ -33,6 +34,7 @@ async function importMirror(nodes: MirrorNode[], parentId: number | null): Promi
     } else {
       await prisma.treeNode.create({
         data: {
+          uuid: generateUUID(),
           name: node.name,
           type: "file",
           parentId,
@@ -68,6 +70,7 @@ async function importDir(dirPath: string, parentId: number | null): Promise<numb
 
       const node = await prisma.treeNode.create({
         data: {
+          uuid: generateUUID(),
           name: item,
           type: "directory",
           parentId,
@@ -88,6 +91,7 @@ async function importDir(dirPath: string, parentId: number | null): Promise<numb
 
       await prisma.treeNode.create({
         data: {
+          uuid: generateUUID(),
           name: item,
           type: "file",
           parentId,
@@ -135,16 +139,31 @@ async function seedProcedures() {
       const existing = await prisma.procedure.findFirst({ where: { code: parsed.metadata.code } });
       if (existing) continue;
 
+      const requiredRoles = parsed.metadata.requiredRoles || [];
+      const globalSafetyInstructions = parsed.metadata.globalSafetyInstructions || [];
+      const tags = parsed.metadata.tags || [];
+
       await prisma.procedure.create({
         data: {
+          uuid: generateUUID(),
           code: parsed.metadata.code,
           title: parsed.metadata.title || path.basename(fullPath, ".json"),
           description: parsed.metadata.description || "",
           category: parsed.metadata.category || "production",
           priority: parsed.metadata.criticality || parsed.metadata.priority || "moyenne",
           estimatedTimeMinutes: parsed.metadata.estimatedTimeMinutes || 30,
-          requiredRoles: parsed.metadata.requiredRoles || [],
-          globalSafetyInstructions: parsed.metadata.globalSafetyInstructions || [],
+          requiredRoles: {
+            create: requiredRoles.map((role: string) => ({
+              uuid: generateUUID(),
+              role,
+            })),
+          },
+          globalSafetyInstructions: {
+            create: globalSafetyInstructions.map((instr: string) => ({
+              uuid: generateUUID(),
+              instruction: instr,
+            })),
+          },
           status: "approved",
           authorId: parsed.metadata.author?.id || "system",
           authorName: parsed.metadata.author?.name || "System",
@@ -152,7 +171,12 @@ async function seedProcedures() {
           approverName: parsed.metadata.approvers?.[0]?.name || "System",
           reviewDate: parsed.metadata.reviewDate ? new Date(parsed.metadata.reviewDate) : undefined,
           version: parsed.metadata.version || "1.0",
-          tags: parsed.metadata.tags || [],
+          tags: {
+            create: tags.map((tag: string) => ({
+              uuid: generateUUID(),
+              tag,
+            })),
+          },
           language: parsed.metadata.language || "fr-FR",
           body: parsed,
         },
@@ -175,7 +199,7 @@ async function main() {
 
   console.log("[seed] Création du root...");
   const root = await prisma.treeNode.create({
-    data: { name: ".data", type: "root", order: 0 },
+    data: { uuid: generateUUID(), name: ".data", type: "root", order: 0 },
   });
   console.log("[seed] Root créé.");
 
@@ -280,10 +304,12 @@ async function seedQA() {
 
       await prisma.qARegistry.create({
         data: {
+          uuid: generateUUID(),
           title: parsed.title || file.replace(".json", ""),
           description: parsed.description || "",
           pairs: {
             create: parsed.pairs.map((p: QAPair, idx: number) => ({
+              uuid: generateUUID(),
               question: p.question,
               answer: p.answer,
               order: idx,

@@ -13,186 +13,11 @@ enum NodeType {
   file
 }
 
-model TreeNode {
-  id         Int      @id @default(autoincrement())
-  name       String
-  type       NodeType
-  metadata   String?
-  parentId   Int?
-  parent     TreeNode?   @relation("TreeChildren", fields: [parentId], references: [id], onDelete: Cascade)
-  children   TreeNode[]  @relation("TreeChildren")
-  order      Int        @default(0)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-
-  @@index([parentId])
-  @@index([type])
-  @@unique([name, type, parentId])
-}
-
-model QARegistry {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?
-  pairs       QAPair[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([title])
-}
-
-model QAPair {
-  id         Int        @id @default(autoincrement())
-  question   String
-  answer     String
-  order      Int        @default(0)
-  registryId Int
-  registry   QARegistry @relation(fields: [registryId], references: [id], onDelete: Cascade)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-
-  @@index([registryId])
-  @@index([question])
-}
-
-model Procedure {
-  id                      Int      @id @default(autoincrement())
-  code                    String   @unique
-  title                   String
-  description             String?
-  category                String
-  priority                String   @default("moyenne")
-  estimatedTimeMinutes    Int      @default(1)
-  requiredRoles           String[]
-  globalSafetyInstructions String[]
-  status                  String   @default("draft")
-  authorId                String?
-  authorName              String?
-  approverId              String?
-  approverName            String?
-  reviewDate              DateTime?
-  version                 String   @default("1.0")
-  tags                    String[]
-  language                String   @default("fr-FR")
-  body                    Json
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
-  executions              ProcedureExecution[]
-  approvals               Approval[]
-
-  @@index([code])
-  @@index([status])
-  @@index([category])
-}
-
-model ProcedureExecution {
-  id               Int      @id @default(autoincrement())
-  procedureId      Int
-  procedure        Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
-  userId           String?
-  userName         String?
-  userRole         String?
-  phase            String   @default("briefing")
-  currentStepIndex Int      @default(0)
-  completedSteps   String[]
-  startedAt        DateTime @default(now())
-  finishedAt       DateTime?
-  anomalies        String[]
-  globalElapsed    Int      @default(0)
-  steps            ExecutionStep[]
-  media            ExecutionMedia[]
-
-  @@index([procedureId])
-  @@index([userId])
-  @@index([startedAt])
-}
-
-model ExecutionStep {
-  id          Int      @id @default(autoincrement())
-  executionId Int
-  execution   ProcedureExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
-  stepId      String
-  stepOrder   Int
-  title       String
-  type        String
-  isMandatory Boolean  @default(false)
-  isCompleted Boolean  @default(false)
-  timerEnabled Boolean @default(false)
-  timerSeconds Int     @default(0)
-  startedAt   DateTime?
-  finishedAt  DateTime?
-  anomaly     String?
-
-  @@index([executionId])
-}
-
-model ExecutionMedia {
-  id          Int      @id @default(autoincrement())
-  executionId Int
-  execution   ProcedureExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
-  stepId      String
-  type        String
-  url         String?
-  filename    String?
-  mimeType    String?
-  size        Int?
-  geolocation Json?
-  timestamp   DateTime @default(now())
-  capturedAt  DateTime @default(now())
-
-  @@index([executionId])
-  @@index([stepId])
-}
-
-model Approval {
-  id          Int      @id @default(autoincrement())
-  procedureId Int
-  procedure   Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
-  approverId  String
-  approverName String
-  approverRole String
-  status      String   @default("pending")
-  comment     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([procedureId])
-  @@index([status])
-}
-
-model ProcedureVersion {
-  id            Int      @id @default(autoincrement())
-  procedureCode String
-  version       String
-  body          Json
-  createdAt     DateTime @default(now())
-  createdBy     String?
-  createdByName String?
-  comment       String?
-
-  @@index([procedureCode])
-  @@index([procedureCode, version])
-}
-
-model IotSensorState {
-  id         String   @id
-  name       String
-  type       String
-  value      Float
-  unit       String
-  threshold  Float
-  updatedAt  DateTime @updatedAt
-  createdAt  DateTime @default(now())
-}
-
-model IotActuatorState {
-  id         String   @id
-  name       String
-  type       String
-  isOn       Boolean  @default(false)
-  position   Int?
-  updatedAt  DateTime @updatedAt
-  createdAt  DateTime @default(now())
+enum SyncStatus {
+  synced
+  pending
+  local_only
+  conflict
 }
 
 enum Role {
@@ -208,6 +33,394 @@ enum BootstrapStatus {
   approved
   rejected
   downloaded
+}
+
+model TreeNode {
+  id          Int        @id @default(autoincrement())
+  uuid        String     @unique
+  name        String
+  type        NodeType
+  metadata    String?
+  parentId    Int?
+  parent      TreeNode?  @relation("TreeChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children    TreeNode[] @relation("TreeChildren")
+  order       Int        @default(0)
+  syncStatus  SyncStatus @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([parentId])
+  @@index([type])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@unique([name, type, parentId])
+}
+
+model QARegistry {
+  id          Int        @id @default(autoincrement())
+  uuid        String     @unique
+  title       String
+  description String?
+  pairs       QAPair[]
+  syncStatus  SyncStatus @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([title])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model QAPair {
+  id         Int        @id @default(autoincrement())
+  uuid       String     @unique
+  question   String
+  answer     String
+  order      Int        @default(0)
+  registryId Int
+  registry   QARegistry @relation(fields: [registryId], references: [id], onDelete: Cascade)
+  syncStatus SyncStatus @default(pending)
+  deletedAt  DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([registryId])
+  @@index([question])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model Procedure {
+  id                       Int                       @id @default(autoincrement())
+  uuid                     String                    @unique
+  code                     String                    @unique
+  title                  String
+  description            String?
+  category               String
+  priority               String                    @default("moyenne")
+  estimatedTimeMinutes   Int                       @default(1)
+  requiredRoles          ProcedureRequiredRole[]
+  globalSafetyInstructions ProcedureSafetyInstruction[]
+  status                 String                    @default("draft")
+  authorId               String?
+  authorName             String?
+  approverId             String?
+  approverName           String?
+  reviewDate             DateTime?
+  version                String                    @default("1.0")
+  tags                   ProcedureTag[]
+  language               String                    @default("fr-FR")
+  body                   Json
+  syncStatus             SyncStatus                @default(pending)
+  deletedAt              DateTime?
+  createdAt              DateTime                  @default(now())
+  updatedAt              DateTime                  @updatedAt
+  executions             ProcedureExecution[]
+  approvals              Approval[]
+
+  @@index([code])
+  @@index([status])
+  @@index([category])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model ProcedureRequiredRole {
+  id         Int       @id @default(autoincrement())
+  uuid       String?   @unique
+  procedureId Int
+  procedure  Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  role       String
+  syncStatus SyncStatus @default(pending)
+  deletedAt  DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([procedureId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model ProcedureSafetyInstruction {
+  id          Int       @id @default(autoincrement())
+  uuid        String?   @unique
+  procedureId Int
+  procedure   Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  instruction String
+  syncStatus  SyncStatus @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([procedureId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model ProcedureTag {
+  id         Int       @id @default(autoincrement())
+  uuid       String?   @unique
+  procedureId Int
+  procedure   Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  tag        String
+  syncStatus SyncStatus @default(pending)
+  deletedAt  DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([procedureId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model ProcedureExecution {
+  id            Int                  @id @default(autoincrement())
+  uuid            String             @unique
+  procedureId     Int
+  procedure       Procedure           @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  userId          String?
+  userName        String?
+  userRole        String?
+  phase           String              @default("briefing")
+  currentStepIndex Int               @default(0)
+  completedSteps  ExecutionCompletedStep[]
+  startedAt       DateTime            @default(now())
+  finishedAt      DateTime?
+  anomalies       ExecutionAnomaly[]
+  globalElapsed   Int                 @default(0)
+  syncStatus      SyncStatus          @default(pending)
+  deletedAt       DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  steps           ExecutionStep[]
+  media           ExecutionMedia[]
+
+  @@index([procedureId])
+  @@index([userId])
+  @@index([startedAt])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model ExecutionCompletedStep {
+  id            Int                 @id @default(autoincrement())
+  uuid          String?             @unique
+  executionId   Int
+  execution     ProcedureExecution  @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  stepId        String
+  syncStatus    SyncStatus          @default(pending)
+  deletedAt     DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([executionId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model ExecutionAnomaly {
+  id            Int                 @id @default(autoincrement())
+  uuid          String?             @unique
+  executionId   Int
+  execution     ProcedureExecution  @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  anomaly       String
+  syncStatus    SyncStatus          @default(pending)
+  deletedAt     DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([executionId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model ExecutionStep {
+  id          Int      @id @default(autoincrement())
+  uuid        String   @unique
+  executionId Int
+  execution   ProcedureExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  stepId      String
+  stepOrder   Int
+  title       String
+  type        String
+  isMandatory Boolean  @default(false)
+  isCompleted Boolean  @default(false)
+  timerEnabled Boolean @default(false)
+  timerSeconds Int     @default(0)
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  anomaly     String?
+  syncStatus  SyncStatus @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([executionId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model ExecutionMedia {
+  id          Int      @id @default(autoincrement())
+  uuid        String   @unique
+  executionId Int
+  execution   ProcedureExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  stepId      String
+  type        String
+  url         String?
+  filename    String?
+  mimeType    String?
+  size        Int?
+  geolocation Json?
+  timestamp   DateTime @default(now())
+  capturedAt  DateTime @default(now())
+  syncStatus  SyncStatus @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([executionId])
+  @@index([stepId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model Approval {
+  id           Int       @id @default(autoincrement())
+  uuid         String     @unique
+  procedureId  Int
+  procedure    Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  approverId   String
+  approverName String
+  approverRole String
+  status       String    @default("pending")
+  comment     String?
+  syncStatus  SyncStatus @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([procedureId])
+  @@index([status])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model ProcedureVersion {
+  id            Int       @id @default(autoincrement())
+  uuid          String    @unique
+  procedureCode String
+  version       String
+  body          Json
+  syncStatus    SyncStatus @default(pending)
+  deletedAt     DateTime?
+  createdAt     DateTime   @default(now())
+  createdBy     String?
+  createdByName String?
+  comment       String?
+
+  @@index([procedureCode])
+  @@index([procedureCode, version])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model IotSensorState {
+  id         String   @id
+  uuid       String   @unique
+  name       String
+  type       String
+  value      Float
+  unit       String
+  threshold  Float
+  syncStatus SyncStatus @default(pending)
+  deletedAt  DateTime?
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model IotActuatorState {
+  id         String   @id
+  uuid       String   @unique
+  name       String
+  type       String
+  isOn       Boolean  @default(false)
+  position   Int?
+  syncStatus SyncStatus @default(pending)
+  deletedAt  DateTime?
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model MediaItem {
+  id              String   @id @default(cuid())
+  uuid            String   @unique
+  title           String
+  category        String
+  description     String?
+  tags            MediaItemTag[]
+  kind            String
+  mimeType        String
+  size            Int
+  dataUrl         String
+  thumbnailDataUrl String?
+  geolocation     String?
+  syncStatus      SyncStatus @default(pending)
+  deletedAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category])
+  @@index([kind])
+  @@index([createdAt])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model MediaItemTag {
+  id         Int       @id @default(autoincrement())
+  uuid       String?   @unique
+  mediaItemId String
+  mediaItem  MediaItem @relation(fields: [mediaItemId], references: [id], onDelete: Cascade)
+  tag        String
+  syncStatus SyncStatus @default(pending)
+  deletedAt  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  @@index([mediaItemId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+}
+
+model SyncLog {
+  id            Int        @id @default(autoincrement())
+  uuid          String     @unique
+  modelName     String
+  recordId      String?
+  recordUuid    String?
+  operation     String
+  status        String     @default("pending")
+  source        String?
+  target        String?
+  error         String?
+  metadata      Json?
+  syncedAt      DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([modelName])
+  @@index([recordUuid])
+  @@index([status])
+  @@index([syncedAt])
 }
 
 model User {
@@ -298,31 +511,8 @@ model MediaCategory {
   children    MediaCategory[] @relation("CategoryHierarchy")
   order       Int             @default(0)
   createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  updatedAt   DateTime @updatedAt
 
   @@index([parentId])
   @@index([name])
 }
-
-model MediaItem {
-  id              String   @id @default(cuid())
-  title           String
-  category        String
-  description     String?
-  tags            String[]
-  kind            String
-  mimeType        String
-  size            Int
-  dataUrl         String
-  thumbnailDataUrl String?
-  geolocation     String?
-  syncStatus      String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@index([category])
-  @@index([kind])
-  @@index([createdAt])
-}
-
-

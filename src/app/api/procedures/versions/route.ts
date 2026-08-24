@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getUserFromRequest, hasRole } from "@/lib/procedures/server-auth";
+import { generateUUID } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -53,11 +54,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Code is required" }, { status: 400 });
     }
 
-    const { prisma } = await import("@/lib/prisma");
-
-    const procedure = await prisma.procedure.findUnique({
-      where: { code },
-    });
+      const { prisma } = await import("@/lib/prisma");
+      const procedure = await prisma.procedure.findUnique({
+        where: { code },
+        include: { requiredRoles: true },
+      });
 
     if (!procedure) {
       return NextResponse.json({ message: "Procedure not found" }, { status: 404 });
@@ -72,6 +73,7 @@ export async function POST(request: Request) {
 
     const snapshot = await prisma.procedureVersion.create({
       data: {
+        uuid: generateUUID(),
         procedureCode: code,
         version: currentVersion,
         body: JSON.parse(JSON.stringify(procedure.body)),

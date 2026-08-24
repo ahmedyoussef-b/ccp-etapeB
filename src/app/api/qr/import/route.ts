@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, generateUUID } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -20,11 +20,12 @@ export async function POST(request: Request) {
       const title = item.question.toLowerCase().replace(/[^a-z0-9\s-]/g, "").trim().substring(0, 60) || "Général";
       let registry = await prisma.qARegistry.findFirst({ where: { title } });
       if (!registry) {
-        registry = await prisma.qARegistry.create({ data: { title } });
+        registry = await prisma.qARegistry.create({ data: { uuid: generateUUID(), title } });
       }
 
       await prisma.qAPair.create({
         data: {
+          uuid: generateUUID(),
           question: item.question.trim(),
           answer: item.answer.trim(),
           order: 0,

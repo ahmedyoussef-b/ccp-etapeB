@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, generateUUID } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -29,12 +29,12 @@ export async function POST(request: Request) {
 
       let registryFolder = await prisma.treeNode.findFirst({ where: { name: "registry", type: "directory", parentId: rootId } });
       if (!registryFolder) {
-        registryFolder = await prisma.treeNode.create({ data: { name: "registry", type: "directory", parentId: rootId } });
+        registryFolder = await prisma.treeNode.create({ data: { uuid: generateUUID(), name: "registry", type: "directory", parentId: rootId } });
       }
 
       let itemsFolder = await prisma.treeNode.findFirst({ where: { name: "items", type: "directory", parentId: registryFolder.id } });
       if (!itemsFolder) {
-        itemsFolder = await prisma.treeNode.create({ data: { name: "items", type: "directory", parentId: registryFolder.id } });
+        itemsFolder = await prisma.treeNode.create({ data: { uuid: generateUUID(), name: "items", type: "directory", parentId: registryFolder.id } });
       }
 
       let targetParentId = itemsFolder.id;
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
 
         if (existingFile) {
           groupFolder = await prisma.treeNode.create({
-            data: { name: baseName, type: "directory", parentId: itemsFolder.id }
+            data: { uuid: generateUUID(), name: baseName, type: "directory", parentId: itemsFolder.id }
           });
 
           const oldName = `${baseName}_1${fileExt}`;
@@ -83,6 +83,7 @@ export async function POST(request: Request) {
 
       await prisma.treeNode.create({
         data: {
+          uuid: generateUUID(),
           name: finalName,
           type: "file",
           metadata: JSON.stringify({ ...doc, registryPath }),
@@ -99,12 +100,13 @@ export async function POST(request: Request) {
     let registry = await prisma.qARegistry.findFirst({ where: { title } });
     if (!registry) {
       registry = await prisma.qARegistry.create({
-        data: { title, description: body.registryDescription ?? null },
+        data: { uuid: generateUUID(), title, description: body.registryDescription ?? null },
       });
     }
 
     const pair = await prisma.qAPair.create({
       data: {
+        uuid: generateUUID(),
         question: body.question.trim(),
         answer: body.answer.trim(),
         order: 0,

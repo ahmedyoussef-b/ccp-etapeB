@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma, generateUUID } from '@/lib/prisma';
 import { z } from 'zod';
 
 const SyncPayloadSchema = z.object({
@@ -39,19 +39,38 @@ export async function POST(req: Request) {
       for (const exec of payload.procedureExecutions) {
         const execution = await prisma.procedureExecution.create({
           data: {
+            uuid: generateUUID(),
             procedureId: exec.procedureId ?? 0,
             userId: exec.userId,
             userName: exec.userName,
             userRole: exec.userRole,
             phase: exec.phase ?? 'briefing',
             currentStepIndex: exec.currentStepIndex ?? 0,
-            completedSteps: exec.completedSteps ?? [],
             startedAt: new Date(exec.startedAt ?? Date.now()),
             finishedAt: exec.finishedAt ? new Date(exec.finishedAt) : null,
-            anomalies: exec.anomalies ?? [],
             globalElapsed: exec.globalElapsed ?? 0,
           },
         });
+
+        if (exec.completedSteps && Array.isArray(exec.completedSteps)) {
+          await prisma.executionCompletedStep.createMany({
+            data: exec.completedSteps.map((stepId: string) => ({
+              uuid: generateUUID(),
+              executionId: execution.id,
+              stepId,
+            })),
+          });
+        }
+
+        if (exec.anomalies && Array.isArray(exec.anomalies)) {
+          await prisma.executionAnomaly.createMany({
+            data: exec.anomalies.map((anomaly: string) => ({
+              uuid: generateUUID(),
+              executionId: execution.id,
+              anomaly,
+            })),
+          });
+        }
 
         if (exec.steps && Array.isArray(exec.steps)) {
           await prisma.executionStep.createMany({
@@ -68,6 +87,7 @@ export async function POST(req: Request) {
               finishedAt?: string;
               anomaly?: string;
             }) => ({
+              uuid: generateUUID(),
               executionId: execution.id,
               stepId: step.stepId,
               stepOrder: step.stepOrder,
@@ -96,6 +116,7 @@ export async function POST(req: Request) {
               geolocation?: unknown;
               capturedAt?: string;
             }) => ({
+              uuid: generateUUID(),
               executionId: execution.id,
               stepId: m.stepId,
               type: m.type,
@@ -117,6 +138,7 @@ export async function POST(req: Request) {
       for (const media of payload.mediaCaptured) {
         await prisma.executionMedia.create({
           data: {
+            uuid: generateUUID(),
             executionId: media.executionId ?? null,
             stepId: media.stepId ?? 'unknown',
             type: media.type,
@@ -154,6 +176,7 @@ export async function POST(req: Request) {
               },
               create: {
                 id: sensor.id,
+                uuid: generateUUID(),
                 name: sensor.name,
                 type: sensor.type,
                 value: sensor.value,
@@ -182,6 +205,7 @@ export async function POST(req: Request) {
               },
               create: {
                 id: actuator.id,
+                uuid: generateUUID(),
                 name: actuator.name,
                 type: actuator.type,
                 isOn: actuator.isOn,

@@ -25,6 +25,7 @@ export interface MediaItem {
 export async function getAllItems(): Promise<MediaItem[]> {
   const items = await prisma.mediaItem.findMany({
     orderBy: { createdAt: "desc" },
+    include: { tags: true },
   });
 
   return items.map((item) => ({
@@ -32,7 +33,7 @@ export async function getAllItems(): Promise<MediaItem[]> {
     title: item.title,
     category: item.category,
     description: item.description || "",
-    tags: item.tags,
+    tags: item.tags.map((t) => t.tag),
     kind: item.kind as "image" | "video",
     mimeType: item.mimeType,
     size: item.size,
@@ -48,6 +49,7 @@ export async function getAllItems(): Promise<MediaItem[]> {
 export async function getItemById(id: string): Promise<MediaItem | undefined> {
   const item = await prisma.mediaItem.findUnique({
     where: { id },
+    include: { tags: true },
   });
 
   if (!item) return undefined;
@@ -57,7 +59,7 @@ export async function getItemById(id: string): Promise<MediaItem | undefined> {
     title: item.title,
     category: item.category,
     description: item.description || "",
-    tags: item.tags,
+    tags: item.tags.map((t) => t.tag),
     kind: item.kind as "image" | "video",
     mimeType: item.mimeType,
     size: item.size,
@@ -73,10 +75,16 @@ export async function getItemById(id: string): Promise<MediaItem | undefined> {
 export async function createItem(item: Omit<MediaItem, "id" | "createdAt" | "updatedAt">): Promise<MediaItem> {
   const created = await prisma.mediaItem.create({
     data: {
+      uuid: crypto.randomUUID(),
       title: item.title,
       category: item.category,
       description: item.description,
-      tags: item.tags,
+      tags: {
+        create: (item.tags || []).map((tag) => ({
+          uuid: crypto.randomUUID(),
+          tag,
+        })),
+      },
       kind: item.kind,
       mimeType: item.mimeType,
       size: item.size,
@@ -84,6 +92,7 @@ export async function createItem(item: Omit<MediaItem, "id" | "createdAt" | "upd
       thumbnailDataUrl: item.thumbnailDataUrl,
       geolocation: item.geolocation ? JSON.stringify(item.geolocation) : null,
     },
+    include: { tags: true },
   });
 
   const mediaItem: MediaItem = {
@@ -91,7 +100,7 @@ export async function createItem(item: Omit<MediaItem, "id" | "createdAt" | "upd
     title: created.title,
     category: created.category,
     description: created.description || "",
-    tags: created.tags,
+    tags: created.tags.map((t) => t.tag),
     kind: created.kind as "image" | "video",
     mimeType: created.mimeType,
     size: created.size,
@@ -117,16 +126,31 @@ export async function createItem(item: Omit<MediaItem, "id" | "createdAt" | "upd
 }
 
 export async function updateItem(id: string, updates: Partial<Omit<MediaItem, "id" | "createdAt">>): Promise<MediaItem | undefined> {
-  const { syncStatus, ...prismaUpdates } = updates as Record<string, unknown>;
+  const prismaUpdates: Record<string, unknown> = { ...updates };
+  delete prismaUpdates.syncStatus;
+  delete prismaUpdates.tags;
   const data: Record<string, unknown> = { ...prismaUpdates };
 
   if (updates.geolocation) {
     data.geolocation = JSON.stringify(updates.geolocation);
   }
 
+  // Handle tags relation separately
+  if (Array.isArray(updates.tags)) {
+    await prisma.mediaItemTag.deleteMany({ where: { mediaItemId: id } });
+    await prisma.mediaItemTag.createMany({
+      data: updates.tags.map((tag) => ({
+        uuid: crypto.randomUUID(),
+        mediaItemId: id,
+        tag,
+      })),
+    });
+  }
+
   const updated = await prisma.mediaItem.update({
     where: { id },
     data,
+    include: { tags: true },
   }).catch((err) => {
     console.error(`[ServerStorePrisma] updateItem Prisma error for id=${id}:`, err);
     throw err;
@@ -137,7 +161,7 @@ export async function updateItem(id: string, updates: Partial<Omit<MediaItem, "i
     title: updated.title,
     category: updated.category,
     description: updated.description || "",
-    tags: updated.tags,
+    tags: updated.tags.map((t) => t.tag),
     kind: updated.kind as "image" | "video",
     mimeType: updated.mimeType,
     size: updated.size,
@@ -191,6 +215,7 @@ export async function searchItems(query: string): Promise<MediaItem[]> {
       ],
     },
     orderBy: { createdAt: "desc" },
+    include: { tags: true },
   });
 
   return items.map((item) => ({
@@ -198,7 +223,7 @@ export async function searchItems(query: string): Promise<MediaItem[]> {
     title: item.title,
     category: item.category,
     description: item.description || "",
-    tags: item.tags,
+    tags: item.tags.map((t) => t.tag),
     kind: item.kind as "image" | "video",
     mimeType: item.mimeType,
     size: item.size,

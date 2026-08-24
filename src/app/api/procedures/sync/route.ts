@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { offlineRepo } from "@/lib/procedures/offline-repo";
 import { getUserFromRequest, hasRole } from "@/lib/procedures/server-auth";
 import { ProcedureSchema } from "@/lib/procedures/services/validator.service";
+import { generateUUID } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -45,17 +46,27 @@ export async function POST(request: Request) {
         }
       }
 
+      const requiredRolesData = (validated.metadata.requiredRoles || []).map((role: string) => ({
+        uuid: generateUUID(),
+        role,
+      }));
+      const safetyInstructionsData = (validated.metadata.globalSafetyInstructions || []).map((instr: string) => ({
+        uuid: generateUUID(),
+        instruction: instr,
+      }));
+
       const saved = await prisma.procedure.upsert({
         where: { code: validated.metadata.code },
         create: {
+          uuid: generateUUID(),
           code: validated.metadata.code,
           title: validated.metadata.title,
           description: validated.metadata.description || "",
           category: validated.metadata.category,
           priority: validated.metadata.priority,
           estimatedTimeMinutes: validated.metadata.estimatedTimeMinutes,
-          requiredRoles: validated.metadata.requiredRoles,
-          globalSafetyInstructions: validated.metadata.globalSafetyInstructions,
+          requiredRoles: { create: requiredRolesData },
+          globalSafetyInstructions: { create: safetyInstructionsData },
           body: validated,
           version: newVersion,
         },
@@ -65,13 +76,28 @@ export async function POST(request: Request) {
           category: validated.metadata.category,
           priority: validated.metadata.priority,
           estimatedTimeMinutes: validated.metadata.estimatedTimeMinutes,
-          requiredRoles: validated.metadata.requiredRoles,
-          globalSafetyInstructions: validated.metadata.globalSafetyInstructions,
           body: validated,
           version: newVersion,
           updatedAt: new Date(),
         },
       });
+
+      // Sync relation tables for existing procedures
+      if (existing) {
+        await prisma.procedureRequiredRole.deleteMany({ where: { procedureId: saved.id } });
+        if (requiredRolesData.length > 0) {
+          await prisma.procedureRequiredRole.createMany({
+            data: requiredRolesData.map((r) => ({ ...r, procedureId: saved.id })),
+          });
+        }
+
+        await prisma.procedureSafetyInstruction.deleteMany({ where: { procedureId: saved.id } });
+        if (safetyInstructionsData.length > 0) {
+          await prisma.procedureSafetyInstruction.createMany({
+            data: safetyInstructionsData.map((s) => ({ ...s, procedureId: saved.id })),
+          });
+        }
+      }
       return NextResponse.json(saved);
     } catch {
       await offlineRepo.save(validated);

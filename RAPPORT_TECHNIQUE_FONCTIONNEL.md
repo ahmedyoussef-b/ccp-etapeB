@@ -2,7 +2,7 @@
 
 **Projet** : NexaFlow — Plateforme de gestion des procédures et workflows opérationnels  
 **Stack** : Next.js 14 (App Router), React 18, TypeScript 5, Tailwind CSS 3.4.1, Prisma 5, Dexie 4  
-**Base de données** : PostgreSQL (web) + IndexedDB (local/Dexie)  
+**Base de données** : PostgreSQL (web) + SQLite (client local) + IndexedDB (navigateur)  
 **Langue** : Exclusivement français (fr-FR)  
 
 ---
@@ -17,7 +17,7 @@ L'application permet de :
 - Bénéficier d'une assistance vocale (reconnaissance et synthèse vocale) pour un fonctionnement mains-libres.
 - Gérer la collaboration : visioconférence, chat, invitations, présence en ligne.
 - Maintenir une base de connaissances (Q/R), des banques d'images et des rapports d'inspection.
-- Synchroniser les données entre le serveur web (PostgreSQL) et le stockage local (IndexedDB).
+- Synchroniser les données entre le serveur web (PostgreSQL) et le stockage local (SQLite + IndexedDB).
 - Piloter des systèmes embarqués/IoT (capteurs, actionneurs, sortie vocale).
 
 **Branding** : *"NexaFlow — Automate workflows without the chaos"*
@@ -62,7 +62,7 @@ src/
 └── middleware.ts             # Middleware Next.js (protection pipeline prod)
 ```
 
-**Pattern d'architecture** : Next.js App Router avec Server Components par défaut, couche API REST (`/api/*`), stockage hybride PostgreSQL + IndexedDB, React Query pour l'état serveur, contexte React pour le thème.
+**Pattern d'architecture** : Next.js App Router avec Server Components par défaut, couche API REST (`/api/*`), stockage hybride PostgreSQL + SQLite + IndexedDB, React Query pour l'état serveur, contexte React pour le thème.
 
 ---
 
@@ -74,7 +74,7 @@ src/
 | Frontend | React 18 + TypeScript 5 | Interface utilisateur |
 | Styling | Tailwind CSS 3.4.1 + shadcn/ui (base-nova) | Design system |
 | ORM | Prisma 5 + @prisma/adapter-pg | Accès PostgreSQL |
-| Base locale | Dexie 4 (IndexedDB) | Arborescence locale hors-ligne |
+| Base locale | SQLite (@sqlite.org/sqlite-wasm) + IndexedDB (brut) | Stockage client hors-ligne structuré |
 | State serveur | TanStack React Query 5 | Cache, mutations, synchronisation |
 | Forms | React Hook Form + Zod | Validation de formulaires |
 | Notifications | Sonner | Toasts |
@@ -214,9 +214,9 @@ Formulaire de contact public.
 
 ---
 
-## 5. Modèle de données (Prisma / PostgreSQL)
+## 5. Modèle de données (3 bases de données)
 
-### Entités principales
+### 5.1 PostgreSQL (Web) — Prisma ORM
 
 | Modèle | Description | Champs clés |
 |--------|------------|-------------|
@@ -229,10 +229,53 @@ Formulaire de contact public.
 | `ExecutionMedia` | Média capturé lors d'une exécution | id, executionId, stepId, type, url, filename, mimeType, size, geolocation (Json), timestamp, capturedAt |
 | `Approval` | Approbation de procédure | id, procedureId, approverId, approverName, approverRole, status (pending), comment |
 | `ProcedureVersion` | Version d'une procédure | id, procedureCode, version, body (Json), createdBy, comment |
+| `IotSensorState` | État des capteurs IoT | id, name, type, value, unit, threshold, updatedAt, createdAt |
+| `IotActuatorState` | État des actionneurs IoT | id, name, type, isOn, position, updatedAt, createdAt |
+| `User` | Utilisateur | id, email (unique), name, passwordHash, role, teamId, createdAt, updatedAt |
+| `Team` | Équipe | id, name, members, createdAt, updatedAt |
+| `RegistrationRequest` | Demande d'inscription | id, email, name, passwordHash, desiredRole, status, reviewedBy, reviewedAt, reviewComment, createdAt, updatedAt |
+| `BootstrapRequest` | Demande de bootstrap | id, userId, status, requestedAt, approvedAt, downloadedAt, token, reviewedById, reviewedByName, reviewComment, createdAt, updatedAt |
+| `Notification` | Notification | id, userId, type, title, message, relatedId, read, createdAt, updatedAt |
+| `MediaCategory` | Catégorie de média | id, name (unique), description, parentId, order, createdAt, updatedAt |
+| `MediaItem` | Média (image/vidéo) | id, title, category, description, tags, kind, mimeType, size, dataUrl, thumbnailDataUrl, geolocation, syncStatus, createdAt, updatedAt |
 
-### Base locale (IndexedDB / Dexie)
-- Structure arborescente similaire à `TreeNode` pour le stockage hors-ligne.
-- Fichiers : `src/lib/db/db.ts`, `src/lib/db/tree.ts`
+### 5.2 SQLite (Client local) — @sqlite.org/sqlite-wasm
+
+Base de données fichier `nexaflow-client.sqlite` stockée en OPFS / IndexedDB / mémoire.
+
+| Table | Description | Champs clés |
+|-------|-------------|-------------|
+| `qa_registries` | Registres Q/R locaux | id, title, description, created_at, updated_at |
+| `qa_pairs` | Paires Q/R locales | id, question, answer, registry_id, created_at, updated_at |
+| `chat_sessions` | Sessions de chat IA | id, title, messages (JSON), created_at, updated_at |
+| `local_tree` | Arborescence locale | id, remote_id, name, type, parent_id, node_order, path, size, content, created_at, updated_at |
+| `vector_documents` | Documents vectorisés | id, name, original_path, relative_path, content, embedding, metadata, created_at |
+| `sensor_configs` | Configurations capteurs | id, name, type, value, unit, threshold, updated_at |
+| `actuator_states` | États actionneurs | id, name, type, is_on, position, updated_at |
+| `devices` | Appareils IoT | id, name, type, subtype, ip_address, port, is_active, metadata, created_at, updated_at |
+| `iot_history` | Historique IoT | id, entity_type, entity_id, field, old_value, new_value, alert, resolved, created_at |
+
+**Fichiers** : `src/lib/client-engine/sqlite.ts`, `src/lib/db/db.ts`, `src/lib/db/tree.ts`
+
+### 5.3 IndexedDB (Navigateur)
+
+Deux bases IndexedDB distinctes :
+
+**5.3.1 nexaflow-vector-db** (stockage vectoriel / RAG)
+
+| Object Store | Description | Clé / Index |
+|--------------|-------------|-------------|
+| `documents` | Documents vectorisés | keyPath: id ; index: relativePath |
+| `chunks` | Morceaux de documents avec embeddings | keyPath: id (autoIncrement) ; index: documentId, relativePath |
+| `vector_tree` | Arborescence vectorielle | keyPath: id ; index: parentId, relativePath |
+
+**5.3.2 nexaflow-json-db** (stockage JSON clé/valeur)
+
+| Object Store | Description | Clé |
+|--------------|-------------|-----|
+| `json-store` | Paires clé/valeur JSON génériques | keyPath: key |
+
+**Fichiers** : `src/lib/client-engine/vector-store.ts`, `src/lib/client-engine/json-store.ts`
 
 ---
 
@@ -252,7 +295,7 @@ Formulaire de contact public.
 
 ### Arborescence (`/api/tree`, `/api/local-tree`)
 - Web (PostgreSQL) : CRUD sur les nœuds, reset, sync vers local
-- Local (IndexedDB) : CRUD sur les nœuds, vue/édition de fichiers, reset, clear
+- Local (SQLite) : CRUD sur les nœuds, vue/édition de fichiers, reset, clear
 
 ### Q/R (`/api/qr`)
 - CRUD sur les paires Q/R, recherche, export/import JSON
@@ -279,10 +322,10 @@ Formulaire de contact public.
 
 ## 7. Stratégie hors-ligne (Offline-first)
 
-L'application est conçue pour fonctionner sans connexion internet grâce à plusieurs couches de fallback :
-1. **PostgreSQL** (source de vérité) → via Prisma
-2. **IndexedDB (Dexie)** pour l'arborescence locale
-3. **localStorage** pour les procédures, rapports, Q/R
+L'application est conçue pour fonctionner sans connexion internet grâce à plusieurs couches de stockage :
+1. **PostgreSQL** (source de vérité serveur) → via Prisma
+2. **SQLite** (client local via WASM) pour les données structurées hors-ligne (Q/R, chat, arborescence, IoT)
+3. **IndexedDB** (navigateur) pour le stockage vectoriel (RAG) et le cache JSON clé/valeur
 4. **In-memory** (modules `meetings.ts`, `presence.ts`, `execution-repo.ts`)
 5. **Mock data** (`mock-data.ts`, `mock-service.ts`)
 

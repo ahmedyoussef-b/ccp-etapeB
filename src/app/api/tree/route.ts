@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readItems } from "@/lib/images/server-store";
+import { generateUUID } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -137,6 +138,7 @@ export async function POST(request: Request) {
 
     const node = await prisma.treeNode.create({
       data: {
+        uuid: generateUUID(),
         name: body.name,
         type: body.type,
         metadata: body.metadata ?? null,

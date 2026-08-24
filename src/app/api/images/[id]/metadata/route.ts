@@ -81,27 +81,40 @@ export async function PUT(
     fs.writeFileSync(metadataPath, JSON.stringify(updated, null, 2), "utf-8");
     console.log(`[API][PUT /api/images/${params.id}/metadata] - saved to ${metadataPath}`);
 
-    // 2. Synchronize to PostgreSQL (BDD Web / Prisma)
-    try {
-      const { prisma } = await import("@/lib/prisma");
-      const dbUpdates: Record<string, unknown> = {};
-      if (typeof body.title === "string") dbUpdates.title = body.title;
-      if (typeof body.description === "string") dbUpdates.description = body.description;
-      if (typeof body.category === "string") dbUpdates.category = body.category;
-      if (Array.isArray(body.tags)) dbUpdates.tags = body.tags;
-      if (typeof body.kind === "string" && (body.kind === "image" || body.kind === "video")) {
-        dbUpdates.kind = body.kind;
-      }
-      if (body.geolocation) dbUpdates.geolocation = JSON.stringify(body.geolocation);
+      // 2. Synchronize to PostgreSQL (BDD Web / Prisma)
+      try {
+        const { prisma } = await import("@/lib/prisma");
+        const dbUpdates: Record<string, unknown> = {};
+        if (typeof body.title === "string") dbUpdates.title = body.title;
+        if (typeof body.description === "string") dbUpdates.description = body.description;
+        if (typeof body.category === "string") dbUpdates.category = body.category;
+        if (typeof body.kind === "string" && (body.kind === "image" || body.kind === "video")) {
+          dbUpdates.kind = body.kind;
+        }
+        if (body.geolocation) dbUpdates.geolocation = JSON.stringify(body.geolocation);
 
-      if (Object.keys(dbUpdates).length > 0) {
-        await prisma.mediaItem.update({
-          where: { id: item.id },
-          data: dbUpdates,
-        });
-        console.log(`[API][PUT /api/images/${params.id}/metadata] - synced to PostgreSQL Prisma`);
-      }
-    } catch (dbErr) {
+        if (Object.keys(dbUpdates).length > 0) {
+          await prisma.mediaItem.update({
+            where: { id: item.id },
+            data: dbUpdates,
+          });
+          console.log(`[API][PUT /api/images/${params.id}/metadata] - synced to PostgreSQL Prisma`);
+        }
+
+        if (Array.isArray(body.tags)) {
+          const { generateUUID } = await import("@/lib/prisma");
+          await prisma.mediaItemTag.deleteMany({ where: { mediaItemId: item.id } });
+          if (body.tags.length > 0) {
+            await prisma.mediaItemTag.createMany({
+              data: body.tags.map((tag: string) => ({
+                uuid: generateUUID(),
+                mediaItemId: item.id,
+                tag,
+              })),
+            });
+          }
+        }
+      } catch (dbErr) {
       console.warn(`[API][PUT /api/images/${params.id}/metadata] - Prisma sync warning (skipped if no DB):`, dbErr);
     }
 

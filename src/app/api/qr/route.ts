@@ -1,4 +1,5 @@
 ﻿import { NextResponse } from "next/server";
+import { generateUUID } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -11,7 +12,7 @@ function toPairWithRegistry(p: {
   order: number;
   createdAt: Date;
   updatedAt: Date;
-  registry: { id: number; title: string; description: string | null } | null;
+  registry?: { id: number; title: string; description: string | null } | null;
 }): {
   id: number;
   question: string;
@@ -22,15 +23,16 @@ function toPairWithRegistry(p: {
   createdAt: string;
   updatedAt: string;
 } {
+  const registry = p.registry ?? { id: 0, title: "unknown", description: null };
   return {
     id: p.id,
     question: p.question,
     answer: p.answer,
     registryId: p.registryId,
     registry: {
-      id: p.registry?.id ?? 0,
-      title: p.registry?.title ?? "unknown",
-      description: p.registry?.description ?? null,
+      id: registry.id,
+      title: registry.title ?? "unknown",
+      description: registry.description ?? null,
     },
     order: p.order ?? 0,
     createdAt: p.createdAt.toISOString(),
@@ -74,12 +76,13 @@ export async function POST(request: Request) {
     let registry = await prisma.qARegistry.findFirst({ where: { title } });
     if (!registry) {
       registry = await prisma.qARegistry.create({
-        data: { title, description: typeof body.registryDescription === "string" ? body.registryDescription : null },
+        data: { uuid: generateUUID(), title, description: typeof body.registryDescription === "string" ? body.registryDescription : null },
       });
     }
 
     const pair = await prisma.qAPair.create({
       data: {
+        uuid: generateUUID(),
         question,
         answer,
         order: 0,

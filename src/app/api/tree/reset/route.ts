@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { generateUUID } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -26,6 +27,7 @@ async function importMirror(nodes: MirrorNode[], parentId: number | null): Promi
   for (const node of nodes) {
     const record = await prisma.treeNode.create({
       data: {
+        uuid: generateUUID(),
         name: node.name,
         type: node.type === "root" ? "root" : "directory",
         parentId,
@@ -45,7 +47,7 @@ export async function POST() {
     await prisma.treeNode.deleteMany({});
 
     const root = await prisma.treeNode.create({
-      data: { name: ".data", type: "root", order: 0 },
+      data: { uuid: generateUUID(), name: ".data", type: "root", order: 0 },
     });
 
     let count = 1;

@@ -1,8 +1,10 @@
+import { Prisma } from "@prisma/client";
 import type {
   ProcedureExecution,
   ExecutionStep,
   ExecutionMedia,
 } from "@prisma/client";
+import { generateUUID } from "@/lib/prisma";
 
 interface ExecutionRecord extends ProcedureExecution {
   steps: ExecutionStep[];
@@ -68,31 +70,47 @@ export const executionRepo = {
   }): Promise<ExecutionRecord> {
     try {
       const { prisma } = await import("@/lib/prisma");
-      return await prisma.procedureExecution.create({
+      const { anomalies, ...rest } = data;
+      const created = await prisma.procedureExecution.create({
         data: {
-          procedureId: data.procedureId,
-          userId: data.userId,
-          userName: data.userName,
-          userRole: data.userRole,
-          phase: data.phase || "briefing",
-          anomalies: data.anomalies || [],
+          uuid: generateUUID(),
+          procedureId: rest.procedureId,
+          userId: rest.userId,
+          userName: rest.userName,
+          userRole: rest.userRole,
+          phase: rest.phase || "briefing",
         },
         include: { steps: true, media: true },
       });
+
+      if (anomalies && anomalies.length > 0) {
+        await prisma.executionAnomaly.createMany({
+          data: anomalies.map((a) => ({
+            uuid: generateUUID(),
+            executionId: created.id,
+            anomaly: a,
+          })),
+        });
+      }
+
+      return created;
     } catch {
       const record: ExecutionRecord = {
         id: generateClientId(),
+        uuid: generateUUID(),
         procedureId: data.procedureId,
         userId: data.userId ?? null,
         userName: data.userName ?? null,
         userRole: data.userRole ?? null,
         phase: data.phase || "briefing",
         currentStepIndex: 0,
-        completedSteps: [],
         startedAt: new Date(),
         finishedAt: null,
-        anomalies: data.anomalies || [],
         globalElapsed: 0,
+        syncStatus: "pending" as const,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
         steps: [],
         media: [],
       };
@@ -113,17 +131,38 @@ export const executionRepo = {
       globalElapsed: number;
     }>
   ): Promise<ExecutionRecord | null> {
+    const { anomalies } = data;
+    const prismaData: Record<string, unknown> = {};
+    if (data.phase) prismaData.phase = data.phase;
+    if (data.currentStepIndex !== undefined) prismaData.currentStepIndex = data.currentStepIndex;
+    if (data.finishedAt) prismaData.finishedAt = data.finishedAt;
+    if (data.globalElapsed !== undefined) prismaData.globalElapsed = data.globalElapsed;
     try {
       const { prisma } = await import("@/lib/prisma");
-      return await prisma.procedureExecution.update({
+      const updated = await prisma.procedureExecution.update({
         where: { id },
-        data,
+        data: prismaData,
         include: { steps: true, media: true },
       });
+
+      if (anomalies) {
+        await prisma.executionAnomaly.deleteMany({ where: { executionId: id } });
+        if (anomalies.length > 0) {
+          await prisma.executionAnomaly.createMany({
+            data: anomalies.map((a) => ({
+              uuid: generateUUID(),
+              executionId: id,
+              anomaly: a,
+            })),
+          });
+        }
+      }
+
+      return updated;
     } catch {
       const idx = memoryStore.findIndex((e) => e.id === id);
       if (idx === -1) return null;
-      const updated = { ...memoryStore[idx], ...data } as ExecutionRecord;
+      const updated = { ...memoryStore[idx], ...prismaData } as ExecutionRecord;
       memoryStore[idx] = updated;
       return updated;
     }
@@ -147,6 +186,7 @@ export const executionRepo = {
       const { prisma } = await import("@/lib/prisma");
       return await prisma.executionStep.create({
         data: {
+          uuid: generateUUID(),
           executionId: data.executionId,
           stepId: data.stepId,
           stepOrder: data.stepOrder,
@@ -164,6 +204,7 @@ export const executionRepo = {
     } catch {
       const step: ExecutionStep = {
         id: generateClientId(),
+        uuid: generateUUID(),
         executionId: data.executionId,
         stepId: data.stepId,
         stepOrder: data.stepOrder,
@@ -176,6 +217,10 @@ export const executionRepo = {
         startedAt: data.startedAt ?? null,
         finishedAt: data.finishedAt ?? null,
         anomaly: data.anomaly ?? null,
+        syncStatus: "pending" as const,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       memorySteps.push(step);
       purgeMemoryStores();
@@ -197,6 +242,7 @@ export const executionRepo = {
       const { prisma } = await import("@/lib/prisma");
       return await prisma.executionMedia.create({
         data: {
+          uuid: generateUUID(),
           executionId: data.executionId,
           stepId: data.stepId,
           type: data.type,
@@ -204,27 +250,30 @@ export const executionRepo = {
           filename: data.filename,
           mimeType: data.mimeType,
           size: data.size,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          geolocation: data.geolocation as unknown as any,
+          geolocation: data.geolocation as Prisma.InputJsonValue,
         },
       });
     } catch {
       const media: ExecutionMedia = {
         id: generateClientId(),
+        uuid: generateUUID(),
         executionId: data.executionId,
         stepId: data.stepId,
         type: data.type,
         url: data.url ?? null,
         filename: data.filename ?? null,
         mimeType: data.mimeType ?? null,
-          size: data.size ?? null,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          geolocation: data.geolocation as unknown as any,
-          timestamp: new Date(),
+        size: data.size ?? null,
+        geolocation: data.geolocation as Prisma.JsonValue | null,
+        timestamp: new Date(),
         capturedAt: new Date(),
+        syncStatus: "pending" as const,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       memoryMedia.push(media);
-      purgeMemoryStores();
+      pruneMemory(memoryMedia, MAX_MEMORY_MEDIA);
       return media;
     }
   },

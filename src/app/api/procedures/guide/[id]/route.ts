@@ -12,6 +12,7 @@ export async function GET(
     const { prisma } = await import("@/lib/prisma");
     const procedure = await prisma.procedure.findUnique({
       where: { code: params.id },
+      include: { requiredRoles: true },
     });
 
     if (!procedure) {
@@ -19,7 +20,7 @@ export async function GET(
     }
 
     const user = getUserFromRequest(request);
-    const requiredRoles = procedure.requiredRoles || [];
+    const requiredRoles = procedure.requiredRoles.map((r) => r.role) || [];
     const isAdmin = hasRole(user?.role, ["admin"]);
     const hasRequiredRole = isAdmin || hasRole(user?.role, requiredRoles);
 
@@ -69,8 +70,9 @@ export async function DELETE(
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
-    await prisma.procedure.delete({
+    await prisma.procedure.update({
       where: { code: params.id },
+      data: { deletedAt: new Date(), syncStatus: "pending" },
     });
 
     return NextResponse.json({ success: true }, { status: 200 });

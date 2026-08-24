@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { offlineRepo } from "@/lib/procedures/offline-repo";
 import { getUserFromRequest, hasRole } from "@/lib/procedures/server-auth";
+import { generateUUID } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,21 +32,37 @@ export async function POST(request: Request) {
       const { prisma } = await import("@/lib/prisma");
       const created = await prisma.procedure.create({
         data: {
+          uuid: generateUUID(),
           code: body.metadata?.code || body.code,
           title: body.metadata?.title || body.title,
           description: body.metadata?.description || body.description,
           category: body.metadata?.category || body.category,
           priority: body.metadata?.priority || body.priority || "moyenne",
           estimatedTimeMinutes: body.metadata?.estimatedTimeMinutes || body.estimatedTimeMinutes || 1,
-          requiredRoles: body.metadata?.requiredRoles || body.requiredRoles || [],
-          globalSafetyInstructions: body.metadata?.globalSafetyInstructions || body.globalSafetyInstructions || [],
+          requiredRoles: {
+            create: (body.metadata?.requiredRoles || body.requiredRoles || []).map((role: string) => ({
+              uuid: generateUUID(),
+              role,
+            })),
+          },
+          globalSafetyInstructions: {
+            create: (body.metadata?.globalSafetyInstructions || body.globalSafetyInstructions || []).map((instr: string) => ({
+              uuid: generateUUID(),
+              instruction: instr,
+            })),
+          },
           status: body.metadata?.status || body.status || "draft",
           authorId: body.metadata?.authorId || body.authorId,
           authorName: body.metadata?.authorName || body.authorName,
           approverId: body.metadata?.approverId || body.approverId,
           approverName: body.metadata?.approverName || body.approverName,
           version: body.metadata?.version || body.version || "1.0",
-          tags: body.metadata?.tags || body.tags || [],
+          tags: {
+            create: (body.metadata?.tags || body.tags || []).map((tag: string) => ({
+              uuid: generateUUID(),
+              tag,
+            })),
+          },
           language: body.metadata?.language || body.language || "fr-FR",
           body: body.metadata?.body || body.body || {},
         },

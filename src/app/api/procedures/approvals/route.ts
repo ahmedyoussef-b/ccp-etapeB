@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, generateUUID } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +57,7 @@ export async function POST(request: Request) {
       });
       await prisma.approval.create({
         data: {
+          uuid: generateUUID(),
           procedureId: procedure.id,
           approverId,
           approverName,
@@ -75,6 +76,7 @@ export async function POST(request: Request) {
       });
       await prisma.approval.create({
         data: {
+          uuid: generateUUID(),
           procedureId: procedure.id,
           approverId,
           approverName,
