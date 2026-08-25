@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Bell, LogOut, User, Sun, Moon } from "lucide-react";
+import { Bell, LogOut, User, Sun, Moon, Menu } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +47,7 @@ function SyncStatusIndicator() {
   )
 }
 
-export function DashboardTopNav() {
+export function DashboardTopNav({ onToggleMobile }: { onToggleMobile?: () => void }) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const { user, role } = useSession();
@@ -62,6 +62,12 @@ export function DashboardTopNav() {
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
       <div className="flex items-center gap-2">
+        {onToggleMobile && (
+          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted md:hidden" onClick={onToggleMobile}>
+            <Menu className="h-5 w-5 text-foreground/70" />
+            <span className="sr-only">Menu</span>
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2">

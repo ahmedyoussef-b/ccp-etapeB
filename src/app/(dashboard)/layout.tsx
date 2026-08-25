@@ -6,6 +6,7 @@ import { useSession } from "@/hooks/useSession";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { DashboardTopNav } from "@/components/dashboard/top-nav";
 import { ThemeProvider } from "@/components/theme-provider";
+import { cn } from "@/lib/utils";
 
 type Role = "admin" | "superviseur" | "chef-de-quart" | "chef-de-bloc" | "rondier";
 
@@ -35,6 +36,7 @@ export default function DashboardLayout({
   const stored = getStoredRole();
   const [role, setRole] = useState<Role>(pathRole);
   const [hydrated, setHydrated] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { session, status } = useSession();
 
   useLayoutEffect(() => {
@@ -70,9 +72,22 @@ export default function DashboardLayout({
   return (
     <ThemeProvider>
       <div className="flex h-screen overflow-hidden">
-        <DashboardSidebar role={role} />
+        {mobileOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
+        <div
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-200 md:relative md:translate-x-0",
+            mobileOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          <DashboardSidebar role={role} onCloseMobile={() => setMobileOpen(false)} />
+        </div>
         <main className="flex flex-1 flex-col overflow-hidden">
-          <DashboardTopNav />
+          <DashboardTopNav onToggleMobile={() => setMobileOpen((v) => !v)} />
           <div className="flex-1 overflow-y-auto">
             {children}
           </div>
