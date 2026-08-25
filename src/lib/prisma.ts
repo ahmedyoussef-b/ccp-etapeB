@@ -87,31 +87,31 @@ async function ensureConnected(): Promise<void> {
 
 let prisma: PrismaClient;
 
-try {
-  prisma = globalForPrisma.prisma ?? prismaClientSingleton();
+if (typeof window === 'undefined') {
+  try {
+    prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = prisma;
+    if (process.env.NODE_ENV !== "production") {
+      globalForPrisma.prisma = prisma;
+    }
+
+    void ensureConnected().catch((err) => {
+      logger.postgresError("init_connection", err);
+    });
+  } catch (err) {
+    logger.postgresError("init", err);
+    throw err;
   }
-
-  void ensureConnected().catch((err) => {
-    logger.postgresError("init_connection", err);
-  });
-} catch (err) {
-  logger.postgresError("init", err);
-  throw err;
+} else {
+  prisma = (undefined as unknown as PrismaClient);
 }
 
 export type PrismaClientType = typeof prisma;
 export type { Prisma, SyncStatus };
 
 export const syncHelpers = {
-  /**
-   * Récupère tous les enregistrements nécessitant une synchronisation pour un modèle.
-   * Filtre sur les statuts: pending, local_only, conflict (exclut deletedAt)
-   */
   getPendingRecords: async (model: SyncableModel): Promise<unknown[]> => {
-    if (!isSyncableModel(model)) {
+    if (!prisma || !isSyncableModel(model)) {
       throw new Error(`Model "${model}" is not a syncable model`);
     }
     const delegate = getModelDelegate(model);
@@ -127,12 +127,8 @@ export const syncHelpers = {
       orderBy: { updatedAt: "desc" },
     });
   },
-
-  /**
-   * Marque un enregistrement comme synchronisé via son uuid
-   */
   markAsSynced: async (model: SyncableModel, uuid: string): Promise<unknown> => {
-    if (!isSyncableModel(model)) {
+    if (!prisma || !isSyncableModel(model)) {
       throw new Error(`Model "${model}" is not a syncable model`);
     }
     const delegate = getModelDelegate(model);
@@ -141,13 +137,8 @@ export const syncHelpers = {
       data: { syncStatus: "synced" },
     });
   },
-
-  /**
-   * Soft delete d'un enregistrement via son uuid
-   * (marque deletedAt et passe le syncStatus à 'pending')
-   */
   softDelete: async (model: SyncableModel, uuid: string): Promise<unknown> => {
-    if (!isSyncableModel(model)) {
+    if (!prisma || !isSyncableModel(model)) {
       throw new Error(`Model "${model}" is not a syncable model`);
     }
     const delegate = getModelDelegate(model);
@@ -159,12 +150,8 @@ export const syncHelpers = {
       },
     });
   },
-
-  /**
-   * Vérifie le syncStatus d'un enregistrement via son uuid
-   */
   getSyncStatus: async (model: SyncableModel, uuid: string): Promise<SyncStatus | null> => {
-    if (!isSyncableModel(model)) {
+    if (!prisma || !isSyncableModel(model)) {
       throw new Error(`Model "${model}" is not a syncable model`);
     }
     const delegate = getModelDelegate(model);
