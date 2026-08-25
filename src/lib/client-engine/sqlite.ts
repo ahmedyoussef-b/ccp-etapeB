@@ -13,21 +13,38 @@ let storageUsed: SQLiteStorage = 'memory';
 
 async function openPersistentDatabase(s3: Sqlite3Static): Promise<Database> {
   const oo1 = s3.oo1;
-  if (oo1 && typeof oo1.OpfsDb === 'function') {
-    try { logger.sqlite('openDatabase', { storage: 'opfs' }); storageUsed = 'opfs'; return new oo1.OpfsDb(SQLITE_CONFIG.filename); }
-    catch (e) { logger.sqliteError('openDatabase', e); }
-  }
+
   if (typeof s3.installOpfsSAHPoolVfs === 'function') {
     try {
       const poolUtil: SAHPoolUtil = await s3.installOpfsSAHPoolVfs({ name: 'nexaflow-opfs-sah' });
       if (poolUtil && typeof poolUtil.OpfsSAHPoolDb === 'function') {
-        logger.sqlite('openDatabase', { storage: 'indexeddb' }); storageUsed = 'indexeddb'; return new poolUtil.OpfsSAHPoolDb(SQLITE_CONFIG.filename);
+        logger.sqlite('openDatabase', { storage: 'opfs-sah' });
+        storageUsed = 'opfs';
+        return new poolUtil.OpfsSAHPoolDb(SQLITE_CONFIG.filename);
       }
-    } catch (e) { logger.sqliteError('openDatabase', e); }
+    } catch (e) {
+      logger.sqliteError('openDatabase (SAH Pool)', e);
+    }
   }
-  if (oo1 && typeof oo1.JsStorageDb === 'function') { storageUsed = 'indexeddb'; logger.sqlite('openDatabase', { storage: 'indexeddb' }); return new oo1.JsStorageDb('local'); }
-  storageUsed = 'memory';
+
+  if (oo1 && typeof oo1.OpfsDb === 'function') {
+    try {
+      logger.sqlite('openDatabase', { storage: 'opfs-direct' });
+      storageUsed = 'opfs';
+      return new oo1.OpfsDb(SQLITE_CONFIG.filename);
+    } catch (e) {
+      logger.sqliteError('openDatabase (OPFS direct)', e);
+    }
+  }
+
+  if (oo1 && typeof oo1.JsStorageDb === 'function') {
+    logger.sqlite('openDatabase', { storage: 'indexeddb' });
+    storageUsed = 'indexeddb';
+    return new oo1.JsStorageDb('local');
+  }
+
   logger.sqlite('openDatabase', { storage: 'memory' });
+  storageUsed = 'memory';
   return new oo1.DB(SQLITE_CONFIG.filename);
 }
 
