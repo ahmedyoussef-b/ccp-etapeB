@@ -32,32 +32,51 @@ async function openPersistentDatabase(s3: Sqlite3Static): Promise<Database> {
 }
 
 export async function createProcedureTables(db: Database): Promise<void> {
-  const sql = `BEGIN;
-    CREATE TABLE IF NOT EXISTS procedures (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, code TEXT UNIQUE NOT NULL, title TEXT NOT NULL, description TEXT, category TEXT NOT NULL, priority TEXT DEFAULT 'moyenne', estimated_time_minutes INTEGER DEFAULT 1, status TEXT DEFAULT 'draft', author_id TEXT, author_name TEXT, approver_id TEXT, approver_name TEXT, review_date TEXT, version TEXT DEFAULT '1.0', language TEXT DEFAULT 'fr-FR', body TEXT NOT NULL, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')));
-    CREATE TABLE IF NOT EXISTS procedure_required_roles (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, procedure_id INTEGER NOT NULL, role TEXT NOT NULL, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (procedure_id) REFERENCES procedures(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS procedure_safety_instructions (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, procedure_id INTEGER NOT NULL, instruction TEXT NOT NULL, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (procedure_id) REFERENCES procedures(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS procedure_tags (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, procedure_id INTEGER NOT NULL, tag TEXT NOT NULL, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (procedure_id) REFERENCES procedures(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS procedure_versions (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, procedure_code TEXT NOT NULL, version TEXT NOT NULL, body TEXT NOT NULL, created_by TEXT, created_by_name TEXT, comment TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')));
-    CREATE INDEX IF NOT EXISTS idx_procedures_uuid ON procedures(uuid);
-    CREATE INDEX IF NOT EXISTS idx_procedures_sync ON procedures(sync_status, deleted_at);
-    CREATE INDEX IF NOT EXISTS idx_procedures_code ON procedures(code);
-    CREATE INDEX IF NOT EXISTS idx_prr_sync ON procedure_required_roles(sync_status, deleted_at);
-    CREATE INDEX IF NOT EXISTS idx_prr_pid ON procedure_required_roles(procedure_id);
-    CREATE INDEX IF NOT EXISTS idx_psi_sync ON procedure_safety_instructions(sync_status, deleted_at);
-    CREATE INDEX IF NOT EXISTS idx_psi_pid ON procedure_safety_instructions(procedure_id);
-    CREATE INDEX IF NOT EXISTS idx_pt_sync ON procedure_tags(sync_status, deleted_at);
-    CREATE INDEX IF NOT EXISTS idx_pt_pid ON procedure_tags(procedure_id);
-    CREATE INDEX IF NOT EXISTS idx_pv_sync ON procedure_versions(sync_status, deleted_at);
-    CREATE INDEX IF NOT EXISTS idx_pv_deleted ON procedure_versions(deleted_at);
-    CREATE INDEX IF NOT EXISTS idx_pv_code ON procedure_versions(procedure_code);
-    COMMIT;`;
-  db.exec(sql);
+  const tableSqls = [
+    `CREATE TABLE IF NOT EXISTS procedures (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, code TEXT UNIQUE NOT NULL, title TEXT NOT NULL, description TEXT, category TEXT NOT NULL, priority TEXT DEFAULT 'moyenne', estimated_time_minutes INTEGER DEFAULT 1, status TEXT DEFAULT 'draft', author_id TEXT, author_name TEXT, approver_id TEXT, approver_name TEXT, review_date TEXT, version TEXT DEFAULT '1.0', language TEXT DEFAULT 'fr-FR', body TEXT NOT NULL, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')));`,
+    `CREATE TABLE IF NOT EXISTS procedure_required_roles (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, procedure_id INTEGER NOT NULL, role TEXT NOT NULL, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (procedure_id) REFERENCES procedures(id) ON DELETE CASCADE);`,
+    `CREATE TABLE IF NOT EXISTS procedure_safety_instructions (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, procedure_id INTEGER NOT NULL, instruction TEXT NOT NULL, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (procedure_id) REFERENCES procedures(id) ON DELETE CASCADE);`,
+    `CREATE TABLE IF NOT EXISTS procedure_tags (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, procedure_id INTEGER NOT NULL, tag TEXT NOT NULL, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (procedure_id) REFERENCES procedures(id) ON DELETE CASCADE);`,
+    `CREATE TABLE IF NOT EXISTS procedure_versions (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, procedure_code TEXT NOT NULL, version TEXT NOT NULL, body TEXT NOT NULL, created_by TEXT, created_by_name TEXT, comment TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')));`,
+  ];
+  for (const sql of tableSqls) { db.exec(sql); }
+
+  const tables = [
+    'procedures', 'procedure_required_roles', 'procedure_safety_instructions', 'procedure_tags', 'procedure_versions',
+  ];
+  for (const table of tables) {
+    try {
+      const colCheck = await queryOne<{ cid: number }>(`SELECT cid FROM pragma_table_info('${table}') WHERE name = 'sync_status'`);
+      if (!colCheck) {
+        await db.exec(`ALTER TABLE ${table} ADD COLUMN sync_status TEXT DEFAULT 'pending'`);
+        await db.exec(`ALTER TABLE ${table} ADD COLUMN deleted_at DATETIME`);
+      }
+    } catch (e) {
+      logger.sqliteError('createProcedureTables', { table, error: e });
+    }
+  }
+
+  const indexSqls = [
+    `CREATE INDEX IF NOT EXISTS idx_procedures_uuid ON procedures(uuid);`,
+    `CREATE INDEX IF NOT EXISTS idx_procedures_sync ON procedures(sync_status, deleted_at);`,
+    `CREATE INDEX IF NOT EXISTS idx_procedures_code ON procedures(code);`,
+    `CREATE INDEX IF NOT EXISTS idx_prr_sync ON procedure_required_roles(sync_status, deleted_at);`,
+    `CREATE INDEX IF NOT EXISTS idx_prr_pid ON procedure_required_roles(procedure_id);`,
+    `CREATE INDEX IF NOT EXISTS idx_psi_sync ON procedure_safety_instructions(sync_status, deleted_at);`,
+    `CREATE INDEX IF NOT EXISTS idx_psi_pid ON procedure_safety_instructions(procedure_id);`,
+    `CREATE INDEX IF NOT EXISTS idx_pt_sync ON procedure_tags(sync_status, deleted_at);`,
+    `CREATE INDEX IF NOT EXISTS idx_pt_pid ON procedure_tags(procedure_id);`,
+    `CREATE INDEX IF NOT EXISTS idx_pv_sync ON procedure_versions(sync_status, deleted_at);`,
+    `CREATE INDEX IF NOT EXISTS idx_pv_deleted ON procedure_versions(deleted_at);`,
+    `CREATE INDEX IF NOT EXISTS idx_pv_code ON procedure_versions(procedure_code);`,
+  ];
+  for (const sql of indexSqls) { db.exec(sql); }
   logger.sqlite('create tables', { tables: ['procedures', 'procedure_required_roles', 'procedure_safety_instructions', 'procedure_tags', 'procedure_versions'] });
 }
 
 export async function createOtherTables(db: Database): Promise<void> {
   logger.sqlite('create other tables', { started: true });
-  const sqls = [
+  const tableSqls = [
     `CREATE TABLE IF NOT EXISTS approvals (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, procedure_id INTEGER REFERENCES procedures(id) ON DELETE CASCADE, approver_id TEXT NOT NULL, approver_name TEXT, approver_role TEXT, status TEXT DEFAULT 'pending', comment TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS tree_nodes (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, name TEXT NOT NULL, type TEXT NOT NULL, metadata TEXT, parent_id INTEGER REFERENCES tree_nodes(id) ON DELETE CASCADE, order_idx INTEGER DEFAULT 0, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, UNIQUE(name, type, parent_id));`,
     `CREATE TABLE IF NOT EXISTS qa_registries (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, title TEXT NOT NULL, description TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
@@ -67,6 +86,26 @@ export async function createOtherTables(db: Database): Promise<void> {
     `CREATE TABLE IF NOT EXISTS sync_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, model_name TEXT NOT NULL, record_id TEXT, record_uuid TEXT, operation TEXT NOT NULL, status TEXT DEFAULT 'pending', source TEXT, target TEXT, error TEXT, metadata TEXT, deleted_at DATETIME, synced_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS iot_sensor_states (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, name TEXT NOT NULL, type TEXT NOT NULL, value REAL NOT NULL, unit TEXT NOT NULL, threshold REAL NOT NULL, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS iot_actuator_states (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, name TEXT NOT NULL, type TEXT NOT NULL, is_on INTEGER DEFAULT 0, position INTEGER, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
+  ];
+  for (const sql of tableSqls) { db.exec(sql); }
+
+  const tables = [
+    'approvals', 'tree_nodes', 'qa_registries', 'qa_pairs', 'media_items', 'media_item_tags',
+    'sync_logs', 'iot_sensor_states', 'iot_actuator_states',
+  ];
+  for (const table of tables) {
+    try {
+      const colCheck = await queryOne<{ cid: number }>(`SELECT cid FROM pragma_table_info('${table}') WHERE name = 'sync_status'`);
+      if (!colCheck) {
+        await db.exec(`ALTER TABLE ${table} ADD COLUMN sync_status TEXT DEFAULT 'pending'`);
+        await db.exec(`ALTER TABLE ${table} ADD COLUMN deleted_at DATETIME`);
+      }
+    } catch (e) {
+      logger.sqliteError('createOtherTables', { table, error: e });
+    }
+  }
+
+  const indexSqls = [
     `CREATE INDEX IF NOT EXISTS idx_app_procedure_id ON approvals(procedure_id);`,
     `CREATE INDEX IF NOT EXISTS idx_app_status ON approvals(status);`,
     `CREATE INDEX IF NOT EXISTS idx_app_sync_deleted ON approvals(sync_status, deleted_at);`,
@@ -92,18 +131,38 @@ export async function createOtherTables(db: Database): Promise<void> {
     `CREATE INDEX IF NOT EXISTS idx_iss_sync_deleted ON iot_sensor_states(sync_status, deleted_at);`,
     `CREATE INDEX IF NOT EXISTS idx_ias_sync_deleted ON iot_actuator_states(sync_status, deleted_at);`,
   ];
-  for (const sql of sqls) { db.exec(sql); }
+  for (const sql of indexSqls) { db.exec(sql); }
   logger.sqlite('create other tables', { completed: true });
 }
 
 export async function createExecutionTables(db: Database): Promise<void> {
   logger.sqlite('create execution tables', { started: true });
-  const sqls = [
+  const tableSqls = [
     `CREATE TABLE IF NOT EXISTS procedure_executions (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, procedure_id INTEGER REFERENCES procedures(id) ON DELETE CASCADE, user_id TEXT, user_name TEXT, user_role TEXT, phase TEXT DEFAULT 'briefing', current_step_index INTEGER DEFAULT 0, started_at DATETIME DEFAULT CURRENT_TIMESTAMP, finished_at DATETIME, global_elapsed INTEGER DEFAULT 0, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS execution_steps (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, execution_id INTEGER REFERENCES procedure_executions(id) ON DELETE CASCADE, step_id TEXT NOT NULL, step_order INTEGER, title TEXT, type TEXT, is_mandatory INTEGER DEFAULT 0, is_completed INTEGER DEFAULT 0, timer_enabled INTEGER DEFAULT 0, timer_seconds INTEGER DEFAULT 0, started_at DATETIME, finished_at DATETIME, anomaly TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS execution_media (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, execution_id INTEGER REFERENCES procedure_executions(id) ON DELETE CASCADE, step_id TEXT, type TEXT, url TEXT, filename TEXT, mime_type TEXT, size INTEGER, geolocation TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, captured_at DATETIME DEFAULT CURRENT_TIMESTAMP, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS execution_completed_steps (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, execution_id INTEGER REFERENCES procedure_executions(id) ON DELETE CASCADE, step_id TEXT NOT NULL, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS execution_anomalies (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, execution_id INTEGER REFERENCES procedure_executions(id) ON DELETE CASCADE, anomaly TEXT NOT NULL, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
+  ];
+  for (const sql of tableSqls) { db.exec(sql); }
+
+  const tables = [
+    'procedure_executions', 'execution_steps', 'execution_media',
+    'execution_completed_steps', 'execution_anomalies',
+  ];
+  for (const table of tables) {
+    try {
+      const colCheck = await queryOne<{ cid: number }>(`SELECT cid FROM pragma_table_info('${table}') WHERE name = 'sync_status'`);
+      if (!colCheck) {
+        await db.exec(`ALTER TABLE ${table} ADD COLUMN sync_status TEXT DEFAULT 'pending'`);
+        await db.exec(`ALTER TABLE ${table} ADD COLUMN deleted_at DATETIME`);
+      }
+    } catch (e) {
+      logger.sqliteError('createExecutionTables', { table, error: e });
+    }
+  }
+
+  const indexSqls = [
     `CREATE INDEX IF NOT EXISTS idx_pe_procedure_id ON procedure_executions(procedure_id);`,
     `CREATE INDEX IF NOT EXISTS idx_pe_user_id ON procedure_executions(user_id);`,
     `CREATE INDEX IF NOT EXISTS idx_pe_sync_deleted ON procedure_executions(sync_status, deleted_at);`,
@@ -118,7 +177,7 @@ export async function createExecutionTables(db: Database): Promise<void> {
     `CREATE INDEX IF NOT EXISTS idx_ea_execution_id ON execution_anomalies(execution_id);`,
     `CREATE INDEX IF NOT EXISTS idx_ea_sync_deleted ON execution_anomalies(sync_status, deleted_at);`,
   ];
-  for (const sql of sqls) { db.exec(sql); }
+  for (const sql of indexSqls) { db.exec(sql); }
   logger.sqlite('create execution tables', { completed: true });
 }
 
@@ -223,6 +282,20 @@ export async function resetSQLiteDatabase(): Promise<void> {
         logger.sqlite('reset database', { deleted: true });
       } catch {
         logger.sqlite('reset database', { deleted: false, reason: 'opfs unavailable' });
+      }
+    }
+
+    if (typeof indexedDB !== 'undefined') {
+      try {
+        const databases = await indexedDB.databases();
+        for (const dbInfo of databases) {
+          if (dbInfo.name && dbInfo.name.includes('nexaflow')) {
+            indexedDB.deleteDatabase(dbInfo.name);
+            logger.sqlite('reset database', { indexeddbDeleted: dbInfo.name });
+          }
+        }
+      } catch {
+        logger.sqlite('reset database', { indexeddbDeleted: false, reason: 'indexeddb unavailable' });
       }
     }
 
