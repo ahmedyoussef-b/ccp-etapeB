@@ -1877,17 +1877,16 @@ export default function StructureBDDPage() {
                 variant="outline"
                 size="sm"
                 onClick={async () => {
-                  if (window.confirm("Vider complètement la vectorielle ?")) {
-                    await clientEngine.clearVectorTree();
+                  if (window.confirm("Supprimer tous les fichiers vectorisés tout en conservant l'arborescence miroir ?")) {
                     await clientEngine.clearAllVectorDocuments();
                     await loadTrees();
-                    toast.success("Vectorielle vidée");
+                    toast.success("Fichiers vectoriels supprimés, arborescence miroir conservée");
                   }
                 }}
                 className="w-full"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Vider la vectorielle
+                Vider les fichiers vectoriels
               </Button>
             </div>
           )}
