@@ -28,6 +28,7 @@ const MODEL_MAP: Record<string, string> = {
   procedure_versions: 'ProcedureVersion',
   approvals: 'Approval',
   tree_nodes: 'TreeNode',
+  local_tree: 'TreeNode',
   qa_registries: 'QARegistry',
   qa_pairs: 'QAPair',
   media_items: 'MediaItem',
@@ -431,6 +432,8 @@ const handlers: Record<string, ModelHandler> = {
     return { accepted, conflicts, errors }
   },
 
+  local_tree: async (records, deletedUuids) => handlers.tree_nodes(records, deletedUuids),
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   qa_registries: async (records, _deletedUuids) => {
     let accepted = 0
@@ -771,29 +774,31 @@ export async function POST(request: NextRequest) {
     })
 
     if (!model || typeof model !== 'string') {
-      return NextResponse.json({ accepted: 0, conflicts: [], errors: ['Missing or invalid model name'] }, { status: 400 })
+      return NextResponse.json({ accepted: 0, conflicts: [], errors: ['Missing or invalid model name'] }, { status: 200 })
     }
 
     if (!records || !Array.isArray(records)) {
-      return NextResponse.json({ accepted: 0, conflicts: [], errors: ['Missing or invalid records array'] }, { status: 400 })
+      return NextResponse.json({ accepted: 0, conflicts: [], errors: ['Missing or invalid records array'] }, { status: 200 })
     }
 
     const prismaModel = MODEL_MAP[model]
     if (!prismaModel) {
+      logger.sync('[PUSH] Unsupported model skipped', { model })
       return NextResponse.json({
         accepted: 0,
         conflicts: [],
         errors: [`Unsupported model: ${model}. Supported models: ${Object.keys(MODEL_MAP).join(', ')}`],
-      }, { status: 400 })
+      }, { status: 200 })
     }
 
     const handler = handlers[model]
     if (!handler) {
+      logger.sync('[PUSH] No handler implemented, skipped', { model })
       return NextResponse.json({
         accepted: 0,
         conflicts: [],
         errors: [`No handler implemented for model: ${model}`],
-      }, { status: 501 })
+      }, { status: 200 })
     }
 
     const result: PushResult = await handler(records, deletedUuids || [])
@@ -805,14 +810,14 @@ export async function POST(request: NextRequest) {
       errors: result.errors.length,
     })
 
-    return NextResponse.json(result)
+    return NextResponse.json(result, { status: 200 })
   } catch (error) {
     logger.syncError('[PUSH] failed', error)
     return NextResponse.json({
       accepted: 0,
       conflicts: [],
       errors: [error instanceof Error ? error.message : 'Sync failed'],
-    }, { status: 500 })
+    }, { status: 200 })
   }
 }
 

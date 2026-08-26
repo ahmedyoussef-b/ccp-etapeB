@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
-import { getLocalTree, deleteLocalTreeNode, addFolder, updateFolder, addFile } from "@/lib/db/tree";
+import { loadLocalTreeFromSQLite, loadVectorTreeFromIndexedDB, deleteLocalTreeNode, addFolder, updateFolder, addFile } from "@/lib/db/tree";
 import { clientEngine, run, simpleTokenEmbedding } from "@/lib/client-engine";
 import { toast } from "sonner";
 import { csrfFetch } from "@/lib/procedures/csrf-fetch";
@@ -362,7 +362,7 @@ export default function StructureBDDPage() {
   const [search, setSearch] = useState("");
   const [resettingWeb, setResettingWeb] = useState(false);
   const [resettingLocal, setResettingLocal] = useState(false);
-  const [clearingData, setClearingData] = useState(false);
+  const [resettingVector, setResettingVector] = useState(false);
   const [addingNode, setAddingNode] = useState<{ tree: "web" | "local"; parentId: number | string } | null>(null);
   const [newNodeName, setNewNodeName] = useState("");
   const [newNodeType, setNewNodeType] = useState<"file" | "directory">("directory");
@@ -394,18 +394,17 @@ export default function StructureBDDPage() {
     setLocalError(null);
     setVectorError(null);
 
+    const enginePromise = clientEngine.init();
+
     const webPromise = fetch("/api/tree")
       .then((res) => {
         console.log("[StructureBDD] /api/tree status", res.status);
-        if (!res.ok) {
-          if (res.status === 503) throw new Error("La base de données web est indisponible pour le moment.");
-          throw new Error("Failed to fetch web tree");
-        }
+        if (!res.ok) throw new Error("Failed to fetch web tree");
         return res.json();
       })
       .then((data) => {
-        const roots = (data as { roots: WebTreeNode[] }).roots;
-        console.log("[StructureBDD] web tree loaded", { count: roots.length });
+        const roots = (data as { roots: WebTreeNode[] }).roots || [];
+        console.log("[StructureBDD] web tree loaded from PostgreSQL", { count: roots.length });
         setWebTree(roots);
       })
       .catch((err) => {
@@ -415,12 +414,10 @@ export default function StructureBDDPage() {
         setWebTree([]);
       });
 
-    const enginePromise = clientEngine.init();
-
     const localPromise = enginePromise
-      .then(() => getLocalTree())
+      .then(() => loadLocalTreeFromSQLite())
       .then((tree) => {
-        console.log("[StructureBDD] local tree loaded", { count: tree.length });
+        console.log("[StructureBDD] local tree loaded from SQLite", { count: tree.length });
         setLocalTree(tree);
       })
       .catch((err) => {
@@ -431,8 +428,8 @@ export default function StructureBDDPage() {
       });
 
     const vectorPromise = enginePromise
-      .then(() => clientEngine.getAllVectorDocuments())
-      .then((docs) => {
+      .then(async () => {
+        const docs = await clientEngine.getAllVectorDocuments();
         const paths = new Set<string>();
         const count = docs.length;
         for (const doc of docs) {
@@ -443,24 +440,16 @@ export default function StructureBDDPage() {
         }
         setVectorizedPaths(paths);
         setVectorizedCount(count);
-        console.log("[StructureBDD] vector docs loaded", { count });
+        console.log("[StructureBDD] vector docs loaded from IndexedDB", { count });
         setVectorDocs(docs.map((d) => ({ id: d.id, name: d.name, chunks: d.chunks })));
-        return docs;
-      })
-      .then(() => fetch("/api/registry/tree"))
-      .then((res) => {
-        console.log("[StructureBDD] /api/registry/tree status", res.status);
-        if (!res.ok) throw new Error("Failed to fetch registry tree");
-        return res.json();
-      })
-      .then((data) => {
-        const roots = (data as { roots: LocalNode[] }).roots;
-        console.log("[StructureBDD] registry tree loaded", { count: roots.length });
-        setVectorTree(roots);
+
+        const tree = await loadVectorTreeFromIndexedDB();
+        console.log("[StructureBDD] vector tree loaded from IndexedDB", { count: tree.length, docCount: count });
+        setVectorTree(tree);
       })
       .catch((err) => {
         const msg = err instanceof Error ? err.message : "Unknown error";
-        console.error("[StructureBDD] registry tree error", msg);
+        console.error("[StructureBDD] vector tree error", msg);
         setVectorError(msg);
         setVectorTree([]);
       });
@@ -591,47 +580,24 @@ export default function StructureBDDPage() {
 
   const handleResetLocal = async () => {
     const confirmed = window.confirm(
-      "Remise à zéro de la BDD Locale : l'arborescence locale sera réinitialisée à l'état initial. Continuer ?"
+      "Vider l'arborescence locale : toutes les données locales de l'arborescence seront supprimées. Continuer ?"
     );
     if (!confirmed) return;
-    console.log("[StructureBDD] reset local start");
+    console.log("[StructureBDD] clear local tree start");
 
     setResettingLocal(true);
     try {
       await clientEngine.resetLocalTreeOnly();
-      console.log("[StructureBDD] reset local done");
+      console.log("[StructureBDD] clear local tree done");
       await loadTrees();
-      toast.success("BDD Locale remise à zéro avec succès");
+      toast.success("Arborescence locale vidée avec succès");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Reset failed";
       console.error("[StructureBDD] reset local error", msg);
       setLocalError(msg);
-      toast.error("Erreur lors de la remise à zéro de la BDD Locale");
+      toast.error("Erreur lors du vidage de l'arborescence locale");
     } finally {
       setResettingLocal(false);
-    }
-  };
-
-  const handleClearData = async () => {
-    const confirmed = window.confirm(
-      "Supprimer le contenu de .data ? Cette action est irréversible."
-    );
-    if (!confirmed) return;
-    console.log("[StructureBDD] clear data start");
-
-    setClearingData(true);
-    try {
-      await clientEngine.resetLocalTreeOnly();
-      console.log("[StructureBDD] clear data done");
-      await loadTrees();
-      toast.success("Contenu de .data supprimé");
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Clear failed";
-      console.error("[StructureBDD] clear data error", msg);
-      setLocalError(msg);
-      toast.error("Erreur lors de la suppression de .data");
-    } finally {
-      setClearingData(false);
     }
   };
 
@@ -669,7 +635,7 @@ export default function StructureBDDPage() {
      console.log("[StructureBDD] reset mirror start");
      setSyncing(true);
      try {
-       const result = await syncManager.syncTable('tree_nodes');
+       const result = await syncManager.resetAndPullTable('tree_nodes');
        console.log("[StructureBDD] reset mirror result", result);
        if (result.errors.length === 0) {
          toast.success(`Miroir réinitialisé (${result.pulled} enregistrements)`);
@@ -687,31 +653,28 @@ export default function StructureBDDPage() {
      }
    };
 
-   const handleSyncVectorMirror = async () => {
-     const confirmed = window.confirm(
-       "Synchroniser le miroir vectoriel ? Cette opération créera les répertoires manquants dans la BDD vectorielle pour correspondre à la BDD locale."
-     );
-     if (!confirmed) return;
-     console.log("[StructureBDD] sync vector mirror start");
-     setSyncingVectorMirror(true);
-     try {
-       const result = await syncManager.syncTable('vector_tree');
-       console.log("[StructureBDD] sync vector mirror result", result);
-       if (result.errors.length === 0) {
-         toast.success(`Miroir vectoriel synchronisé (${result.pulled} enregistrements)`);
-       } else {
-         toast.error(`Erreurs: ${result.errors.join(", ")}`);
-       }
-       await loadTrees();
-     } catch (err) {
-       const msg = err instanceof Error ? err.message : "Sync vector mirror failed";
-       console.error("[StructureBDD] sync vector mirror error", msg);
-       setVectorError(msg);
-       toast.error("Erreur lors de la synchronisation du miroir vectoriel");
-     } finally {
-       setSyncingVectorMirror(false);
-     }
-   };
+  const handleResetVector = async () => {
+    const confirmed = window.confirm(
+      "Vider la BDD vectorielle (IndexedDB) ? Tous les documents, chunks et nœuds de l'arborescence vectorielle seront supprimés."
+    );
+    if (!confirmed) return;
+    console.log("[StructureBDD] clear vector store start");
+
+    setResettingVector(true);
+    try {
+      await clientEngine.clearAllVectorDocuments();
+      console.log("[StructureBDD] clear vector store done");
+      await loadTrees();
+      toast.success("BDD vectorielle (IndexedDB) vidée avec succès");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Reset vector failed";
+      console.error("[StructureBDD] reset vector error", msg);
+      setVectorError(msg);
+      toast.error("Erreur lors du vidage de la BDD vectorielle");
+    } finally {
+      setResettingVector(false);
+    }
+  };
 
   const removeNodeById = useCallback((nodes: LocalNode[] | WebTreeNode[] | ImageNode[], id: string | number): (LocalNode[] | WebTreeNode[] | ImageNode[]) => {
     return nodes
@@ -1344,6 +1307,53 @@ export default function StructureBDDPage() {
     }
   }, [loadTrees, vectorizeLocalFileInternal]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const handleSyncVectorMirror = async () => {
+    const confirmed = window.confirm(
+      "Synchroniser le miroir vectoriel ? Cette opération va analyser l'arborescence locale et vectoriser tous les fichiers dans la base IndexedDB."
+    );
+    if (!confirmed) return;
+    console.log("[StructureBDD] sync vector mirror start");
+    setSyncingVectorMirror(true);
+    try {
+      let count = 0;
+      const vectorizeRecursive = async (nodes: LocalNode[], currentPath = "") => {
+        for (const node of nodes) {
+          const nodePath = currentPath ? `${currentPath}/${node.name}` : node.name;
+          if (node.type === "file" && node.content) {
+            await vectorizeLocalFileInternal(node, nodePath);
+            count++;
+          } else if (node.type === "folder" || (node.children && node.children.length > 0)) {
+            const treeNodeId = `vf-${nodePath}`;
+            await clientEngine.addVectorTreeNode({
+              id: treeNodeId,
+              name: node.name,
+              type: "folder",
+              parentId: currentPath ? `vf-${currentPath}` : null,
+              order: node.order || 0,
+              relativePath: nodePath,
+              content: null,
+              docId: null,
+            });
+            if (node.children && node.children.length > 0) {
+              await vectorizeRecursive(node.children as LocalNode[], nodePath);
+            }
+          }
+        }
+      };
+
+      await vectorizeRecursive(localTree);
+      await loadTrees();
+      toast.success(`Miroir vectoriel synchronisé (${count} fichiers vectorisés dans IndexedDB)`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Sync vector mirror failed";
+      console.error("[StructureBDD] sync vector mirror error", msg);
+      setVectorError(msg);
+      toast.error("Erreur lors de la synchronisation du miroir vectoriel");
+    } finally {
+      setSyncingVectorMirror(false);
+    }
+  };
+
   const handleDeleteVectorNode = useCallback(async (node: WebTreeNode | LocalNode) => {
     const localNode = node as LocalNode;
     const confirmed = window.confirm(`Supprimer "${localNode.name}" du vecteur ?`);
@@ -1557,36 +1567,28 @@ export default function StructureBDDPage() {
                 </Button>
               )}
               {activeView === "local" && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleResetLocal}
-                    disabled={resettingLocal}
-                    title="Remettre à zéro"
-                  >
-                    <RotateCcw className={`h-4 w-4 ${resettingLocal ? "animate-spin" : ""}`} />
-                  </Button>
-                   <Button
-                     variant="ghost"
-                     size="icon"
-                     onClick={handleClearData}
-                     disabled={clearingData}
-                     title="Supprimer (.data)"
-                     className="text-red-500 hover:text-red-600"
-                   >
-                     <Trash2 className={`h-4 w-4 ${clearingData ? "animate-spin" : ""}`} />
-                   </Button>
-                   <Button
-                     variant="ghost"
-                     size="icon"
-                     onClick={handleResetMirror}
-                     disabled={syncing}
-                     title="Réinitialiser le miroir"
-                   >
-                     <ArrowRightLeft className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-                   </Button>
-                 </>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleResetLocal}
+                  disabled={resettingLocal}
+                  title="Vider l'arborescence locale"
+                  className="text-red-500 hover:text-red-600"
+                >
+                  <Trash2 className={`h-4 w-4 ${resettingLocal ? "animate-spin" : ""}`} />
+                </Button>
+              )}
+              {activeView === "vector" && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleResetVector}
+                  disabled={resettingVector}
+                  title="Vider la BDD vectorielle (IndexedDB)"
+                  className="text-red-500 hover:text-red-600"
+                >
+                  <Trash2 className={`h-4 w-4 ${resettingVector ? "animate-spin" : ""}`} />
+                </Button>
               )}
             </div>
           </div>
@@ -1597,7 +1599,7 @@ export default function StructureBDDPage() {
               </p>
             ) : activeTree.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">
-                Aucune donnée.
+                Aucune donnée vectorisée dans IndexedDB.
               </p>
             ) : (
               activeTree.map((node) => (
@@ -1693,22 +1695,17 @@ export default function StructureBDDPage() {
                 className="w-full"
               >
                 <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncingVectorMirror ? "animate-spin" : ""}`} />
-                Sync miroir BDD vectorielle
+                {syncingVectorMirror ? "Synchronisation en cours..." : "Sync miroir BDD vectorielle (depuis Local)"}
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={async () => {
-                  if (window.confirm("Supprimer tous les fichiers vectorisés tout en conservant l'arborescence miroir ?")) {
-                    await clientEngine.clearAllVectorDocuments();
-                    await loadTrees();
-                    toast.success("Fichiers vectoriels supprimés, arborescence miroir conservée");
-                  }
-                }}
-                className="w-full"
+                onClick={handleResetVector}
+                disabled={resettingVector}
+                className="w-full text-red-500 hover:text-red-600"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Vider les fichiers vectoriels
+                <Trash2 className={`h-4 w-4 mr-2 ${resettingVector ? "animate-spin" : ""}`} />
+                Vider la BDD vectorielle (IndexedDB)
               </Button>
             </div>
           )}

@@ -129,6 +129,8 @@ const modelQueries: Record<string, ModelQuery> = {
     return { records, deletedUuids: deleted.map((r) => r.uuid).filter(Boolean) }
   },
 
+  local_tree: async (since, limit, offset) => modelQueries.tree_nodes(since, limit, offset),
+
   qa_registries: async (since, limit, offset) => {
     const where = buildWhere(since, { deletedAt: null })
     const [records, deleted] = await Promise.all([

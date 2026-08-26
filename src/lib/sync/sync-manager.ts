@@ -100,6 +100,10 @@ const COLUMN_MAPPING: Record<string, Record<string, string>> = {
     remoteId: 'remote_id',
     size: 'size',
   },
+  qa_pairs: {
+    order: 'order_idx',
+    registryId: 'registry_id',
+  },
 }
 
 // ==================== LOGGER ====================
@@ -250,6 +254,10 @@ export class SyncManager {
     }
 
     try {
+      const sqliteTable = this.getTableName(tableName)
+      // Purger les lignes sans uuid (orphelins issus d'anciennes syncs non-UUID)
+      await this.purgeOrphanRows(sqliteTable)
+
       const pushResult = await this.pushTable(tableName)
       result.pushed = pushResult.pushed
       result.conflicts = pushResult.conflicts
@@ -263,6 +271,48 @@ export class SyncManager {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error)
       logger.syncError('syncTable_failed', { table: tableName, error: errorMsg })
+      result.errors.push(errorMsg)
+    }
+
+    return result
+  }
+
+  /**
+   * Réinitialise la table locale (supprime toutes les lignes) puis re-pull depuis le serveur.
+   * Utilisé par le bouton "Réinitialiser le miroir" dans l'UI.
+   */
+  async resetAndPullTable(tableName: string): Promise<SyncTableResult> {
+    logger.sync('resetAndPullTable_started', { table: tableName })
+
+    if (!this.initialized) {
+      const initialized = await this.initialize()
+      if (!initialized) {
+        return { table: tableName, pushed: 0, pulled: 0, conflicts: [], errors: ['Initialization failed'] }
+      }
+    }
+
+    const result: SyncTableResult = {
+      table: tableName,
+      pushed: 0,
+      pulled: 0,
+      conflicts: [],
+      errors: [],
+    }
+
+    try {
+      const sqliteTable = this.getTableName(tableName)
+      // Vider complètement la table locale avant le pull
+      await run(`DELETE FROM "${sqliteTable}"`)
+      logger.sync('resetAndPullTable_cleared', { table: sqliteTable })
+
+      const pullResult = await this.pullTable(tableName)
+      result.pulled = pullResult.pulled
+      result.errors.push(...pullResult.errors)
+
+      logger.sync('resetAndPullTable_completed', result)
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      logger.syncError('resetAndPullTable_failed', { table: tableName, error: errorMsg })
       result.errors.push(errorMsg)
     }
 
@@ -668,6 +718,68 @@ export class SyncManager {
     return rows.length > 0 ? rows[0] : null
   }
 
+  /**
+   * Supprime les lignes sans uuid (orphelins issus d'anciennes syncs)
+   * afin d'éviter les doublons lors du prochain pull.
+   */
+  private async purgeOrphanRows(tableName: string): Promise<void> {
+    try {
+      const result = await queryOne<{ count: number }>(
+        `SELECT COUNT(*) as count FROM "${tableName}" WHERE uuid IS NULL`
+      )
+      const orphanCount = result?.count ?? 0
+      if (orphanCount > 0) {
+        await run(`DELETE FROM "${tableName}" WHERE uuid IS NULL`)
+        logger.sync('purgeOrphanRows', { table: tableName, deleted: orphanCount })
+      }
+    } catch {
+      // Ignorer si la table n'a pas de colonne uuid
+    }
+  }
+
+  private isIgnoredRelationKey(key: string): boolean {
+    const ignored = new Set([
+      'pairs',
+      'requiredRoles',
+      'globalSafetyInstructions',
+      'tags',
+      'versions',
+      'steps',
+      'media',
+      'items',
+      'registry',
+      'procedure',
+      'approvals',
+      'executions',
+      'anomalies',
+      'completedSteps',
+      'executionSteps',
+      'executionMedia',
+      'executionAnomalies',
+      'executionCompletedSteps',
+    ])
+    return ignored.has(key)
+  }
+
+  private processValue(key: string, value: unknown): { skip: boolean; value: unknown } {
+    // Ignorer les tableaux (relations) et les objets non sérialisables
+    if (Array.isArray(value)) return { skip: true, value: null }
+
+    if (value !== null && typeof value === 'object' && !(value instanceof Date)) {
+      // Sérialiser uniquement les champs JSON connus
+      if (key === 'body' || key === 'metadata' || key === 'content') {
+        return { skip: false, value: JSON.stringify(value) }
+      }
+      return { skip: true, value: null }
+    }
+
+    if (value instanceof Date) {
+      return { skip: false, value: value.toISOString() }
+    }
+
+    return { skip: false, value }
+  }
+
   private async upsertLocalRecord(modelName: string, record: Record<string, unknown>): Promise<void> {
     const tableName = this.getTableName(modelName)
     const uuid = record.uuid as string | undefined
@@ -679,10 +791,13 @@ export class SyncManager {
       const values: unknown[] = []
 
       for (const [key, value] of Object.entries(record)) {
-        if (key === 'uuid' || key === 'id') continue
+        if (key === 'uuid' || key === 'id' || this.isIgnoredRelationKey(key)) continue
+        const { skip, value: processedValue } = this.processValue(key, value)
+        if (skip) continue
+
         const columnName = this.escapeColumn(this.mapColumnName(tableName, key))
         setClauses.push(`${columnName} = ?`)
-        values.push(value)
+        values.push(processedValue)
       }
 
       setClauses.push(`"sync_status" = 'synced'`)
@@ -692,15 +807,18 @@ export class SyncManager {
       await run(`UPDATE "${tableName}" SET ${setClauses.join(', ')} WHERE uuid = ?`, values)
     } else {
       const columns: string[] = ['"uuid"', '"sync_status"', '"created_at"', '"updated_at"']
-      const placeholders: string[] = ['?', '?', "datetime('now')", "datetime('now')"]
-      const values: unknown[] = [uuid, 'synced']
+      const placeholders: string[] = ['?', "'synced'", "datetime('now')", "datetime('now')"]
+      const values: unknown[] = [uuid]
 
       for (const [key, value] of Object.entries(record)) {
-        if (key === 'uuid' || key === 'id') continue
+        if (key === 'uuid' || key === 'id' || this.isIgnoredRelationKey(key)) continue
+        const { skip, value: processedValue } = this.processValue(key, value)
+        if (skip) continue
+
         const columnName = this.escapeColumn(this.mapColumnName(tableName, key))
         columns.push(columnName)
         placeholders.push('?')
-        values.push(value)
+        values.push(processedValue)
       }
 
       await run(

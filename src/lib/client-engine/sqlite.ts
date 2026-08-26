@@ -95,7 +95,7 @@ export async function createOtherTables(db: Database): Promise<void> {
   logger.sqlite('create other tables', { started: true });
   const tableSqls = [
     `CREATE TABLE IF NOT EXISTS approvals (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, procedure_id INTEGER REFERENCES procedures(id) ON DELETE CASCADE, approver_id TEXT NOT NULL, approver_name TEXT, approver_role TEXT, status TEXT DEFAULT 'pending', comment TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
-    `CREATE TABLE IF NOT EXISTS tree_nodes (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, name TEXT NOT NULL, type TEXT NOT NULL, metadata TEXT, parent_id INTEGER REFERENCES tree_nodes(id) ON DELETE CASCADE, order_idx INTEGER DEFAULT 0, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, UNIQUE(name, type, parent_id));`,
+    `CREATE TABLE IF NOT EXISTS local_tree (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE, remote_id TEXT, name TEXT NOT NULL, type TEXT NOT NULL, parent_id INTEGER, node_order INTEGER DEFAULT 0, path TEXT, size INTEGER DEFAULT 0, content TEXT, metadata TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS qa_registries (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, title TEXT NOT NULL, description TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS qa_pairs (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, question TEXT NOT NULL, answer TEXT NOT NULL, order_idx INTEGER DEFAULT 0, registry_id INTEGER REFERENCES qa_registries(id) ON DELETE CASCADE, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS media_items (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, title TEXT NOT NULL, category TEXT NOT NULL, description TEXT, kind TEXT NOT NULL, mime_type TEXT NOT NULL, size INTEGER NOT NULL, data_url TEXT NOT NULL, thumbnail_data_url TEXT, geolocation TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
@@ -107,7 +107,7 @@ export async function createOtherTables(db: Database): Promise<void> {
   for (const sql of tableSqls) { db.exec(sql); }
 
   const tables = [
-    'approvals', 'tree_nodes', 'qa_registries', 'qa_pairs', 'media_items', 'media_item_tags',
+    'approvals', 'local_tree', 'qa_registries', 'qa_pairs', 'media_items', 'media_item_tags',
     'sync_logs', 'iot_sensor_states', 'iot_actuator_states',
   ];
   for (const table of tables) {
@@ -117,18 +117,25 @@ export async function createOtherTables(db: Database): Promise<void> {
         await db.exec(`ALTER TABLE ${table} ADD COLUMN sync_status TEXT DEFAULT 'pending'`);
         await db.exec(`ALTER TABLE ${table} ADD COLUMN deleted_at DATETIME`);
       }
+      if (table === 'local_tree') {
+        const metaCheck = await queryOne<{ cid: number }>(`SELECT cid FROM pragma_table_info('local_tree') WHERE name = 'metadata'`);
+        if (!metaCheck) {
+          await db.exec(`ALTER TABLE local_tree ADD COLUMN metadata TEXT`);
+        }
+      }
     } catch (e) {
       logger.sqliteError('createOtherTables', { table, error: e });
     }
   }
 
   const indexSqls = [
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_local_tree_uuid ON local_tree(uuid);`,
     `CREATE INDEX IF NOT EXISTS idx_app_procedure_id ON approvals(procedure_id);`,
     `CREATE INDEX IF NOT EXISTS idx_app_status ON approvals(status);`,
     `CREATE INDEX IF NOT EXISTS idx_app_sync_deleted ON approvals(sync_status, deleted_at);`,
-    `CREATE INDEX IF NOT EXISTS idx_tn_parent_id ON tree_nodes(parent_id);`,
-    `CREATE INDEX IF NOT EXISTS idx_tn_type ON tree_nodes(type);`,
-    `CREATE INDEX IF NOT EXISTS idx_tn_sync_deleted ON tree_nodes(sync_status, deleted_at);`,
+    `CREATE INDEX IF NOT EXISTS idx_tn_parent_id ON local_tree(parent_id);`,
+    `CREATE INDEX IF NOT EXISTS idx_tn_type ON local_tree(type);`,
+    `CREATE INDEX IF NOT EXISTS idx_tn_sync_deleted ON local_tree(sync_status, deleted_at);`,
     `CREATE INDEX IF NOT EXISTS idx_qr_title ON qa_registries(title);`,
     `CREATE INDEX IF NOT EXISTS idx_qr_sync_deleted ON qa_registries(sync_status, deleted_at);`,
     `CREATE INDEX IF NOT EXISTS idx_qp_registry_id ON qa_pairs(registry_id);`,
@@ -150,6 +157,73 @@ export async function createOtherTables(db: Database): Promise<void> {
   ];
   for (const sql of indexSqls) { db.exec(sql); }
   logger.sqlite('create other tables', { completed: true });
+}
+
+export async function migrateLocalTree(db: Database): Promise<void> {
+  logger.sqlite('migrate local_tree', { started: true });
+
+  try {
+    const hasLocalTree = await queryOne<{ count: number }>(`SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='local_tree'`);
+    const hasTreeNodes = await queryOne<{ count: number }>(`SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='tree_nodes'`);
+
+    if (!hasLocalTree || hasLocalTree.count === 0) {
+      if (hasTreeNodes && hasTreeNodes.count > 0) {
+        logger.sqlite('migrate local_tree', { action: 'renaming tree_nodes to local_tree' });
+        await db.exec(`ALTER TABLE tree_nodes RENAME TO local_tree_old`);
+        await db.exec(`CREATE TABLE local_tree (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE, remote_id TEXT, name TEXT NOT NULL, type TEXT NOT NULL, parent_id INTEGER, node_order INTEGER DEFAULT 0, path TEXT, size INTEGER DEFAULT 0, content TEXT, metadata TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`);
+        await db.exec(`INSERT INTO local_tree SELECT id, uuid, NULL as remote_id, name, type, parent_id, order_idx as node_order, NULL as path, 0 as size, metadata, sync_status, deleted_at, created_at, updated_at FROM local_tree_old`);
+        await db.exec(`DROP TABLE local_tree_old`);
+      } else {
+        logger.sqlite('migrate local_tree', { action: 'creating local_tree' });
+        await db.exec(`CREATE TABLE local_tree (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE, remote_id TEXT, name TEXT NOT NULL, type TEXT NOT NULL, parent_id INTEGER, node_order INTEGER DEFAULT 0, path TEXT, size INTEGER DEFAULT 0, content TEXT, metadata TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)`);
+      }
+    }
+
+    const columnsToAdd: Array<{ column: string; definition: string }> = [
+      { column: 'uuid', definition: `uuid TEXT` },
+      { column: 'remote_id', definition: `remote_id TEXT` },
+      { column: 'path', definition: `path TEXT` },
+      { column: 'size', definition: `size INTEGER DEFAULT 0` },
+      { column: 'content', definition: `content TEXT` },
+      { column: 'metadata', definition: `metadata TEXT` },
+      { column: 'node_order', definition: `node_order INTEGER DEFAULT 0` },
+      { column: 'sync_status', definition: `sync_status TEXT DEFAULT 'pending'` },
+      { column: 'deleted_at', definition: `deleted_at DATETIME` },
+      { column: 'created_at', definition: `created_at DATETIME DEFAULT CURRENT_TIMESTAMP` },
+      { column: 'updated_at', definition: `updated_at DATETIME DEFAULT CURRENT_TIMESTAMP` },
+    ];
+
+    for (const col of columnsToAdd) {
+      try {
+        const colCheck = await queryOne<{ cid: number }>(`SELECT cid FROM pragma_table_info('local_tree') WHERE name = '${col.column}'`);
+        if (!colCheck) {
+          await db.exec(`ALTER TABLE local_tree ADD COLUMN ${col.definition}`);
+          logger.sqlite('migrate local_tree', { addedColumn: col.column });
+        }
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        logger.sqliteError('migrate local_tree', { column: col.column, error: message });
+      }
+    }
+
+    const indexSqls = [
+      `CREATE INDEX IF NOT EXISTS idx_lt_parent_id ON local_tree(parent_id);`,
+      `CREATE INDEX IF NOT EXISTS idx_lt_type ON local_tree(type);`,
+      `CREATE INDEX IF NOT EXISTS idx_lt_sync_deleted ON local_tree(sync_status, deleted_at);`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_lt_uuid ON local_tree(uuid);`,
+    ];
+    for (const sql of indexSqls) {
+      try { db.exec(sql); } catch { /* ignore */ }
+    }
+
+    logger.sqlite('migrate local_tree', { completed: true });
+
+    const schemaRows = await query<Record<string, unknown>>(`PRAGMA table_info('local_tree')`);
+    logger.sqlite('migrate local_tree', { schema: schemaRows });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    logger.sqliteError('migrate local_tree', message);
+  }
 }
 
 export async function createExecutionTables(db: Database): Promise<void> {
@@ -212,6 +286,7 @@ export async function initSQLite(): Promise<Database> {
     await createProcedureTables(db);
     await createExecutionTables(db);
     await createOtherTables(db);
+    await migrateLocalTree(db);
     await _migrate(db);
     logger.sqlite('initialized', { storage: storageUsed, persist: SQLITE_CONFIG.persist, filename: SQLITE_CONFIG.filename });
     return db;
@@ -224,7 +299,7 @@ async function _migrate(db: Database): Promise<void> {
   await db.exec(`CREATE TABLE IF NOT EXISTS _schema_version (version INTEGER PRIMARY KEY)`);
   const currentVersion = await queryOne<{ version: number }>(`SELECT version FROM _schema_version LIMIT 1`);
   const version = currentVersion?.version ?? 0;
-  if (version >= 3) return;
+  if (version >= 4) return;
 
   const addColumnIfExists = async (table: string, column: string, definition: string): Promise<void> => {
     const colCheck = await queryOne<{ cid: number }>(
@@ -238,7 +313,7 @@ async function _migrate(db: Database): Promise<void> {
   if (version < 1) {
     const tables = [
       'procedures', 'procedure_required_roles', 'procedure_safety_instructions', 'procedure_tags', 'procedure_versions',
-      'approvals', 'tree_nodes', 'qa_registries', 'qa_pairs', 'media_items', 'media_item_tags',
+      'approvals', 'local_tree', 'qa_registries', 'qa_pairs', 'media_items', 'media_item_tags',
       'iot_sensor_states', 'iot_actuator_states',
       'procedure_executions', 'execution_steps', 'execution_media', 'execution_completed_steps', 'execution_anomalies',
     ];
@@ -260,7 +335,46 @@ async function _migrate(db: Database): Promise<void> {
     await db.exec(`INSERT OR REPLACE INTO _schema_version (version) VALUES (3)`);
   }
 
-  logger.sqlite('migration', { fromVersion: version, toVersion: 3 });
+  if (version < 4) {
+    // Recréer local_tree avec uuid TEXT UNIQUE pour supporter les contraintes et index
+    try {
+      await db.exec(`CREATE TABLE IF NOT EXISTS local_tree_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        uuid TEXT UNIQUE,
+        remote_id TEXT,
+        name TEXT NOT NULL,
+        type TEXT NOT NULL,
+        parent_id INTEGER,
+        node_order INTEGER DEFAULT 0,
+        path TEXT,
+        size INTEGER DEFAULT 0,
+        content TEXT,
+        metadata TEXT,
+        sync_status TEXT DEFAULT 'pending',
+        deleted_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+
+      await db.exec(`
+        INSERT OR IGNORE INTO local_tree_new
+          (uuid, remote_id, name, type, parent_id, node_order, path, size, content, sync_status, deleted_at, created_at, updated_at)
+        SELECT uuid, remote_id, name, type, parent_id, node_order, path, size, content, sync_status, deleted_at, created_at, updated_at
+        FROM local_tree
+        WHERE uuid IS NOT NULL
+      `);
+
+      await db.exec(`DROP TABLE IF EXISTS local_tree`);
+      await db.exec(`ALTER TABLE local_tree_new RENAME TO local_tree`);
+      await db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_local_tree_uuid ON local_tree(uuid);`);
+      logger.sqlite('migration v4', { table: 'local_tree', action: 'uuid UNIQUE added, orphan rows purged' });
+    } catch (e) {
+      logger.sqliteError('migration v4 local_tree', e);
+    }
+    await db.exec(`INSERT OR REPLACE INTO _schema_version (version) VALUES (4)`);
+  }
+
+  logger.sqlite('migration', { fromVersion: version, toVersion: 4 });
 }
 
 export const initSqlite = initSQLite;
@@ -306,9 +420,11 @@ export async function resetSQLiteDatabase(): Promise<void> {
       try {
         const databases = await indexedDB.databases();
         for (const dbInfo of databases) {
-          if (dbInfo.name && dbInfo.name.includes('nexaflow')) {
-            indexedDB.deleteDatabase(dbInfo.name);
-            logger.sqlite('reset database', { indexeddbDeleted: dbInfo.name });
+          const name = dbInfo.name;
+          if (!name) continue;
+          if (name.includes('nexaflow') || name === 'local') {
+            indexedDB.deleteDatabase(name);
+            logger.sqlite('reset database', { indexeddbDeleted: name });
           }
         }
       } catch {
@@ -500,5 +616,4 @@ if (typeof window !== 'undefined') {
   };
   (window as unknown as Record<string, unknown>).initSQLite = initSQLite;
   console.log('[DB:SQLITE] [GLOBAL] window.resetSQLite() and window.initSQLite() are now available');
-
 }

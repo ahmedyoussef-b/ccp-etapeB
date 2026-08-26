@@ -546,6 +546,7 @@ export class ClientEngine {
 
   async clearAllVectorDocuments(): Promise<void> {
     await clearVectorStore();
+    await clearVectorTree();
   }
 
   async getStats(): Promise<{ pairs: number; sessions: number; documents: number; chunks: number }> {
