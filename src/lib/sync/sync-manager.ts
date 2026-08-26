@@ -622,24 +622,24 @@ export class SyncManager {
 
       for (const [key, value] of Object.entries(record)) {
         if (key === 'uuid' || key === 'id') continue
-        const columnName = this.camelToSnake(key)
+        const columnName = this.escapeColumn(this.mapColumnName(tableName, key))
         setClauses.push(`${columnName} = ?`)
         values.push(value)
       }
 
-      setClauses.push(`sync_status = 'synced'`)
-      setClauses.push(`updated_at = datetime('now')`)
+      setClauses.push(`"sync_status" = 'synced'`)
+      setClauses.push(`"updated_at" = datetime('now')`)
       values.push(uuid)
 
       await run(`UPDATE ${tableName} SET ${setClauses.join(', ')} WHERE uuid = ?`, values)
     } else {
-      const columns: string[] = ['uuid', 'sync_status', 'created_at', 'updated_at']
-      const placeholders: string[] = ['?', '?', 'datetime(\'now\')', 'datetime(\'now\')']
+      const columns: string[] = ['"uuid"', '"sync_status"', '"created_at"', '"updated_at"']
+      const placeholders: string[] = ['?', '?', "datetime('now')", "datetime('now')"]
       const values: unknown[] = [uuid, 'synced']
 
       for (const [key, value] of Object.entries(record)) {
         if (key === 'uuid' || key === 'id') continue
-        const columnName = this.camelToSnake(key)
+        const columnName = this.escapeColumn(this.mapColumnName(tableName, key))
         columns.push(columnName)
         placeholders.push('?')
         values.push(value)
@@ -650,6 +650,17 @@ export class SyncManager {
         values
       )
     }
+  }
+
+  private mapColumnName(tableName: string, key: string): string {
+    if ((tableName === 'local_tree' || tableName === 'tree_nodes') && key === 'order') {
+      return 'node_order'
+    }
+    return this.camelToSnake(key)
+  }
+
+  private escapeColumn(name: string): string {
+    return `"${name.replace(/"/g, '""')}"`
   }
 
   private camelToSnake(camel: string): string {
