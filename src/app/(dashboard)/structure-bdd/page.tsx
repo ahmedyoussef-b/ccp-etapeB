@@ -374,6 +374,7 @@ export default function StructureBDDPage() {
   const [previewData, setPreviewData] = useState<{ content?: string; dataUrl?: string; mimeType: string; name: string; size: number; isText: boolean } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [syncingVectorMirror, setSyncingVectorMirror] = useState(false);
   const [activeView, setActiveView] = useState<"web" | "local" | "vector" | "images">("web");
   const [showOnlyVectorized, setShowOnlyVectorized] = useState(false);
   const [vectorizedPaths, setVectorizedPaths] = useState<Set<string>>(new Set());
@@ -802,6 +803,91 @@ export default function StructureBDDPage() {
       toast.error("Erreur lors de la réinitialisation du miroir");
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleSyncVectorMirror = async () => {
+    const confirmed = window.confirm(
+      "Synchroniser le miroir vectoriel ? Cette opération créera les répertoires manquants dans la BDD vectorielle pour correspondre à la BDD locale."
+    );
+    if (!confirmed) return;
+    console.log("[StructureBDD] sync vector mirror start");
+
+    setSyncingVectorMirror(true);
+    try {
+      await initSqlite();
+      const localTree = await getLocalTree();
+
+      const existingVectorNodes = await clientEngine.getAllVectorTreeNodes();
+      const existingVectorFolderPaths = new Set(
+        existingVectorNodes
+          .filter((n) => n.type === "folder")
+          .map((n) => n.relativePath)
+          .filter((p): p is string => Boolean(p))
+      );
+
+      const foldersToAdd: { path: string; name: string; parentPath: string | null; order: number }[] = [];
+
+      const traverse = (nodes: LocalNode[], parentPath = "") => {
+        for (const node of nodes) {
+          if (node.type === "folder") {
+            const currentPath = parentPath ? `${parentPath}/${node.name}` : node.name;
+            if (!existingVectorFolderPaths.has(currentPath)) {
+              foldersToAdd.push({
+                path: currentPath,
+                name: node.name,
+                parentPath: parentPath || null,
+                order: node.order ?? 0,
+              });
+            }
+            if (node.children && node.children.length > 0) {
+              traverse(node.children, currentPath);
+            }
+          }
+        }
+      };
+
+      traverse(localTree);
+
+      foldersToAdd.sort((a, b) => {
+        const depthA = a.path.split("/").length;
+        const depthB = b.path.split("/").length;
+        return depthA - depthB;
+      });
+
+      for (const folder of foldersToAdd) {
+        const parentId = folder.parentPath ? `vf-${folder.parentPath}` : null;
+        await clientEngine.addVectorTreeNode({
+          id: `vf-${folder.path}`,
+          name: folder.name,
+          type: "folder",
+          parentId,
+          order: folder.order,
+          relativePath: folder.path,
+          content: null,
+          docId: null,
+        });
+      }
+
+      if (foldersToAdd.length > 0) {
+        const paths = foldersToAdd.map((f) => f.path);
+        await fetch("/api/registry/sync-mirror", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ directories: paths }),
+        });
+      }
+
+      console.log("[StructureBDD] sync vector mirror done", { count: foldersToAdd.length });
+      await loadTrees();
+      toast.success(`Miroir vectoriel synchronisé (${foldersToAdd.length} répertoires ajoutés)`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Sync vector mirror failed";
+      console.error("[StructureBDD] sync vector mirror error", msg);
+      setVectorError(msg);
+      toast.error("Erreur lors de la synchronisation du miroir vectoriel");
+    } finally {
+      setSyncingVectorMirror(false);
     }
   };
 
@@ -1776,7 +1862,17 @@ export default function StructureBDDPage() {
           </div>
 
           {activeView === "vector" && (
-            <div className="p-3 border-t border-border">
+            <div className="p-3 border-t border-border flex flex-col gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleSyncVectorMirror}
+                disabled={syncingVectorMirror}
+                className="w-full"
+              >
+                <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncingVectorMirror ? "animate-spin" : ""}`} />
+                Sync miroir BDD vectorielle
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
