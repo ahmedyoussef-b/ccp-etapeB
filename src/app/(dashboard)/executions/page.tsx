@@ -506,28 +506,28 @@ export default function ExecutionsPage() {
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => openDetail(exec)}
-                            title="Voir le détail"
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => handleExport(exec)}
-                            title="Exporter JSON"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
+                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                         <div className="flex items-center gap-1">
+                           <Button
+                             variant="ghost"
+                             size="icon"
+                             className="h-9 w-9"
+                             onClick={() => openDetail(exec)}
+                             title="Voir le détail"
+                           >
+                             <ChevronRight className="h-4 w-4" />
+                           </Button>
+                           <Button
+                             variant="ghost"
+                             size="icon"
+                             className="h-9 w-9"
+                             onClick={() => handleExport(exec)}
+                             title="Exporter JSON"
+                           >
+                             <Download className="h-4 w-4" />
+                           </Button>
+                         </div>
+                       </td>
                     </tr>
                   );
                 })}

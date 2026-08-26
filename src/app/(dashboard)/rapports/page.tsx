@@ -365,9 +365,9 @@ export default function RapportsPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => removePoint(index)}
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive"
                       >
-                        <X className="h-3.5 w-3.5" />
+                        <X className="h-4 w-4" />
                       </Button>
                     )}
                   </div>

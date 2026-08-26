@@ -942,6 +942,13 @@
   }
 }
 
+/* Images page: always show card actions on touch devices */
+@media (hover: none) {
+  .group-hover\:opacity-100 {
+    opacity: 1 !important;
+  }
+}
+
 /* Empty State */
 .q-r-empty {
   display: flex;

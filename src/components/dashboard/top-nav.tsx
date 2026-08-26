@@ -73,12 +73,12 @@ export function DashboardTopNav({ onToggleMobile }: { onToggleMobile?: () => voi
       <div className="flex items-center gap-1 sm:gap-2">
         <SyncStatusIndicator />
         <SyncButton />
-        <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+        <Button variant="ghost" size="icon-lg" className="rounded-xl hover:bg-muted" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
           {theme === "light" ? <Moon className="h-5 w-5 text-foreground/70" /> : <Sun className="h-5 w-5 text-foreground/70" />}
           <span className="sr-only">Toggle theme</span>
         </Button>
 
-        <Button variant="ghost" size="icon" className="relative rounded-xl hover:bg-muted">
+        <Button variant="ghost" size="icon-lg" className="relative rounded-xl hover:bg-muted">
           <Bell className="h-5 w-5 text-foreground/70" />
           <Badge className="absolute -top-0.5 -right-0.5 h-4 w-4 min-w-4 justify-center rounded-full bg-primary p-0 text-[10px] text-primary-foreground">
             3
@@ -86,14 +86,14 @@ export function DashboardTopNav({ onToggleMobile }: { onToggleMobile?: () => voi
           <span className="sr-only">Notifications</span>
         </Button>
 
-        <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted" onClick={() => router.push("/profile")}>
+        <Button variant="ghost" size="icon-lg" className="rounded-xl hover:bg-muted" onClick={() => router.push("/profile")}>
           <User className="h-5 w-5 text-foreground/70" />
           <span className="sr-only">Profile</span>
         </Button>
 
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-lg"
           className="rounded-xl hover:bg-muted"
           onClick={() => signOut({ callbackUrl: "/login" })}
         >

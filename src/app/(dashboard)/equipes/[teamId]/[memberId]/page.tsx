@@ -366,14 +366,14 @@ export default function MembreDetailPage() {
                 <Badge variant="secondary" className="text-[8px] h-4 px-1.5">8j</Badge>
               </div>
               <div className="flex items-center gap-0.5 bg-muted/50 rounded-sm p-px">
-                <Button variant="ghost" size="icon" className="h-5 w-5" onClick={prevMonth}>
-                  <ChevronLeft className="h-3 w-3" />
+                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={prevMonth}>
+                  <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <span className="text-[11px] font-semibold text-foreground w-24 text-center">
                   {MONTHS[currentMonth]} {currentYear}
                 </span>
-                <Button variant="ghost" size="icon" className="h-5 w-5" onClick={nextMonth}>
-                  <ChevronRight className="h-3 w-3" />
+                <Button variant="ghost" size="icon" className="h-9 w-9" onClick={nextMonth}>
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>

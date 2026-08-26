@@ -1031,12 +1031,12 @@ export default function ImagesPage() {
                       {item.title}
                     </h3>
                     <div className="mt-1.5 flex items-center justify-between gap-1">
-                      <Badge
-                        variant="secondary"
-                        className={`text-[10px] px-1.5 py-0 border truncate max-w-[90px] ${
-                          CATEGORY_COLORS[item.category] || "bg-muted text-muted-foreground"
-                        }`}
-                      >
+                     <Badge
+                       variant="secondary"
+                       className={`text-[10px] px-1.5 py-0 border truncate max-w-[100px] sm:max-w-none ${
+                           CATEGORY_COLORS[item.category] || "bg-muted text-muted-foreground"
+                         }`}
+                     >
                         {item.category}
                       </Badge>
                       <span className="text-[10px] text-muted-foreground">

@@ -504,7 +504,7 @@ export default function DevicesPage() {
                         </div>
                       )}
                       <Separator />
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Button variant="outline" size="sm" onClick={() => handleTestConnection(device)} disabled={testingId === device.id || !device.ipAddress} className="flex-1 text-xs gap-1.5">
                           {testingId === device.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Wifi className="h-3 w-3" />}
                           Tester
@@ -524,16 +524,16 @@ export default function DevicesPage() {
                             </Button>
                           </>
                         )}
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(device.id)} className="text-destructive h-8 w-8">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                         <Button variant="ghost" size="icon" onClick={() => handleDelete(device.id)} className="text-destructive h-9 w-9">
+                           <Trash2 className="h-4 w-4" />
+                         </Button>
                       </div>
                       {selectedCameraId === device.id && edgeActive && edgeResults.length > 0 && (
                         <div className="mt-3 space-y-2">
                           <p className="text-[10px] text-muted-foreground">Analyses récentes :</p>
                           {edgeResults.slice(0, 5).map((result, idx) => (
                             <div key={idx} className={`flex items-center justify-between rounded-lg border p-2 text-[10px] ${result.hasAnomaly ? "border-red-500/30 bg-red-500/5" : "border-border/50 bg-background/50"}`}>
-                              <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-medium">{result.labels.join(", ")}</span>
                                 {result.hasAnomaly && <Badge variant="destructive" className="text-[8px]">ANOMALIE</Badge>}
                               </div>

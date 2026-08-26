@@ -26,6 +26,7 @@ import {
   Wifi,
   WifiOff,
   Mail,
+  X,
 } from "lucide-react";
 import { getClientUser } from "@/lib/procedures/client-auth";
 
@@ -547,11 +548,7 @@ export default function VideoConferencePage() {
         <div className="flex-1 flex flex-col">
           <div className="flex-1 bg-black/5 dark:bg-white/5 p-4">
             <div
-              className="grid h-full gap-3"
-              style={{
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gridTemplateRows: "repeat(2, 1fr)",
-              }}
+              className="grid h-full gap-3 grid-cols-1 sm:grid-cols-2 auto-rows-fr"
             >
               <Card className="relative overflow-hidden bg-muted/50 flex items-center justify-center">
                 <video
@@ -620,7 +617,7 @@ export default function VideoConferencePage() {
                 </Badge>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
                 <Button
                   variant={isMuted ? "destructive" : "secondary"}
                   size="icon"
@@ -719,9 +716,12 @@ export default function VideoConferencePage() {
         </div>
 
         {showChat && (
-          <div className="w-80 border-l border-border bg-background flex flex-col">
-            <div className="border-b border-border px-4 py-3">
+          <div className="fixed inset-0 z-50 w-full sm:relative sm:inset-auto sm:w-80 sm:z-auto border-l border-border bg-background flex flex-col">
+            <div className="border-b border-border px-4 py-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-foreground">Chat de la réunion</h3>
+              <Button variant="ghost" size="icon" className="h-7 w-7 sm:hidden" onClick={() => setShowChat(false)}>
+                <X className="h-4 w-4" />
+              </Button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -758,14 +758,19 @@ export default function VideoConferencePage() {
         )}
 
         {showParticipants && (
-          <div className="w-72 border-l border-border bg-background flex flex-col">
+          <div className="fixed inset-0 z-50 w-full sm:relative sm:inset-auto sm:w-72 sm:z-auto border-l border-border bg-background flex flex-col">
             <div className="border-b border-border px-4 py-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-foreground">
                 Participants ({participants.length})
               </h3>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-7 w-7 sm:hidden" onClick={() => setShowParticipants(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-1">
@@ -829,18 +834,23 @@ export default function VideoConferencePage() {
         )}
 
         {showInvitePanel && (
-          <div className="w-80 border-l border-border bg-background flex flex-col">
+          <div className="fixed inset-0 z-50 w-full sm:relative sm:inset-auto sm:w-80 sm:z-auto border-l border-border bg-background flex flex-col">
             <div className="border-b border-border px-4 py-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-foreground">Utilisateurs en ligne</h3>
-              <div className="flex items-center gap-1 text-xs text-emerald-600">
-                {isLoadingPresence ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <>
-                    <Wifi className="h-3.5 w-3.5" />
-                    <span>{onlineUsers.length} en ligne</span>
-                  </>
-                )}
+              <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 text-xs text-emerald-600">
+                  {isLoadingPresence ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <>
+                      <Wifi className="h-3.5 w-3.5" />
+                      <span>{onlineUsers.length} en ligne</span>
+                    </>
+                  )}
+                </div>
+                <Button variant="ghost" size="icon" className="h-7 w-7 sm:hidden" onClick={() => setShowInvitePanel(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
