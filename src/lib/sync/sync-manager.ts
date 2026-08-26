@@ -57,7 +57,7 @@ const SYNCABLE_TABLES = [
   'procedure_tags',
   'procedure_versions',
   'approvals',
-  'tree_nodes',
+  'local_tree',
   'qa_registries',
   'qa_pairs',
   'media_items',
@@ -65,6 +65,42 @@ const SYNCABLE_TABLES = [
   'iot_sensor_states',
   'iot_actuator_states',
 ]
+
+const POSTGRES_TO_SQLITE_TABLE: Record<string, string> = {
+  procedures: 'procedures',
+  procedure_required_roles: 'procedure_required_roles',
+  procedure_safety_instructions: 'procedure_safety_instructions',
+  procedure_tags: 'procedure_tags',
+  procedure_versions: 'procedure_versions',
+  approvals: 'approvals',
+  tree_nodes: 'local_tree',
+  qa_registries: 'qa_registries',
+  qa_pairs: 'qa_pairs',
+  media_items: 'media_items',
+  media_item_tags: 'media_item_tags',
+  iot_sensor_states: 'iot_sensor_states',
+  iot_actuator_states: 'iot_actuator_states',
+}
+
+const COLUMN_MAPPING: Record<string, Record<string, string>> = {
+  local_tree: {
+    id: 'id',
+    uuid: 'uuid',
+    name: 'name',
+    type: 'type',
+    parentId: 'parent_id',
+    order: 'node_order',
+    path: 'path',
+    content: 'content',
+    metadata: 'metadata',
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+    syncStatus: 'sync_status',
+    deletedAt: 'deleted_at',
+    remoteId: 'remote_id',
+    size: 'size',
+  },
+}
 
 // ==================== LOGGER ====================
 const logger = {
@@ -357,13 +393,14 @@ export class SyncManager {
   private async pushTable(tableName: string): Promise<{ pushed: number; conflicts: string[]; errors: string[] }> {
     const result: { pushed: number; conflicts: string[]; errors: string[] } = { pushed: 0, conflicts: [], errors: [] }
     const db = getDb()
+    const sqliteTable = this.getTableName(tableName)
 
     if (!db) {
       return { ...result, errors: ['Database not available'] }
     }
 
     try {
-      const pendingRecords = await this.getPendingRecords(tableName)
+      const pendingRecords = await this.getPendingRecords(sqliteTable)
       if (pendingRecords.length === 0) {
         return result
       }
@@ -394,7 +431,7 @@ export class SyncManager {
       for (const record of pendingRecords) {
         const uuid = String(record.uuid || record.id || '')
         if (uuid && !conflicts.includes(uuid)) {
-          await this.markAsSynced(tableName, uuid)
+          await this.markAsSynced(sqliteTable, uuid)
         } else if (conflicts.includes(uuid)) {
           this.conflictResolutions.set(uuid, {
             uuid,
@@ -563,6 +600,26 @@ export class SyncManager {
 
   // ==================== HELPERS ====================
 
+  private getTableName(modelName: string): string {
+    return POSTGRES_TO_SQLITE_TABLE[modelName] || modelName
+  }
+
+  private getColumnMapping(tableName: string): Record<string, string> {
+    return COLUMN_MAPPING[tableName] || {}
+  }
+
+  private mapColumnName(tableName: string, key: string): string {
+    const mapping = this.getColumnMapping(tableName)
+    if (mapping[key]) {
+      return mapping[key]
+    }
+    return this.camelToSnake(key)
+  }
+
+  private escapeColumn(name: string): string {
+    return `"${name.replace(/"/g, '""')}"`
+  }
+
   private ensureInitialized(): boolean {
     if (!this.initialized) {
       logger.syncError('not_initialized', 'Call initialize() first')
@@ -584,34 +641,35 @@ export class SyncManager {
 
   private async getPendingRecords(tableName: string): Promise<Record<string, unknown>[]> {
     const rows = await query<Record<string, unknown>>(
-      `SELECT * FROM ${tableName} WHERE sync_status = 'pending' OR sync_status = 'conflict' OR sync_status IS NULL`
+      `SELECT * FROM "${tableName}" WHERE sync_status = 'pending' OR sync_status = 'conflict' OR sync_status IS NULL`
     )
     return rows
   }
 
   private async getPendingCount(tableName: string): Promise<number> {
     const result = await queryOne<{ count: number }>(
-      `SELECT COUNT(*) as count FROM ${tableName} WHERE sync_status = 'pending' OR sync_status = 'conflict' OR sync_status IS NULL`
+      `SELECT COUNT(*) as count FROM "${tableName}" WHERE sync_status = 'pending' OR sync_status = 'conflict' OR sync_status IS NULL`
     )
     return result?.count ?? 0
   }
 
   private async markAsSynced(tableName: string, uuid: string): Promise<void> {
     await run(
-      `UPDATE ${tableName} SET sync_status = 'synced', updated_at = datetime('now') WHERE uuid = ?`,
+      `UPDATE "${tableName}" SET sync_status = 'synced', updated_at = datetime('now') WHERE uuid = ?`,
       [uuid]
     )
   }
 
   private async findRecordByUuid(tableName: string, uuid: string): Promise<Record<string, unknown> | null> {
     const rows = await query<Record<string, unknown>>(
-      `SELECT * FROM ${tableName} WHERE uuid = ? LIMIT 1`,
+      `SELECT * FROM "${tableName}" WHERE uuid = ? LIMIT 1`,
       [uuid]
     )
     return rows.length > 0 ? rows[0] : null
   }
 
-  private async upsertLocalRecord(tableName: string, record: Record<string, unknown>): Promise<void> {
+  private async upsertLocalRecord(modelName: string, record: Record<string, unknown>): Promise<void> {
+    const tableName = this.getTableName(modelName)
     const uuid = record.uuid as string | undefined
     if (!uuid) return
 
@@ -631,7 +689,7 @@ export class SyncManager {
       setClauses.push(`"updated_at" = datetime('now')`)
       values.push(uuid)
 
-      await run(`UPDATE ${tableName} SET ${setClauses.join(', ')} WHERE uuid = ?`, values)
+      await run(`UPDATE "${tableName}" SET ${setClauses.join(', ')} WHERE uuid = ?`, values)
     } else {
       const columns: string[] = ['"uuid"', '"sync_status"', '"created_at"', '"updated_at"']
       const placeholders: string[] = ['?', '?', "datetime('now')", "datetime('now')"]
@@ -646,21 +704,10 @@ export class SyncManager {
       }
 
       await run(
-        `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders.join(', ')})`,
+        `INSERT INTO "${tableName}" (${columns.join(', ')}) VALUES (${placeholders.join(', ')})`,
         values
       )
     }
-  }
-
-  private mapColumnName(tableName: string, key: string): string {
-    if ((tableName === 'local_tree' || tableName === 'tree_nodes') && key === 'order') {
-      return 'node_order'
-    }
-    return this.camelToSnake(key)
-  }
-
-  private escapeColumn(name: string): string {
-    return `"${name.replace(/"/g, '""')}"`
   }
 
   private camelToSnake(camel: string): string {
