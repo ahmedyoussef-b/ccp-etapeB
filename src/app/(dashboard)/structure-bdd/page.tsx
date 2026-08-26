@@ -514,14 +514,20 @@ export default function StructureBDDPage() {
     }
   }, [loadTrees]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    console.log("[StructureBDD] mount");
-    loadTrees();
-  }, [loadTrees]);
+   useEffect(() => {
+     console.log("[StructureBDD] mount");
+     loadTrees();
+   }, [loadTrees]);
 
-  useEffect(() => {
-    if (!syncManager.isInitialized()) return;
-    const updateStatus = async () => {
+   useEffect(() => {
+     syncManager.initialize().then((ok) => {
+       console.log("[StructureBDD] syncManager initialized", ok);
+     });
+   }, []);
+
+   useEffect(() => {
+     if (!syncManager.isInitialized()) return;
+     const updateStatus = async () => {
       try {
         const status = await syncManager.getSyncStatus();
         setSyncStatus(status);

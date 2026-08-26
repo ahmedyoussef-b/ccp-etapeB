@@ -115,7 +115,7 @@ export class SyncManager {
       }
 
       this.initialized = true
-      logger.sync('initialize_completed', { failures })
+      logger.sync('initialized', { tables: SYNCABLE_TABLES, status: 'ready', failures })
       return failures.length === 0
     } catch (error) {
       logger.syncError('initialize_failed', error)
@@ -128,8 +128,11 @@ export class SyncManager {
   async syncAll(): Promise<SyncResult> {
     logger.sync('syncAll_started', { isOnline: this.isOnline })
 
-    if (!this.ensureInitialized()) {
-      return this.createErrorResult('Sync manager not initialized')
+    if (!this.initialized) {
+      const initialized = await this.initialize()
+      if (!initialized) {
+        return this.createErrorResult('Sync manager initialization failed')
+      }
     }
 
     if (!this.isOnline) {
@@ -195,8 +198,11 @@ export class SyncManager {
   async syncTable(tableName: string): Promise<SyncTableResult> {
     logger.sync('syncTable_started', { table: tableName })
 
-    if (!this.ensureInitialized()) {
-      return { table: tableName, pushed: 0, pulled: 0, conflicts: [], errors: ['Not initialized'] }
+    if (!this.initialized) {
+      const initialized = await this.initialize()
+      if (!initialized) {
+        return { table: tableName, pushed: 0, pulled: 0, conflicts: [], errors: ['Initialization failed'] }
+      }
     }
 
     const result: SyncTableResult = {
