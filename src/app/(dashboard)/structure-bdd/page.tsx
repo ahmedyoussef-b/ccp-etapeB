@@ -35,7 +35,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 
 import { loadLocalTreeFromSQLite, loadVectorTreeFromIndexedDB, deleteLocalTreeNode, addFolder, updateFolder, addFile } from "@/lib/db/tree";
-import { clientEngine, run, simpleTokenEmbedding } from "@/lib/client-engine";
+import { clientEngine, query, run, simpleTokenEmbedding } from "@/lib/client-engine";
 import { toast } from "sonner";
 import { csrfFetch } from "@/lib/procedures/csrf-fetch";
 import { syncManager, type SyncManagerStatus } from "@/lib/sync/sync-manager";
@@ -1309,41 +1309,80 @@ export default function StructureBDDPage() {
 
   const handleSyncVectorMirror = async () => {
     const confirmed = window.confirm(
-      "Synchroniser le miroir vectoriel ? Cette opération va analyser l'arborescence locale et vectoriser tous les fichiers dans la base IndexedDB."
+      "Synchroniser le miroir vectoriel ? Cette opération va reproduire exactement l'arborescence locale (361 nœuds) dans la BDD vectorielle IndexedDB et vectoriser les fichiers pour le RAG."
     );
     if (!confirmed) return;
     console.log("[StructureBDD] sync vector mirror start");
     setSyncingVectorMirror(true);
     try {
-      let count = 0;
-      const vectorizeRecursive = async (nodes: LocalNode[], currentPath = "") => {
-        for (const node of nodes) {
-          const nodePath = currentPath ? `${currentPath}/${node.name}` : node.name;
-          if (node.type === "file" && node.content) {
-            await vectorizeLocalFileInternal(node, nodePath);
-            count++;
-          } else if (node.type === "folder" || (node.children && node.children.length > 0)) {
-            const treeNodeId = `vf-${nodePath}`;
-            await clientEngine.addVectorTreeNode({
-              id: treeNodeId,
-              name: node.name,
-              type: "folder",
-              parentId: currentPath ? `vf-${currentPath}` : null,
-              order: node.order || 0,
-              relativePath: nodePath,
-              content: null,
-              docId: null,
-            });
-            if (node.children && node.children.length > 0) {
-              await vectorizeRecursive(node.children as LocalNode[], nodePath);
-            }
-          }
-        }
-      };
+      await clientEngine.clearVectorTree();
+      await clientEngine.clearAllVectorDocuments();
 
-      await vectorizeRecursive(localTree);
+      // Lire directement tous les nœuds de la table SQLite local_tree
+      const rows = await query<{
+        id: number;
+        uuid: string | null;
+        name: string;
+        type: string;
+        parent_id: number | null;
+        node_order: number;
+        path: string | null;
+        content: string | null;
+      }>(
+        `SELECT id, uuid, name, type, parent_id, node_order, path, content 
+         FROM local_tree 
+         WHERE deleted_at IS NULL 
+         ORDER BY parent_id, node_order`
+      );
+
+      let fileCount = 0;
+      let totalNodesSynced = 0;
+
+      for (const row of rows) {
+        const isFolder = row.type === "directory" || row.type === "folder" || row.type === "root";
+        const treeNodeId = `vnode-${row.id}`;
+        const parentId = row.parent_id !== null ? `vnode-${row.parent_id}` : null;
+        const relativePath = row.path || row.name;
+
+        let docId: string | null = null;
+        const content = row.content;
+
+        if (!isFolder && content && content.trim().length > 0) {
+          docId = `vdoc-${row.id}`;
+          const chunks = [{
+            documentId: docId,
+            documentName: row.name,
+            chunkIndex: 0,
+            content,
+            embedding: simpleTokenEmbedding(content),
+          }];
+
+          await clientEngine.addVectorDocument({
+            id: docId,
+            name: row.name,
+            originalPath: relativePath,
+            relativePath,
+            chunks,
+            metadata: { source: "sqlite", sqliteId: row.id, uuid: row.uuid },
+          });
+          fileCount++;
+        }
+
+        await clientEngine.addVectorTreeNode({
+          id: treeNodeId,
+          name: row.name,
+          type: isFolder ? "folder" : "file",
+          parentId,
+          order: row.node_order ?? 0,
+          relativePath,
+          content: isFolder ? null : content,
+          docId,
+        });
+        totalNodesSynced++;
+      }
+
       await loadTrees();
-      toast.success(`Miroir vectoriel synchronisé (${count} fichiers vectorisés dans IndexedDB)`);
+      toast.success(`Miroir vectoriel synchronisé : ${totalNodesSynced} nœuds créés (${fileCount} fichiers vectorisés)`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Sync vector mirror failed";
       console.error("[StructureBDD] sync vector mirror error", msg);

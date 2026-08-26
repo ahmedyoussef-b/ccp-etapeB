@@ -12,6 +12,7 @@ export interface LocalTreeNode {
   path: string;
   order: number;
   content?: string | null;
+  docId?: string | null;
 }
 
 interface LocalTreeSQLiteRow {
@@ -113,6 +114,7 @@ export async function loadVectorTreeFromIndexedDB(): Promise<LocalTreeNode[]> {
           path: raw.relativePath,
           order: raw.order ?? 0,
           content: raw.content ?? null,
+          docId: raw.docId ?? null,
         };
         map.set(raw.id, node);
       }
