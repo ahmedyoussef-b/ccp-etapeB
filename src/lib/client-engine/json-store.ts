@@ -9,7 +9,7 @@ const logger = {
 
 // ==================== STORE ====================
 const DB_NAME = 'nexaflow-json-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'json-store';
 
 let dbInstance: IDBDatabase | null = null;
@@ -31,7 +31,9 @@ function openDb(): Promise<IDBDatabase> {
     request.onupgradeneeded = () => {
       const database = request.result;
       if (!database.objectStoreNames.contains(STORE_NAME)) {
-        database.createObjectStore(STORE_NAME, { keyPath: 'key' });
+        const store = database.createObjectStore(STORE_NAME, { keyPath: 'key' });
+        store.createIndex('syncStatus', 'syncStatus', { unique: false });
+        store.createIndex('updatedAt', 'updatedAt', { unique: false });
       }
     };
   });
@@ -63,21 +65,25 @@ export const jsonStore = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async set<T = any>(key: string, value: T): Promise<void> {
     const store = tx(STORE_NAME, 'readwrite');
-    await promisifyRequest(store.put({ key, value }));
+    const now = Date.now();
+    await promisifyRequest(store.put({ key, value, syncStatus: 'pending', updatedAt: now }));
     logger.jsonstore('set', { key });
   },
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async get<T = any>(key: string): Promise<T | null> {
     const store = tx(STORE_NAME);
-    const result = await promisifyRequest<{ key: string; value: T } | undefined>(store.get(key));
+    const result = await promisifyRequest<{ key: string; value: T; syncStatus?: string; updatedAt?: number } | undefined>(store.get(key));
     logger.jsonstore('get', { key, found: !!result });
     return result?.value ?? null;
   },
+
   async delete(key: string): Promise<void> {
     const store = tx(STORE_NAME, 'readwrite');
     await promisifyRequest(store.delete(key));
     logger.jsonstore('delete', { key });
   },
+
   async list(prefix?: string): Promise<string[]> {
     const store = tx(STORE_NAME);
     const keys = (await promisifyRequest<IDBValidKey[]>(store.getAllKeys())) as string[];
@@ -85,14 +91,45 @@ export const jsonStore = {
     logger.jsonstore('list', { prefix, count: filtered.length });
     return filtered;
   },
+
   async clear(): Promise<void> {
     const store = tx(STORE_NAME, 'readwrite');
     await promisifyRequest(store.clear());
     logger.jsonstore('clear');
+  },
+
+  async markAsSynced(key: string): Promise<void> {
+    const store = tx(STORE_NAME, 'readwrite');
+    const now = Date.now();
+    await promisifyRequest(store.put({ key, syncStatus: 'synced', updatedAt: now }));
+    logger.jsonstore('markAsSynced', { key });
+  },
+
+  async softDelete(key: string): Promise<void> {
+    const store = tx(STORE_NAME, 'readwrite');
+    const now = Date.now();
+    await promisifyRequest(store.put({ key, syncStatus: 'deleted', updatedAt: now }));
+    logger.jsonstore('softDelete', { key });
+  },
+
+  async getPendingSyncKeys(): Promise<string[]> {
+    const store = tx(STORE_NAME);
+    const index = store.index('syncStatus');
+    const pending = await promisifyRequest<{ key: string }[]>(index.getAll('pending'));
+    const result = pending.map(entry => entry.key);
+    logger.jsonstore('getPendingSyncKeys', { count: result.length });
+    return result;
+  },
+
+  async getAllWithSyncStatus(): Promise<{ key: string; syncStatus: string; updatedAt: number }[]> {
+    const store = tx(STORE_NAME);
+    const entries = await promisifyRequest<{ key: string; syncStatus: string; updatedAt: number }[]>(store.getAll());
+    logger.jsonstore('getAllWithSyncStatus', { count: entries.length });
+    return entries;
   }
 };
 
-// Backward-compatible wrappers
+// ==================== BACKWARD-COMPATIBLE WRAPPERS ====================
 export async function jsonGet<T = unknown>(key: string): Promise<T | undefined> {
   return jsonStore.get<T>(key) as Promise<T | undefined>;
 }

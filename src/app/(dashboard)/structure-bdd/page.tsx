@@ -35,9 +35,10 @@ import {
 import { Switch } from "@/components/ui/switch";
 
 import { getLocalTree, deleteLocalTreeNode, addFolder, updateFolder, addFile } from "@/lib/db/tree";
-import { clientEngine, initSqlite, run, simpleTokenEmbedding } from "@/lib/client-engine";
+import { clientEngine, run, simpleTokenEmbedding } from "@/lib/client-engine";
 import { toast } from "sonner";
 import { csrfFetch } from "@/lib/procedures/csrf-fetch";
+import { syncManager, type SyncManagerStatus } from "@/lib/sync/sync-manager";
 
 type LocalNode = {
   id: string;
@@ -383,6 +384,8 @@ export default function StructureBDDPage() {
   const [editingImageMetadata, setEditingImageMetadata] = useState<{ id: string; name: string } | null>(null);
   const [imageMetadataContent, setImageMetadataContent] = useState("");
   const [savingImageMetadata, setSavingImageMetadata] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncManagerStatus | null>(null);
+  const [syncingAll, setSyncingAll] = useState(false);
 
   const loadTrees = useCallback(async () => {
     console.log("[StructureBDD] loadTrees start");
@@ -516,6 +519,46 @@ export default function StructureBDDPage() {
     loadTrees();
   }, [loadTrees]);
 
+  useEffect(() => {
+    if (!syncManager.isInitialized()) return;
+    const updateStatus = async () => {
+      try {
+        const status = await syncManager.getSyncStatus();
+        setSyncStatus(status);
+      } catch {
+        // ignore
+      }
+    };
+    updateStatus();
+    const interval = setInterval(updateStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSyncAll = async () => {
+    const confirmed = window.confirm(
+      "Synchronisation complète : envoyer les modifications locales vers le serveur et récupérer les mises à jour distantes. Continuer ?"
+    );
+    if (!confirmed) return;
+    console.log("[StructureBDD] sync all start");
+    setSyncingAll(true);
+    try {
+      const result = await syncManager.syncAll();
+      console.log("[StructureBDD] sync all result", result);
+      if (result.success) {
+        toast.success(`Synchronisation complète réussie : ${result.pushed} push, ${result.pulled} pull`);
+      } else {
+        toast.error(`Synchronisation terminée avec erreurs : ${result.errors.join(", ")}`);
+      }
+      await loadTrees();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Sync all failed";
+      console.error("[StructureBDD] sync all error", msg);
+      toast.error("Erreur lors de la synchronisation complète");
+    } finally {
+      setSyncingAll(false);
+    }
+  };
+
   const handleResetWeb = async () => {
     const confirmed = window.confirm(
       "Remise à zéro de la BDD Web : toutes les données web seront réinitialisées à l'état initial. Continuer ?"
@@ -587,309 +630,82 @@ export default function StructureBDDPage() {
   };
 
    const handleSyncToLocal = async () => {
-    const confirmed = window.confirm(
-      "Synchroniser la BDD Web vers la BDD Locale ? Cette opération recréera l'arborescence locale en miroir du Web."
-    );
-    if (!confirmed) return;
-    console.log("[StructureBDD] sync to local start");
-
-    setSyncing(true);
-    try {
-      const timeoutMs = 30000;
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout: synchronisation trop longue (>30s)')), timeoutMs);
-      });
-
-      const syncPromise = (async () => {
-        const res = await fetch("/api/tree");
-        console.log("[StructureBDD] fetch web tree status", res.status);
-        if (!res.ok) throw new Error("Failed to fetch web tree");
-        const { roots } = (await res.json()) as { roots: WebTreeNode[] };
-
-        await initSqlite();
-
-        await run("BEGIN TRANSACTION");
-        try {
-          await run("DELETE FROM local_tree");
-
-          const normalizeType = (webType: string): "folder" | "file" => {
-            if (webType === "file") return "file";
-            return "folder";
-          };
-
-          interface FlatNode {
-            remoteId: string;
-            name: string;
-            type: "folder" | "file";
-            parentId: number | null;
-            nodeOrder: number;
-            content: string | null;
-            size: number;
-            depth: number;
-          }
-
-          const flatNodes: FlatNode[] = [];
-          const queue: Array<{ node: WebTreeNode; depth: number; parentId: number | null }> = roots.map((r) => ({ node: r, depth: 0, parentId: null }));
-
-          while (queue.length > 0) {
-            const { node, depth, parentId } = queue.shift()!;
-            if (node.type === "image") continue;
-            flatNodes.push({
-              remoteId: String(node.id),
-              name: node.name,
-              type: normalizeType(node.type),
-              parentId,
-              nodeOrder: node.order ?? 0,
-              content: node.type === "file" ? node.metadata : null,
-              size: 0,
-              depth,
-            });
-            if (node.children?.length) {
-              for (const child of node.children) {
-                queue.push({ node: child, depth: depth + 1, parentId: node.id as number });
-              }
-            }
-          }
-
-          flatNodes.sort((a, b) => a.depth - b.depth || (a.nodeOrder ?? 0) - (b.nodeOrder ?? 0));
-
-          const localIdMap = new Map<string, number>();
-
-          for (const node of flatNodes) {
-            const localParentId = node.parentId !== null && localIdMap.has(String(node.parentId))
-              ? localIdMap.get(String(node.parentId))!
-              : null;
-
-            const result = await run(
-              `INSERT INTO local_tree (remote_id, name, type, parent_id, node_order, size, content, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-              [node.remoteId, node.name, node.type, localParentId, node.nodeOrder, node.size, node.content]
-            );
-
-            if (result.lastInsertRowid) {
-              localIdMap.set(node.remoteId, result.lastInsertRowid);
-            }
-          }
-
-          await run("COMMIT");
-          console.log("[StructureBDD] sync to local done", { count: flatNodes.length });
-          await loadTrees();
-          toast.success(`Synchronisation miroir terminée (${flatNodes.length} nœuds)`);
-        } catch (err) {
-          try {
-            await run("ROLLBACK");
-          } catch (rollbackErr) {
-            console.warn("[StructureBDD] rollback skipped:", rollbackErr);
-          }
-          throw err;
-        }
-      })();
-
-      await Promise.race([syncPromise, timeoutPromise]);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Sync to local failed";
-      console.error("[StructureBDD] sync to local error", msg);
-      setLocalError(msg);
-      toast.error("Erreur lors de la synchronisation");
-    } finally {
-      setSyncing(false);
-    }
-  };
+     const confirmed = window.confirm(
+       "Synchroniser la BDD Web vers la BDD Locale ? Cette opération recréera l'arborescence locale en miroir du Web."
+     );
+     if (!confirmed) return;
+     console.log("[StructureBDD] sync to local start");
+     setSyncing(true);
+     try {
+       const result = await syncManager.syncTable('tree_nodes');
+       console.log("[StructureBDD] sync to local result", result);
+       if (result.errors.length === 0) {
+         toast.success(`Synchronisation terminée (${result.pulled} enregistrements)`);
+       } else {
+         toast.error(`Erreurs: ${result.errors.join(", ")}`);
+       }
+       await loadTrees();
+     } catch (err) {
+       const msg = err instanceof Error ? err.message : "Sync to local failed";
+       console.error("[StructureBDD] sync to local error", msg);
+       setLocalError(msg);
+       toast.error("Erreur lors de la synchronisation");
+     } finally {
+       setSyncing(false);
+     }
+   };
 
    const handleResetMirror = async () => {
-    const confirmed = window.confirm(
-      "Réinitialiser le miroir local ? Cette opération supprimera toute la structure locale et la reconstruira exactement comme le Web."
-    );
-    if (!confirmed) return;
-    console.log("[StructureBDD] reset mirror start");
+     const confirmed = window.confirm(
+       "Réinitialiser le miroir local ? Cette opération supprimera toute la structure locale et la reconstruira exactement comme le Web."
+     );
+     if (!confirmed) return;
+     console.log("[StructureBDD] reset mirror start");
+     setSyncing(true);
+     try {
+       const result = await syncManager.syncTable('tree_nodes');
+       console.log("[StructureBDD] reset mirror result", result);
+       if (result.errors.length === 0) {
+         toast.success(`Miroir réinitialisé (${result.pulled} enregistrements)`);
+       } else {
+         toast.error(`Erreurs: ${result.errors.join(", ")}`);
+       }
+       await loadTrees();
+     } catch (err) {
+       const msg = err instanceof Error ? err.message : "Reset mirror failed";
+       console.error("[StructureBDD] reset mirror error", msg);
+       setLocalError(msg);
+       toast.error("Erreur lors de la réinitialisation du miroir");
+     } finally {
+       setSyncing(false);
+     }
+   };
 
-    setSyncing(true);
-    try {
-      const timeoutMs = 30000;
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout: réinitialisation trop longue (>30s)')), timeoutMs);
-      });
-
-      const resetPromise = (async () => {
-        const res = await fetch("/api/tree");
-        console.log("[StructureBDD] fetch web tree for reset status", res.status);
-        if (!res.ok) throw new Error("Failed to fetch web tree");
-        const { roots } = (await res.json()) as { roots: WebTreeNode[] };
-
-        await initSqlite();
-
-        await run("BEGIN TRANSACTION");
-        try {
-          await run("DELETE FROM local_tree");
-
-          const normalizeType = (webType: string): "folder" | "file" => {
-            if (webType === "file") return "file";
-            return "folder";
-          };
-
-          interface FlatNode {
-            remoteId: string;
-            name: string;
-            type: "folder" | "file";
-            parentId: number | null;
-            nodeOrder: number;
-            content: string | null;
-            size: number;
-            depth: number;
-          }
-
-          const flatNodes: FlatNode[] = [];
-          const queue: Array<{ node: WebTreeNode; depth: number; parentId: number | null }> = roots.map((r) => ({ node: r, depth: 0, parentId: null }));
-
-          while (queue.length > 0) {
-            const { node, depth, parentId } = queue.shift()!;
-            if (node.type === "image") continue;
-            flatNodes.push({
-              remoteId: String(node.id),
-              name: node.name,
-              type: normalizeType(node.type),
-              parentId,
-              nodeOrder: node.order ?? 0,
-              content: node.type === "file" ? node.metadata : null,
-              size: 0,
-              depth,
-            });
-            if (node.children?.length) {
-              for (const child of node.children) {
-                queue.push({ node: child, depth: depth + 1, parentId: node.id as number });
-              }
-            }
-          }
-
-          flatNodes.sort((a, b) => a.depth - b.depth || (a.nodeOrder ?? 0) - (b.nodeOrder ?? 0));
-
-          const localIdMap = new Map<string, number>();
-
-          for (const node of flatNodes) {
-            const localParentId = node.parentId !== null && localIdMap.has(String(node.parentId))
-              ? localIdMap.get(String(node.parentId))!
-              : null;
-
-            const result = await run(
-              `INSERT INTO local_tree (remote_id, name, type, parent_id, node_order, size, content, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-              [node.remoteId, node.name, node.type, localParentId, node.nodeOrder, node.size, node.content]
-            );
-
-            if (result.lastInsertRowid) {
-              localIdMap.set(node.remoteId, result.lastInsertRowid);
-            }
-          }
-
-          await run("COMMIT");
-          console.log("[StructureBDD] reset mirror done", { count: flatNodes.length });
-          await loadTrees();
-          toast.success(`Miroir local réinitialisé (${flatNodes.length} nœuds)`);
-        } catch (err) {
-          try {
-            await run("ROLLBACK");
-          } catch (rollbackErr) {
-            console.warn("[StructureBDD] rollback skipped:", rollbackErr);
-          }
-          throw err;
-        }
-      })();
-
-      await Promise.race([resetPromise, timeoutPromise]);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Reset mirror failed";
-      console.error("[StructureBDD] reset mirror error", msg);
-      setLocalError(msg);
-      toast.error("Erreur lors de la réinitialisation du miroir");
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  const handleSyncVectorMirror = async () => {
-    const confirmed = window.confirm(
-      "Synchroniser le miroir vectoriel ? Cette opération créera les répertoires manquants dans la BDD vectorielle pour correspondre à la BDD locale."
-    );
-    if (!confirmed) return;
-    console.log("[StructureBDD] sync vector mirror start");
-
-    setSyncingVectorMirror(true);
-    try {
-      await initSqlite();
-      const localTree = await getLocalTree();
-
-      const existingVectorNodes = await clientEngine.getAllVectorTreeNodes();
-      const existingVectorFolderPaths = new Set(
-        existingVectorNodes
-          .filter((n) => n.type === "folder")
-          .map((n) => n.relativePath)
-          .filter((p): p is string => Boolean(p))
-      );
-
-      const foldersToAdd: { path: string; name: string; parentPath: string | null; order: number }[] = [];
-
-      const traverse = (nodes: LocalNode[], parentPath = "") => {
-        for (const node of nodes) {
-          if (node.type === "folder") {
-            const currentPath = parentPath ? `${parentPath}/${node.name}` : node.name;
-            if (!existingVectorFolderPaths.has(currentPath)) {
-              foldersToAdd.push({
-                path: currentPath,
-                name: node.name,
-                parentPath: parentPath || null,
-                order: node.order ?? 0,
-              });
-            }
-            if (node.children && node.children.length > 0) {
-              traverse(node.children, currentPath);
-            }
-          }
-        }
-      };
-
-      traverse(localTree);
-
-      foldersToAdd.sort((a, b) => {
-        const depthA = a.path.split("/").length;
-        const depthB = b.path.split("/").length;
-        return depthA - depthB;
-      });
-
-      for (const folder of foldersToAdd) {
-        const parentId = folder.parentPath ? `vf-${folder.parentPath}` : null;
-        await clientEngine.addVectorTreeNode({
-          id: `vf-${folder.path}`,
-          name: folder.name,
-          type: "folder",
-          parentId,
-          order: folder.order,
-          relativePath: folder.path,
-          content: null,
-          docId: null,
-        });
-      }
-
-      if (foldersToAdd.length > 0) {
-        const paths = foldersToAdd.map((f) => f.path);
-        await fetch("/api/registry/sync-mirror", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ directories: paths }),
-        });
-      }
-
-      console.log("[StructureBDD] sync vector mirror done", { count: foldersToAdd.length });
-      await loadTrees();
-      toast.success(`Miroir vectoriel synchronisé (${foldersToAdd.length} répertoires ajoutés)`);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Sync vector mirror failed";
-      console.error("[StructureBDD] sync vector mirror error", msg);
-      setVectorError(msg);
-      toast.error("Erreur lors de la synchronisation du miroir vectoriel");
-    } finally {
-      setSyncingVectorMirror(false);
-    }
-  };
+   const handleSyncVectorMirror = async () => {
+     const confirmed = window.confirm(
+       "Synchroniser le miroir vectoriel ? Cette opération créera les répertoires manquants dans la BDD vectorielle pour correspondre à la BDD locale."
+     );
+     if (!confirmed) return;
+     console.log("[StructureBDD] sync vector mirror start");
+     setSyncingVectorMirror(true);
+     try {
+       const result = await syncManager.syncTable('vector_tree');
+       console.log("[StructureBDD] sync vector mirror result", result);
+       if (result.errors.length === 0) {
+         toast.success(`Miroir vectoriel synchronisé (${result.pulled} enregistrements)`);
+       } else {
+         toast.error(`Erreurs: ${result.errors.join(", ")}`);
+       }
+       await loadTrees();
+     } catch (err) {
+       const msg = err instanceof Error ? err.message : "Sync vector mirror failed";
+       console.error("[StructureBDD] sync vector mirror error", msg);
+       setVectorError(msg);
+       toast.error("Erreur lors de la synchronisation du miroir vectoriel");
+     } finally {
+       setSyncingVectorMirror(false);
+     }
+   };
 
   const removeNodeById = useCallback((nodes: LocalNode[] | WebTreeNode[] | ImageNode[], id: string | number): (LocalNode[] | WebTreeNode[] | ImageNode[]) => {
     return nodes
@@ -1545,41 +1361,26 @@ export default function StructureBDDPage() {
     }
   }, [loadTrees, removeNodeById]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const collectFileNodes = (nodes: LocalNode[], path = ""): { node: LocalNode; path: string }[] => {
-    const result: { node: LocalNode; path: string }[] = [];
-    for (const node of nodes) {
-      const nodePath = path ? `${path}/${node.name}` : node.name;
-      if (node.type === "file") {
-        result.push({ node, path: nodePath });
-      }
-      if (node.children && node.children.length > 0) {
-        result.push(...collectFileNodes(node.children, nodePath));
-      }
-    }
-    return result;
-  };
-
-  const handleVectorizeAllLocal = async () => {
-    const fileNodes = collectFileNodes(visibleLocalTree);
-    if (fileNodes.length === 0) {
-      toast.info("Aucun fichier local à vectoriser");
-      return;
-    }
-
+   const handleVectorizeAllLocal = async () => {
+     console.log("[StructureBDD] vectorize all local start");
      setVectorizing(true);
-     let count = 0;
-     for (const { node, path } of fileNodes) {
-       try {
-         await vectorizeLocalFileInternal(node, path);
-         count++;
-       } catch (err) {
-         console.error("[StructureBDD] vectorize all error", { path, err });
+     try {
+       const result = await syncManager.syncAll();
+       console.log("[StructureBDD] vectorize all local result", result);
+       if (result.success) {
+         toast.success(`Synchronisation terminée : ${result.pushed} push, ${result.pulled} pull`);
+       } else {
+         toast.error(`Erreurs: ${result.errors.join(", ")}`);
        }
+       await loadTrees();
+     } catch (err) {
+       const msg = err instanceof Error ? err.message : "Sync all failed";
+       console.error("[StructureBDD] vectorize all local error", msg);
+       toast.error("Erreur lors de la synchronisation");
+     } finally {
+       setVectorizing(false);
      }
-     setVectorizing(false);
-     await loadTrees();
-     toast.success(`${count} fichier(s) vectorisé(s)`);
-  };
+   };
 
   const visibleWebTree = useMemo(() => filterWebTree(webTree), [webTree, filterWebTree]);
   const baseLocalTree = useMemo(() => filterLocalTree(localTree), [localTree, filterLocalTree]);
@@ -1656,10 +1457,25 @@ export default function StructureBDDPage() {
             Vue active : {activeView === "web" ? "Hub / PostgreSQL" : activeView === "local" ? "Spoke / SQLite OPFS" : activeView === "vector" ? "Spoke / IndexedDB" : "Hub / Médias"} · {totalActiveNodes} nœuds
             {activeView === "local" && showOnlyVectorized && <span className="text-blue-500"> · {vectorizedCount} vectorisés</span>}
             {activeError && <span className="text-red-500"> · Erreur: {activeError}</span>}
+            {syncStatus && (
+              <span className={`ml-2 inline-flex items-center gap-1 ${syncStatus.isOnline ? "text-green-500" : "text-red-500"}`}>
+                <span className="h-2 w-2 rounded-full bg-current" />
+                {syncStatus.isOnline ? "En ligne" : "Hors ligne"}
+              </span>
+            )}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSyncAll}
+            disabled={syncingAll}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${syncingAll ? "animate-spin" : ""}`} />
+            Synchronisation complète
+          </Button>
           <Button
             variant={activeView === "web" ? "default" : "outline"}
             size="sm"
@@ -1823,18 +1639,18 @@ export default function StructureBDDPage() {
                   Réinitialiser le miroir
                 </Button>
               )}
-              {activeView === "local" && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleVectorizeAllLocal}
-                  disabled={vectorizing}
-                  className="w-full"
-                >
-                  <Database className={`h-4 w-4 mr-2 ${vectorizing ? "animate-spin" : ""}`} />
-                  Vectoriser tout
-                </Button>
-              )}
+               {activeView === "local" && (
+                 <Button
+                   variant="secondary"
+                   size="sm"
+                   onClick={handleVectorizeAllLocal}
+                   disabled={vectorizing}
+                   className="w-full"
+                 >
+                   <Database className={`h-4 w-4 mr-2 ${vectorizing ? "animate-spin" : ""}`} />
+                   Sync complète
+                 </Button>
+               )}
               {activeView === "images" && (
                 <>
                   <Button
