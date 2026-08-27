@@ -636,9 +636,29 @@ export default function StructureBDDPage() {
     } finally {
       setResettingWeb(false);
     }
-  };
+   };
 
-  const handleResetLocal = async () => {
+   const handleExportWebJson = async () => {
+     try {
+       const res = await fetch("/api/tree");
+       if (!res.ok) throw new Error("Failed to fetch web tree");
+       const data = await res.json();
+       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+       const url = URL.createObjectURL(blob);
+       const link = document.createElement("a");
+       link.href = url;
+       link.download = "structure-bdd-export.json";
+       document.body.appendChild(link);
+       link.click();
+       document.body.removeChild(link);
+       URL.revokeObjectURL(url);
+       toast.success("Export JSON téléchargé");
+     } catch {
+       toast.error("Erreur lors de l'export JSON");
+     }
+   };
+
+   const handleResetLocal = async () => {
     const confirmed = window.confirm(
       "Vider l'arborescence locale : toutes les données locales de l'arborescence seront supprimées. Continuer ?"
     );
@@ -1512,9 +1532,154 @@ export default function StructureBDDPage() {
       return totalNodes(activeTree) + totalNodes(visibleWebTree);
     }
     return totalNodes(activeTree);
-  }, [activeView, activeTree, visibleWebTree, totalNodes]);
+   }, [activeView, activeTree, visibleWebTree, totalNodes]);
 
-  if (loading) {
+   const renderActions = () => {
+     switch (activeView) {
+       case "web":
+         return (
+           <>
+             <Button
+               size="sm"
+               variant="outline"
+               onClick={handleResetWeb}
+               disabled={resettingWeb}
+               className="flex-1"
+             >
+               <RotateCcw className={`h-4 w-4 mr-2 ${resettingWeb ? "animate-spin" : ""}`} />
+               Réinitialiser PostgreSQL
+             </Button>
+             <Button
+               size="sm"
+               variant="outline"
+               onClick={handleSyncToLocal}
+               disabled={syncing}
+               className="flex-1"
+             >
+               <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+               Pull Web → Local
+             </Button>
+             <Button
+               size="sm"
+               variant="outline"
+               onClick={handleExportWebJson}
+               className="flex-1"
+             >
+               <Download className="h-4 w-4 mr-2" />
+               Exporter JSON
+             </Button>
+           </>
+         );
+      case "local":
+        return (
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleQuickSync}
+              disabled={syncing}
+              className="flex-1"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+              Sync local_tree
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSyncAll}
+              disabled={syncingAll}
+              className="flex-1"
+            >
+              <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncingAll ? "animate-spin" : ""}`} />
+              Push vers Web
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleResetLocal}
+              disabled={resettingLocal}
+              className="flex-1"
+            >
+              <Trash2 className={`h-4 w-4 mr-2 ${resettingLocal ? "animate-spin" : ""}`} />
+              Vider SQLite
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleResetLocal}
+              disabled={resettingLocal}
+              className="flex-1"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Réinitialiser Local
+            </Button>
+          </>
+        );
+       case "vector":
+         return (
+           <>
+             <Button
+               size="sm"
+               variant="outline"
+               onClick={handleQuickVectorize}
+               disabled={vectorizing}
+               className="flex-1"
+             >
+               <Database className={`h-4 w-4 mr-2 ${vectorizing ? "animate-spin" : ""}`} />
+               Vectoriser
+             </Button>
+             <Button
+               size="sm"
+               variant="outline"
+               onClick={handleSyncVectorMirror}
+               disabled={syncingVectorMirror}
+               className="flex-1"
+             >
+               <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncingVectorMirror ? "animate-spin" : ""}`} />
+               Sync miroir
+             </Button>
+             <Button
+               size="sm"
+               variant="destructive"
+               onClick={handleResetVector}
+               disabled={resettingVector}
+               className="flex-1"
+             >
+               <Trash2 className={`h-4 w-4 mr-2 ${resettingVector ? "animate-spin" : ""}`} />
+               Vider IndexedDB
+             </Button>
+           </>
+         );
+       case "images":
+         return (
+           <>
+             <Button
+               size="sm"
+               variant="outline"
+               onClick={handleVectorizeAllMedia}
+               disabled={vectorizing}
+               className="flex-1"
+             >
+               <Database className={`h-4 w-4 mr-2 ${vectorizing ? "animate-spin" : ""}`} />
+               Connecter au RAG
+             </Button>
+             <Button
+               size="sm"
+               variant="outline"
+               onClick={() => loadTrees()}
+               className="flex-1"
+             >
+               <RefreshCw className="h-4 w-4 mr-2" />
+               Actualiser
+             </Button>
+           </>
+         );
+       default:
+         return null;
+     }
+   };
+
+   if (loading) {
     console.log("[StructureBDD] render loading");
     return (
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -1596,7 +1761,7 @@ export default function StructureBDDPage() {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <Card className="p-3">
           <div className="text-xs text-muted-foreground">SQLite</div>
           <div className="text-sm font-medium">{dbStatus.sqlite ? '✅ Initialisé' : '⏳ En attente'}</div>
@@ -1609,14 +1774,25 @@ export default function StructureBDDPage() {
           <div className="text-xs text-muted-foreground">Vectorisés</div>
           <div className="text-sm font-medium">{vectorizedCountLocal} fichiers</div>
         </Card>
-        <Card className="p-3">
-          <div className="text-xs text-muted-foreground">Actions</div>
-          <div className="flex gap-2 mt-1">
-            <Button size="sm" variant="outline" onClick={handleQuickSync}>🔄 Sync</Button>
-            <Button size="sm" variant="secondary" onClick={handleQuickVectorize}>🧠 Vectoriser</Button>
-          </div>
-        </Card>
       </div>
+
+      {/* Carte Actions contextuelle */}
+      <Card className="p-4 mt-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium text-sm">
+            Actions - {activeView === "web" ? "PostgreSQL" : activeView === "local" ? "SQLite" : activeView === "vector" ? "Vectorielle" : "Médias"}
+          </h3>
+          <span className="text-xs text-muted-foreground">
+            {activeView === "web" && `${totalNodes(visibleWebTree)} nœuds`}
+            {activeView === "local" && `${totalNodes(visibleLocalTree)} nœuds`}
+            {activeView === "vector" && `${vectorDocs.length} documents`}
+            {activeView === "images" && `${imageTree.length} médias`}
+          </span>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {renderActions()}
+        </div>
+      </Card>
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
