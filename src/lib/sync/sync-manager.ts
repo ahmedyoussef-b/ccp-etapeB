@@ -255,13 +255,17 @@ export class SyncManager {
 
     try {
       const sqliteTable = this.getTableName(tableName)
-      // Purger les lignes sans uuid (orphelins issus d'anciennes syncs non-UUID)
+      // Purger les lignes sans uuid (orphelins issus de d'anciennes syncs non-UUID)
       await this.purgeOrphanRows(sqliteTable)
 
       const pushResult = await this.pushTable(tableName)
       result.pushed = pushResult.pushed
       result.conflicts = pushResult.conflicts
       result.errors = pushResult.errors
+
+      // Réinitialiser la table locale avant le pull pour éviter les doublons
+      await run(`DELETE FROM "${sqliteTable}"`)
+      logger.sync('syncTable_cleared', { table: sqliteTable })
 
       const pullResult = await this.pullTable(tableName)
       result.pulled = pullResult.pulled

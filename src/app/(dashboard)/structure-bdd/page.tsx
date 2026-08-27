@@ -126,7 +126,7 @@ const TreeNodeItem = memo(function TreeNodeItem({
   vectorizing?: boolean;
   expandAll?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(depth < 2 || expandAll);
+  const [expanded, setExpanded] = useState(expandAll);
   const [showActions, setShowActions] = useState(false);
   const isLocal = "path" in node;
   const isImage = isImageNode(node);
@@ -688,30 +688,30 @@ export default function StructureBDDPage() {
    };
 
    const handleResetMirror = async () => {
-     const confirmed = window.confirm(
-       "Réinitialiser le miroir local ? Cette opération supprimera toute la structure locale et la reconstruira exactement comme le Web."
-     );
-     if (!confirmed) return;
-     console.log("[StructureBDD] reset mirror start");
-     setSyncing(true);
-     try {
-       const result = await syncManager.resetAndPullTable('tree_nodes');
-       console.log("[StructureBDD] reset mirror result", result);
-       if (result.errors.length === 0) {
-         toast.success(`Miroir réinitialisé (${result.pulled} enregistrements)`);
-       } else {
-         toast.error(`Erreurs: ${result.errors.join(", ")}`);
-       }
-       await loadTrees();
-     } catch (err) {
-       const msg = err instanceof Error ? err.message : "Reset mirror failed";
-       console.error("[StructureBDD] reset mirror error", msg);
-       setLocalError(msg);
-       toast.error("Erreur lors de la réinitialisation du miroir");
-     } finally {
-       setSyncing(false);
-     }
-   };
+      const confirmed = window.confirm(
+        "Réinitialiser le miroir local ? Cette opération supprimera toute la structure locale et la reconstruira exactement comme le Web."
+      );
+      if (!confirmed) return;
+      console.log("[StructureBDD] reset mirror start");
+      setSyncing(true);
+      try {
+        const result = await syncManager.resetAndPullTable('tree_nodes');
+        console.log("[StructureBDD] reset mirror result", result);
+        if (result.errors.length === 0) {
+          toast.success(`Miroir réinitialisé (${result.pulled} enregistrements)`);
+        } else {
+          toast.error(`Erreurs: ${result.errors.join(", ")}`);
+        }
+        await loadTrees();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Reset mirror failed";
+        console.error("[StructureBDD] reset mirror error", msg);
+        setLocalError(msg);
+        toast.error("Erreur lors de la réinitialisation du miroir");
+      } finally {
+        setSyncing(false);
+      }
+    };
 
   const handleResetVector = async () => {
     const confirmed = window.confirm(
@@ -1755,18 +1755,6 @@ export default function StructureBDDPage() {
                 <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
                 Sync Web → Local
               </Button>
-             )}
-              {activeView === "local" && (
-                 <Button
-                   variant="outline"
-                   size="sm"
-                   onClick={handleResetMirror}
-                   disabled={syncing}
-                   className="w-full"
-                 >
-                   <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-                  Réinitialiser le miroir
-                </Button>
               )}
                {activeView === "local" && (
                  <Button

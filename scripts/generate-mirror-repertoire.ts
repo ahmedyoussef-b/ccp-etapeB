@@ -16,7 +16,7 @@ interface MirrorNode {
   children: MirrorNode[];
 }
 
-let nextId = 1;
+let totalNodes = 0;
 
 function walk(dirPath: string, parentId: number | null, orderStart: number): MirrorNode[] {
   const entries = fs.readdirSync(dirPath).sort();
@@ -27,9 +27,11 @@ function walk(dirPath: string, parentId: number | null, orderStart: number): Mir
     if (entry === ".meta.json" || entry === "mirror.json" || entry === "mirror_repertoire.json") continue;
     const fullPath = path.join(dirPath, entry);
     const stat = fs.statSync(fullPath);
-    const id = nextId++;
 
     if (stat.isDirectory()) {
+      const id = totalNodes + 1;
+      totalNodes++;
+
       const metaPath = path.join(fullPath, ".meta.json");
       let metadata: string | null = null;
       if (fs.existsSync(metaPath)) {
@@ -57,7 +59,8 @@ function walk(dirPath: string, parentId: number | null, orderStart: number): Mir
   return nodes;
 }
 
-const rootId = nextId++;
+const rootId = totalNodes + 1;
+totalNodes++;
 const rootChildren = walk(DATA_DIR, rootId, 0);
 const now = new Date().toISOString();
 
@@ -76,4 +79,4 @@ const mirror: MirrorNode[] = [
 ];
 
 fs.writeFileSync(OUTPUT, JSON.stringify(mirror, null, 2));
-console.log(`Generated ${OUTPUT} with ${nextId} nodes`);
+console.log(`Generated ${OUTPUT} with ${totalNodes} nodes`);
