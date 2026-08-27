@@ -687,32 +687,6 @@ export default function StructureBDDPage() {
      }
    };
 
-   const handleResetMirror = async () => {
-      const confirmed = window.confirm(
-        "Réinitialiser le miroir local ? Cette opération supprimera toute la structure locale et la reconstruira exactement comme le Web."
-      );
-      if (!confirmed) return;
-      console.log("[StructureBDD] reset mirror start");
-      setSyncing(true);
-      try {
-        const result = await syncManager.resetAndPullTable('tree_nodes');
-        console.log("[StructureBDD] reset mirror result", result);
-        if (result.errors.length === 0) {
-          toast.success(`Miroir réinitialisé (${result.pulled} enregistrements)`);
-        } else {
-          toast.error(`Erreurs: ${result.errors.join(", ")}`);
-        }
-        await loadTrees();
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Reset mirror failed";
-        console.error("[StructureBDD] reset mirror error", msg);
-        setLocalError(msg);
-        toast.error("Erreur lors de la réinitialisation du miroir");
-      } finally {
-        setSyncing(false);
-      }
-    };
-
   const handleResetVector = async () => {
     const confirmed = window.confirm(
       "Vider la BDD vectorielle (IndexedDB) ? Tous les documents, chunks et nœuds de l'arborescence vectorielle seront supprimés."
