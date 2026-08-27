@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { NexaFlowLogo } from "@/components/brand/nexaflow-logo";
 import { Role } from "@/lib/auth/roles";
+import { dbInitService } from "@/lib/client-engine/init.service";
 
 const ROLE_HOME: Record<Role, string> = {
   admin: "/admin",
@@ -75,6 +76,19 @@ function LoginForm() {
 
       router.push(target);
       router.refresh();
+
+      dbInitService
+        .initialize({ autoSync: true, autoVectorize: true })
+        .then((result) => {
+            if (result.errors.length > 0) {
+                console.warn("[Login] DB init with errors:", result.errors);
+            } else {
+                console.log(`[Login] ✅ DB initialized: ${result.vectorized} documents vectorized`);
+            }
+        })
+        .catch((e) => {
+            console.error("[Login] DB init failed:", e);
+        });
     } catch (err) {
       console.error("[NexaFlow][Login] Erreur inattendue:", err);
       setError("Une erreur est survenue lors de la connexion");

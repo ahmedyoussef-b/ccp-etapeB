@@ -36,6 +36,7 @@ import { Switch } from "@/components/ui/switch";
 
 import { loadLocalTreeFromSQLite, loadVectorTreeFromIndexedDB, deleteLocalTreeNode, addFolder, updateFolder, addFile } from "@/lib/db/tree";
 import { clientEngine, query, run, simpleTokenEmbedding } from "@/lib/client-engine";
+import { dbInitService } from "@/lib/client-engine/init.service";
 import { toast } from "sonner";
 import { csrfFetch } from "@/lib/procedures/csrf-fetch";
 import { syncManager, type SyncManagerStatus } from "@/lib/sync/sync-manager";
@@ -386,6 +387,9 @@ export default function StructureBDDPage() {
   const [savingImageMetadata, setSavingImageMetadata] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncManagerStatus | null>(null);
   const [syncingAll, setSyncingAll] = useState(false);
+  const [dbStatus, setDbStatus] = useState<{ sqlite: boolean; vector: boolean; json: boolean }>({ sqlite: false, vector: false, json: false });
+  const [lastSyncCount, setLastSyncCount] = useState(0);
+  const [vectorizedCountLocal, setVectorizedCountLocal] = useState(0);
 
   const loadTrees = useCallback(async () => {
     console.log("[StructureBDD] loadTrees start");
@@ -514,22 +518,78 @@ export default function StructureBDDPage() {
      });
    }, []);
 
-   useEffect(() => {
-     if (!syncManager.isInitialized()) return;
-     const updateStatus = async () => {
-      try {
-        const status = await syncManager.getSyncStatus();
-        setSyncStatus(status);
-      } catch {
-        // ignore
-      }
-    };
-    updateStatus();
-    const interval = setInterval(updateStatus, 30000);
-    return () => clearInterval(interval);
+    useEffect(() => {
+      if (!syncManager.isInitialized()) return;
+      const updateStatus = async () => {
+        try {
+          const status = await syncManager.getSyncStatus();
+          setSyncStatus(status);
+        } catch {
+          // ignore
+        }
+      };
+      updateStatus();
+      const interval = setInterval(updateStatus, 30000);
+      return () => clearInterval(interval);
+    }, []);
+
+  const updateDbStatus = useCallback(async () => {
+    const status = await dbInitService.initialize({ autoSync: false, autoVectorize: false });
+    setDbStatus({ sqlite: status.sqlite, vector: status.vector, json: status.json });
+    setLastSyncCount(0);
+    setVectorizedCountLocal(0);
   }, []);
 
-  const handleSyncAll = async () => {
+  const handleQuickSync = useCallback(async () => {
+    try {
+      const result = await syncManager.syncTable('local_tree');
+      setLastSyncCount(result.pulled || 0);
+      await loadTrees();
+      if (result.errors.length > 0) {
+        toast.error(`Sync: ${result.errors.join(', ')}`);
+      } else {
+        toast.success(`Sync OK: ${result.pulled || 0} pulled`);
+      }
+    } catch {
+      toast.error('Sync failed');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadTrees]);
+
+  const handleQuickVectorize = useCallback(async () => {
+    try {
+      const { getAllFiles } = await import('@/lib/db/db');
+      const files = await getAllFiles();
+      let count = 0;
+      for (const file of files) {
+        const content = typeof file.content === 'string' ? file.content : '';
+        if (content && content.length > 0) {
+          const embedding = simpleTokenEmbedding(content);
+          await clientEngine.addVectorDocument({
+            id: `file-${file.id}`,
+            name: file.name,
+            originalPath: file.path || file.name,
+            relativePath: file.path || file.name,
+            chunks: [{ documentId: `file-${file.id}`, documentName: file.name, chunkIndex: 0, content, embedding, metadata: {} }],
+            metadata: {}
+          });
+          count++;
+        }
+      }
+      setVectorizedCountLocal(count);
+      await loadTrees();
+      toast.success(`Vectorisé: ${count} fichiers`);
+    } catch {
+      toast.error('Vectorization failed');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadTrees]);
+
+    useEffect(() => {
+      updateDbStatus();
+    }, [updateDbStatus]);
+
+   const handleSyncAll = async () => {
     const confirmed = window.confirm(
       "Synchronisation complète : envoyer les modifications locales vers le serveur et récupérer les mises à jour distantes. Continuer ?"
     );
@@ -1560,6 +1620,28 @@ export default function StructureBDDPage() {
             Médias
           </Button>
         </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">SQLite</div>
+          <div className="text-sm font-medium">{dbStatus.sqlite ? '✅ Initialisé' : '⏳ En attente'}</div>
+        </Card>
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Dernière sync</div>
+          <div className="text-sm font-medium">{lastSyncCount > 0 ? `${lastSyncCount} nœuds` : 'Jamais'}</div>
+        </Card>
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Vectorisés</div>
+          <div className="text-sm font-medium">{vectorizedCountLocal} fichiers</div>
+        </Card>
+        <Card className="p-3">
+          <div className="text-xs text-muted-foreground">Actions</div>
+          <div className="flex gap-2 mt-1">
+            <Button size="sm" variant="outline" onClick={handleQuickSync}>🔄 Sync</Button>
+            <Button size="sm" variant="secondary" onClick={handleQuickVectorize}>🧠 Vectoriser</Button>
+          </div>
+        </Card>
       </div>
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">

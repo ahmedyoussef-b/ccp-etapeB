@@ -21,7 +21,7 @@ const MODEL_TABLE_MAP: Record<string, string> = {
   procedure_tags: 'procedure_tags',
   procedure_versions: 'procedure_versions',
   approvals: 'approvals',
-  tree_nodes: 'tree_nodes',
+  tree_nodes: 'local_tree',
   qa_registries: 'qa_registries',
   qa_pairs: 'qa_pairs',
   media_items: 'media_items',
@@ -587,7 +587,7 @@ export class SyncService {
     if (!db) return 0
 
     try {
-      await sqliteCrud.delete(db, 'tree_nodes', 'all')
+      await sqliteCrud.delete(db, 'local_tree', 'all')
 
       for (const node of nodes) {
         const data = {
@@ -602,7 +602,7 @@ export class SyncService {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
-        await sqliteCrud.create(db, 'tree_nodes', data)
+        await sqliteCrud.create(db, 'local_tree', data)
         count++
       }
 

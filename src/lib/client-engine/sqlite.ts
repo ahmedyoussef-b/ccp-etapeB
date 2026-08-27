@@ -7,6 +7,8 @@ const logger = {
   sqliteError: (action: string, error: unknown) => console.error('[DB:SQLITE]', '[ERROR]', action, error instanceof Error ? error.message : String(error)),
 };
 
+const SCHEMA_VERSION = 5;
+
 let db: Database | null = null;
 let initPromise: Promise<Database> | null = null;
 let storageUsed: SQLiteStorage = 'memory';
@@ -103,6 +105,13 @@ export async function createOtherTables(db: Database): Promise<void> {
     `CREATE TABLE IF NOT EXISTS sync_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, model_name TEXT NOT NULL, record_id TEXT, record_uuid TEXT, operation TEXT NOT NULL, status TEXT DEFAULT 'pending', source TEXT, target TEXT, error TEXT, metadata TEXT, deleted_at DATETIME, synced_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS iot_sensor_states (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, name TEXT NOT NULL, type TEXT NOT NULL, value REAL NOT NULL, unit TEXT NOT NULL, threshold REAL NOT NULL, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS iot_actuator_states (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, name TEXT NOT NULL, type TEXT NOT NULL, is_on INTEGER DEFAULT 0, position INTEGER, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
+    `CREATE TABLE IF NOT EXISTS chat_sessions (id TEXT PRIMARY KEY, title TEXT, messages TEXT, created_at INTEGER, updated_at INTEGER);`,
+    `CREATE TABLE IF NOT EXISTS sensor_configs (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT, value REAL, unit TEXT, threshold REAL, updated_at INTEGER);`,
+    `CREATE TABLE IF NOT EXISTS actuator_states (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT, is_on INTEGER DEFAULT 0, position REAL, updated_at INTEGER);`,
+    `CREATE TABLE IF NOT EXISTS devices (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT, subtype TEXT, ip_address TEXT, port INTEGER, is_active INTEGER DEFAULT 1, metadata TEXT, created_at INTEGER, updated_at INTEGER);`,
+    `CREATE TABLE IF NOT EXISTS iot_history (id TEXT PRIMARY KEY, entity_type TEXT, entity_id TEXT, field TEXT, old_value TEXT, new_value TEXT, alert INTEGER DEFAULT 0, resolved INTEGER DEFAULT 0, created_at INTEGER);`,
+    `CREATE TABLE IF NOT EXISTS vector_documents (id TEXT PRIMARY KEY, name TEXT, original_path TEXT, relative_path TEXT, content TEXT, embedding TEXT, metadata TEXT, created_at INTEGER);`,
+    `CREATE TABLE IF NOT EXISTS json_store (key TEXT PRIMARY KEY, value TEXT, syncStatus TEXT, updatedAt INTEGER);`,
   ];
   for (const sql of tableSqls) { db.exec(sql); }
 
@@ -154,6 +163,13 @@ export async function createOtherTables(db: Database): Promise<void> {
     `CREATE INDEX IF NOT EXISTS idx_sl_synced_at ON sync_logs(synced_at);`,
     `CREATE INDEX IF NOT EXISTS idx_iss_sync_deleted ON iot_sensor_states(sync_status, deleted_at);`,
     `CREATE INDEX IF NOT EXISTS idx_ias_sync_deleted ON iot_actuator_states(sync_status, deleted_at);`,
+    `CREATE INDEX IF NOT EXISTS idx_cs_updated_at ON chat_sessions(updated_at);`,
+    `CREATE INDEX IF NOT EXISTS idx_sc_name ON sensor_configs(name);`,
+    `CREATE INDEX IF NOT EXISTS idx_as_name ON actuator_states(name);`,
+    `CREATE INDEX IF NOT EXISTS idx_devices_type ON devices(type);`,
+    `CREATE INDEX IF NOT EXISTS idx_ih_entity ON iot_history(entity_id, entity_type);`,
+    `CREATE INDEX IF NOT EXISTS idx_ih_alert ON iot_history(alert);`,
+    `CREATE INDEX IF NOT EXISTS idx_vd_relative_path ON vector_documents(relative_path);`,
   ];
   for (const sql of indexSqls) { db.exec(sql); }
   logger.sqlite('create other tables', { completed: true });
@@ -299,7 +315,7 @@ async function _migrate(db: Database): Promise<void> {
   await db.exec(`CREATE TABLE IF NOT EXISTS _schema_version (version INTEGER PRIMARY KEY)`);
   const currentVersion = await queryOne<{ version: number }>(`SELECT version FROM _schema_version LIMIT 1`);
   const version = currentVersion?.version ?? 0;
-  if (version >= 4) return;
+  if (version >= SCHEMA_VERSION) return;
 
   const addColumnIfExists = async (table: string, column: string, definition: string): Promise<void> => {
     const colCheck = await queryOne<{ cid: number }>(
@@ -374,7 +390,11 @@ async function _migrate(db: Database): Promise<void> {
     await db.exec(`INSERT OR REPLACE INTO _schema_version (version) VALUES (4)`);
   }
 
-  logger.sqlite('migration', { fromVersion: version, toVersion: 4 });
+  if (version < 5) {
+    await db.exec(`INSERT OR REPLACE INTO _schema_version (version) VALUES (5)`);
+  }
+
+  logger.sqlite('migration', { fromVersion: version, toVersion: SCHEMA_VERSION });
 }
 
 export const initSqlite = initSQLite;
