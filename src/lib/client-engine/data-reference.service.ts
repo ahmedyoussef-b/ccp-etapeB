@@ -1,5 +1,17 @@
 import type { SyncTableResult } from '@/lib/sync/sync-manager'
 
+interface RawApiNode {
+  id?: string | number
+  uuid?: string
+  name?: string
+  type?: string
+  path?: string
+  children?: RawApiNode[]
+  metadata?: Record<string, unknown>
+  content?: unknown
+  size?: number
+}
+
 export interface DataNode {
   id: string
   name: string
@@ -7,21 +19,21 @@ export interface DataNode {
   path: string
   parentId: string | null
   children?: DataNode[]
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   content?: string
   size?: number
 }
 
 export class DataReferenceService {
-  private static instance: DataReferenceService
+  private static instance: DataReferenceService | null = null
   private rootPath = '.data'
   private structureCache: DataNode[] | null = null
 
   static getInstance(): DataReferenceService {
-    if (!this.instance) {
-      this.instance = new DataReferenceService()
+    if (!DataReferenceService.instance) {
+      DataReferenceService.instance = new DataReferenceService()
     }
-    return this.instance
+    return DataReferenceService.instance
   }
 
   async getStructure(): Promise<DataNode[]> {
@@ -32,7 +44,7 @@ export class DataReferenceService {
     try {
       const response = await fetch('/api/tree')
       const data = await response.json()
-      this.structureCache = this.normalizeStructure(data.roots || [])
+      this.structureCache = this.normalizeStructure((data.roots || []) as RawApiNode[])
       return this.structureCache
     } catch (e) {
       console.error('[DataReference] Failed to load structure:', e)
@@ -41,10 +53,10 @@ export class DataReferenceService {
     }
   }
 
-  private normalizeStructure(nodes: any[]): DataNode[] {
+  private normalizeStructure(nodes: RawApiNode[]): DataNode[] {
     const result: DataNode[] = []
 
-    const processNode = (node: any, parentId: string | null = null) => {
+    const processNode = (node: RawApiNode, parentId: string | null = null) => {
       const dataNode: DataNode = {
         id: String(node.id || node.uuid || `node_${Date.now()}_${Math.random()}`),
         name: node.name || 'unnamed',
@@ -52,8 +64,8 @@ export class DataReferenceService {
         path: node.path || node.name || '',
         parentId: parentId,
         metadata: node.metadata || {},
-        content: node.content || '',
-        size: node.size || 0,
+        content: typeof node.content === 'string' ? node.content : '',
+        size: typeof node.size === 'number' ? node.size : 0,
       }
 
       result.push(dataNode)
@@ -93,7 +105,7 @@ export class DataReferenceService {
   }
 
   async syncToLocal(): Promise<SyncTableResult> {
-    const structure = await this.getStructure()
+    await this.getStructure()
     const { syncManager } = await import('@/lib/sync/sync-manager')
     return await syncManager.resetAndPullTable('tree_nodes')
   }
@@ -102,7 +114,7 @@ export class DataReferenceService {
     const structure = await this.getStructure()
     const { vectorStore } = await import('@/lib/client-engine/vector-store')
 
-    const files = structure.filter((n) => n.type === 'file' && n.content)
+    const files = structure.filter((n: DataNode) => n.type === 'file' && n.content)
     let count = 0
     const errors: string[] = []
 
@@ -142,7 +154,6 @@ export class DataReferenceService {
     const structure = await this.getStructure()
     const directories = structure.filter((n) => n.type === 'directory' || n.type === 'root')
     const isWindows = typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows')
-    const isMac = typeof navigator !== 'undefined' && navigator.userAgent.includes('Mac')
     const basePath = isWindows ? '.\\' : './'
     const script = isWindows
       ? `@echo off\r\necho 📁 Création de la structure .data...\r\n${directories.map((d) => `mkdir "${basePath}${d.path}" >nul 2>&1`).join('\r\n')}\r\necho ✅ Structure .data créée\r\npause`

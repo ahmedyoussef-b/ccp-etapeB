@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,10 +14,9 @@ import {
   Loader2,
 } from 'lucide-react';
 import { incrementalSync } from '@/lib/sync/incremental-sync.service';
-import type { FullSyncReport, SyncReport, VectorizationReport } from '@/lib/sync/incremental-sync.service';
+import type { FullSyncReport } from '@/lib/sync/incremental-sync.service';
 
 export function StorageStatusView() {
-  const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncPhase, setSyncPhase] = useState<'idle' | 'web-to-local' | 'local-to-vector' | 'done'>('idle');
   const [syncProgress, setSyncProgress] = useState(0);

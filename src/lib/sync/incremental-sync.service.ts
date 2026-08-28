@@ -1,7 +1,6 @@
 import { getDb, query, queryOne, run } from '@/lib/client-engine/sqlite';
-import { initVectorStore, getVectorDB, vectorSyncHelpers } from '@/lib/client-engine/vector-store';
+import { initVectorStore } from '@/lib/client-engine/vector-store';
 import { UnifiedTreeService } from '@/lib/db/services/unified-tree.service';
-import { prisma } from '@/lib/prisma';
 
 // ==================== TYPES ====================
 
@@ -312,7 +311,7 @@ export class IncrementalSyncService {
   private async updateLocalRecord(db: Awaited<ReturnType<typeof getDb>>, table: string, record: Record<string, unknown>): Promise<void> {
     const updates = Object.entries(record)
       .filter(([k]) => k !== 'id' && k !== 'uuid' && k !== 'createdAt' && k !== 'updatedAt')
-      .map(([k, v]) => `"${k}" = ?`)
+      .map(([k]) => `"${k}" = ?`)
       .join(', ');
     
     const values = Object.entries(record)

@@ -2,8 +2,6 @@ import type { LocalTreeRow } from '@/lib/db/db';
 import type { UnifiedTreeNode } from '../types/unified-tree-node';
 
 export function fromSQLiteLocalTree(row: LocalTreeRow): UnifiedTreeNode {
-  const metadata = parseMetadata(row.metadata);
-
   return {
     id: `local-${row.id}`,
     name: row.name,

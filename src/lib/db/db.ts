@@ -2,7 +2,7 @@ import { query, queryOne, run } from '@/lib/client-engine/sqlite';
 
 export interface Folder {
   id?: number;
-  remoteId: string;
+  remoteId: string | null;
   name: string;
   parentId: number | null;
   order: number;
@@ -13,7 +13,7 @@ export interface Folder {
 
 export interface File {
   id?: number;
-  remoteId: string;
+  remoteId: string | null;
   name: string;
   folderId: number | null;
   order: number;
@@ -26,7 +26,7 @@ export interface File {
 
 export interface LocalTreeNode {
   id?: number;
-  remoteId: string;
+  remoteId: string | null;
   name: string;
   type: 'folder' | 'file' | 'meta';
   parentId: number | null;

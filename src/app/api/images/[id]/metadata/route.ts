@@ -14,10 +14,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   console.log(`[API][GET /api/images/${params.id}/metadata]`);
-  let item = await getDiskById(params.id);
-  if (!item) {
-    item = await getPrismaById(params.id);
-  }
+  const item = (await getDiskById(params.id)) ?? (await getPrismaById(params.id));
 
   if (!item) {
     return NextResponse.json({ message: "Image not found" }, { status: 404 });
@@ -25,9 +22,9 @@ export async function GET(
 
   const metadataPath = getItemMetadataPath(item);
   if (!fs.existsSync(metadataPath)) {
-    // If json file is missing, synthesize from item
-    const { dataUrl: _dataUrl, ...cleanMeta } = item; // eslint-disable-line @typescript-eslint/no-unused-vars
-    return NextResponse.json({ metadata: cleanMeta, path: metadataPath });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { dataUrl: _dataUrl, ...safeItem } = item;
+    return NextResponse.json({ metadata: safeItem, path: metadataPath });
   }
 
   try {
@@ -48,21 +45,13 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   console.log(`[API][PUT /api/images/${params.id}/metadata]`);
-  let item = await getDiskById(params.id);
-  if (!item) {
-    item = await getPrismaById(params.id);
-  }
+  const item = (await getDiskById(params.id)) ?? (await getPrismaById(params.id));
 
   if (!item) {
     return NextResponse.json({ message: "Image not found" }, { status: 404 });
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
+  const body: Record<string, unknown> = await request.json();
 
   const metadataPath = getItemMetadataPath(item);
   const metadataDir = path.dirname(metadataPath);

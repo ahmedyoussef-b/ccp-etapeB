@@ -178,7 +178,9 @@ export async function updateItem(id: string, updates: Partial<Omit<MediaItem, "i
   };
 
   try {
-    await updateDiskItem(id, updates);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { dataUrl: _dataUrl, ...diskUpdates } = updates;
+    await updateDiskItem(id, diskUpdates);
   } catch (err) {
     console.error("[ServerStorePrisma] Disk update warning:", err);
   }

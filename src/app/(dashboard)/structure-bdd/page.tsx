@@ -34,13 +34,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { loadLocalTreeFromSQLite, loadVectorTreeFromIndexedDB } from "@/lib/db/tree";
 import { clientEngine, query, simpleTokenEmbedding, dataReference, localTreeService } from "@/lib/client-engine";
 import { generateOpenScript, downloadScript } from "@/lib/client-engine/folder-opener";
 import { dbInitService } from "@/lib/client-engine/init.service";
-import { UnifiedTreeService } from "@/lib/db/services/unified-tree.service";
 import type { UnifiedTreeNode } from "@/lib/db/types/unified-tree-node";
 import { toast } from "sonner";
 import { csrfFetch } from "@/lib/procedures/csrf-fetch";
@@ -386,7 +384,6 @@ export default function StructureBDDPage() {
   const [syncing, setSyncing] = useState(false);
   const [syncingVectorMirror, setSyncingVectorMirror] = useState(false);
   const [activeView, setActiveView] = useState<"web" | "local" | "vector" | "images" | "comparison">("web");
-  const [unifiedTree, setUnifiedTree] = useState<UnifiedTreeNode[]>([]);
   const [showOnlyVectorized, setShowOnlyVectorized] = useState(false);
   const [vectorizedPaths, setVectorizedPaths] = useState<Set<string>>(new Set());
   const [vectorizedCount, setVectorizedCount] = useState(0);
@@ -396,9 +393,6 @@ export default function StructureBDDPage() {
   const [savingImageMetadata, setSavingImageMetadata] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncManagerStatus | null>(null);
   const [resettingAll, setResettingAll] = useState(false);
-  const [dbStatus, setDbStatus] = useState<{ sqlite: boolean; vector: boolean; json: boolean }>({ sqlite: false, vector: false, json: false });
-  const [lastSyncCount, setLastSyncCount] = useState(0);
-  const [vectorizedCountLocal, setVectorizedCountLocal] = useState(0);
   const [dbLocations, setDbLocations] = useState<DatabaseLocations | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [localSyncStatus, setLocalSyncStatus] = useState<{ webCount: number; localCount: number; isSynced: boolean }>({ webCount: 0, localCount: 0, isSynced: false });
@@ -595,7 +589,7 @@ export default function StructureBDDPage() {
             console.log("[StructureBDD] auto pull local from web because local tree is empty");
             const result = await syncManager.resetAndPullTable('local_tree');
             if (!cancelled) {
-              setLastSyncCount(result.pulled || 0);
+              // setLastSyncCount(result.pulled || 0);
               await loadTrees();
               if (result.errors.length > 0) {
                 toast.error(`Auto pull: ${result.errors.join(', ')}`);
@@ -613,16 +607,16 @@ export default function StructureBDDPage() {
     }, [loadTrees]);
 
   const updateDbStatus = useCallback(async () => {
-    const status = await dbInitService.initialize({ autoSync: false, autoVectorize: false });
-    setDbStatus({ sqlite: status.sqlite, vector: status.vector, json: status.json });
-    setLastSyncCount(0);
-    setVectorizedCountLocal(0);
+    await dbInitService.initialize({ autoSync: false, autoVectorize: false });
+    // setDbStatus({ sqlite: status.sqlite, vector: status.vector, json: status.json });
+    // setLastSyncCount(0);
+    // setVectorizedCountLocal(0);
   }, []);
 
   const handleQuickSync = useCallback(async () => {
     try {
       const result = await syncManager.resetAndPullTable('local_tree');
-      setLastSyncCount(result.pulled || 0);
+        // setLastSyncCount(result.pulled || 0);
       await loadTrees();
       if (result.errors.length > 0) {
         toast.error(`Pull: ${result.errors.join(', ')}`);
@@ -655,7 +649,7 @@ export default function StructureBDDPage() {
           count++;
         }
       }
-      setVectorizedCountLocal(count);
+      // setVectorizedCountLocal(count);
       await loadTrees();
       toast.success(`Vectorisé: ${count} fichiers`);
     } catch {
@@ -1081,13 +1075,6 @@ export default function StructureBDDPage() {
     }
   };
 
-  const handleAddWeb = useCallback((node: WebTreeNode | LocalNode) => {
-    if (!("id" in node) || typeof node.id === "string") return;
-    setAddingNode({ tree: "web", parentId: node.id });
-    setNewNodeName("");
-    setNewNodeType("directory");
-  }, [setAddingNode, setNewNodeName, setNewNodeType]);
-
   const handleAddLocal = useCallback((node: WebTreeNode | LocalNode) => {
     if (!("id" in node)) return;
     setAddingNode({ tree: "local", parentId: node.id as string });
@@ -1133,12 +1120,6 @@ export default function StructureBDDPage() {
       toast.error("Erreur lors de l'ajout");
     }
   };
-
-  const handleRenameWeb = useCallback((node: WebTreeNode | LocalNode) => {
-    if (isImageNode(node)) return;
-    setRenamingNode({ tree: "web", id: node.id, currentName: node.name });
-    setRenameValue(node.name);
-  }, [setRenamingNode, setRenameValue]);
 
   const handleRenameLocal = useCallback((node: WebTreeNode | LocalNode) => {
     if (!("id" in node)) return;

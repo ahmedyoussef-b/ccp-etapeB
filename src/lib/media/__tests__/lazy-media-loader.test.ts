@@ -7,7 +7,7 @@ const createMockCache = () => {
     store,
     get: vi.fn(async (key: string) => {
       const item = store.get(key);
-      if (!item) return undefined;
+      if (!item) return null;
       return item.data;
     }),
     set: vi.fn(async (key: string, data: string) => {
@@ -104,18 +104,18 @@ export class LazyMediaLoader {
       };
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        return this.loadFromFallback(id, mimeType, startTime, 'timeout');
+        return this.loadFromFallback(id, mimeType, startTime);
       }
 
       if (error instanceof Error && error.message.includes('fetch')) {
-        return this.loadFromFallback(id, mimeType, startTime, 'network');
+        return this.loadFromFallback(id, mimeType, startTime);
       }
 
-      return this.loadFromFallback(id, mimeType, startTime, 'not_found');
+      return this.loadFromFallback(id, mimeType, startTime);
     }
   }
 
-  private async loadFromFallback(id: string, mimeType: string | undefined, startTime: number, reason: string): Promise<LazyMediaLoaderResult> {
+  private async loadFromFallback(id: string, mimeType: string | undefined, startTime: number): Promise<LazyMediaLoaderResult> {
     try {
       const indexedDbData = await this.fallback.loadFromIndexedDB(id);
       if (indexedDbData) {
@@ -192,7 +192,7 @@ describe('LazyMediaLoader', () => {
       getPlaceholder: vi.fn(() => 'data:image/svg+xml,<svg>placeholder</svg>'),
     };
     mockFetch = vi.fn();
-    global.fetch = mockFetch;
+    (global as unknown as { fetch: typeof mockFetch }).fetch = mockFetch;
   });
 
   afterEach(() => {

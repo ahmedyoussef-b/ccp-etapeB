@@ -51,7 +51,7 @@ const TreeNodeItem = memo(function TreeNodeItem({
     return vectorizedPaths.has(node.path) || vectorizedPaths.has(node.id);
   }, [vectorizedPaths, node.path, node.id]);
 
-  const isMedia = node.type === 'file' && (node.name.match(/\.(jpg|jpeg|png|gif|webp|mp4|webm|ogg|mp3|wav)$/i) || node.metadata['kind']);
+  const isMedia = node.type === 'file' && (node.name.match(/\.(jpg|jpeg|png|gif|webp|mp4|webm|ogg|mp3|wav)$/i) || Boolean(node.metadata['kind']));
 
   return (
     <div className="group relative">
@@ -176,11 +176,11 @@ export function UnifiedTreeView({ source, onVectorize, vectorizing, vectorizedPa
   const stats = useMemo(() => UnifiedTreeService.getStats(nodes), [nodes]);
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Chargement de l'arborescence...</p>;
+    return <p className="text-sm text-muted-foreground">Chargement de l&apos;arborescence...</p>;
   }
 
   if (error) {
-    return <p className="text-sm text-red-500">Erreur : {error}</p>;
+    return <p className="text-sm text-muted-foreground">Erreur : {error}</p>;
   }
 
   return (

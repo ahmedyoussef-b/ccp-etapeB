@@ -303,13 +303,13 @@ export default function ImageDetailPage() {
             {item.kind === "image" ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={item.dataUrl}
+                src={item.dataUrl ?? ''}
                 alt={item.title}
                 className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
               />
             ) : (
               <video
-                src={item.dataUrl}
+                src={item.dataUrl ?? ''}
                 controls
                 autoPlay
                 className="max-w-full max-h-[70vh] rounded-lg shadow-lg"

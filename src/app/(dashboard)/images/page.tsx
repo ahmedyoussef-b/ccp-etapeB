@@ -496,7 +496,7 @@ export default function ImagesPage() {
       description: item.description,
       tags: item.tags.join(", "),
       kind: item.kind,
-      dataUrl: item.dataUrl,
+      dataUrl: item.dataUrl ?? '',
       thumbnailDataUrl: item.thumbnailDataUrl,
       mimeType: item.mimeType,
       size: item.size,

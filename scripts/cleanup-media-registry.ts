@@ -31,7 +31,8 @@ function parseArgs(): CleanupOptions {
   return options;
 }
 
-let prisma: Awaited<ReturnType<typeof import('../src/lib/prisma').prisma>> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let prisma: any = null;
 let dbAvailable = false;
 
 async function initDatabase(): Promise<boolean> {

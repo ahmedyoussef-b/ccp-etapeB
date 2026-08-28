@@ -3,7 +3,6 @@ import { buildWebTree } from '../mappers/web-tree.mapper';
 import { buildSQLiteTree } from '../mappers/sqlite-tree.mapper';
 import { buildVectorTree } from '../mappers/vector-tree.mapper';
 import type { LocalTreeRow } from '@/lib/db/db';
-import type { VectorTreeNode } from '@/lib/client-engine/vector-store';
 
 export class UnifiedTreeService {
   static async loadWebTree(): Promise<UnifiedTreeNode[]> {

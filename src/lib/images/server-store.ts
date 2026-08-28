@@ -128,7 +128,7 @@ export interface MediaItem {
   kind: "image" | "video";
   mimeType: string;
   size: number;
-  dataUrl: string;
+  dataUrl: string | null;
   thumbnailDataUrl?: string;
   geolocation?: { lat: number; lng: number };
   createdAt: string;
@@ -203,7 +203,7 @@ export function readItems(): MediaItem[] {
 
 // ─── Write ────────────────────────────────────────────────────────────────────
 
-function writeItem(item: MediaItem, options?: { preserveData?: boolean }): void {
+export function writeItem(item: MediaItem, options?: { preserveData?: boolean }): void {
   const itemDir = getItemDir(item);
   const metadataPath = getItemMetadataPath(item);
   const mediaFilePath = getMediaFilePath(item);

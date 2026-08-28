@@ -198,7 +198,7 @@ export class LocalTreeService {
   }
 
   async renameNode(nodeId: number, newName: string): Promise<void> {
-    const { run, query } = await import('@/lib/client-engine/sqlite');
+    const { run } = await import('@/lib/client-engine/sqlite');
     const node = await this.getNode(nodeId);
     if (!node) throw new Error('Nœud non trouvé');
 
@@ -256,9 +256,10 @@ export class LocalTreeService {
 
     for (const child of children) {
       const newPath = `${newParentPath}/${child.name}`;
-      await run(`UPDATE local_tree SET path = ? WHERE id = ?`, [newPath, child.id]);
+      const childId = Number(child.id);
+      await run(`UPDATE local_tree SET path = ? WHERE id = ?`, [newPath, childId]);
       if (child.type === 'directory') {
-        await this.updateChildPaths(child.id, newPath);
+        await this.updateChildPaths(childId, newPath);
       }
     }
   }

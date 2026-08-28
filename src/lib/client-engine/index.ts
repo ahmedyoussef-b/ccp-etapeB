@@ -1,8 +1,7 @@
 import { initSqlite, getDb, query, queryOne, run } from './sqlite';
 export { initSqlite, initSQLite, getDb, query, queryOne, run, exec, createProcedureTables, createExecutionTables, createOtherTables, sqliteSyncHelpers, sqliteCrud } from './sqlite';
-import { initVectorStore, searchByEmbedding, addDocument, getAllDocuments, deleteDocument, getDocument, getStats, clearVectorStore, simpleTokenEmbedding, addVectorTreeNode, getAllVectorTreeNodes, deleteVectorTreeNode, clearVectorTree, syncMirrorStructure, type VectorDocument, type VectorTreeNode } from './vector-store';
+import { initVectorStore, searchByEmbedding, addDocument, getAllDocuments, deleteDocument, getDocument, getStats, clearVectorStore, simpleTokenEmbedding, addVectorTreeNode, getAllVectorTreeNodes, deleteVectorTreeNode, clearVectorTree, type VectorDocument, type VectorTreeNode } from './vector-store';
 import { initJsonStore, jsonGet, jsonSet, jsonDelete, jsonClear, jsonGetAll } from './json-store';
-import { dataReference, type DataNode } from './data-reference.service';
 
 export {
   dataReference,
@@ -25,7 +24,6 @@ export {
   getAllVectorTreeNodes,
   deleteVectorTreeNode,
   clearVectorTree,
-  syncMirrorStructure,
   type VectorDocument,
   type VectorTreeNode,
 } from './vector-store';
