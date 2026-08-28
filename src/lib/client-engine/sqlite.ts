@@ -112,12 +112,13 @@ export async function createOtherTables(db: Database): Promise<void> {
     `CREATE TABLE IF NOT EXISTS iot_history (id TEXT PRIMARY KEY, entity_type TEXT, entity_id TEXT, field TEXT, old_value TEXT, new_value TEXT, alert INTEGER DEFAULT 0, resolved INTEGER DEFAULT 0, created_at INTEGER);`,
     `CREATE TABLE IF NOT EXISTS vector_documents (id TEXT PRIMARY KEY, name TEXT, original_path TEXT, relative_path TEXT, content TEXT, embedding TEXT, metadata TEXT, created_at INTEGER);`,
     `CREATE TABLE IF NOT EXISTS json_store (key TEXT PRIMARY KEY, value TEXT, syncStatus TEXT, updatedAt INTEGER);`,
+    `CREATE TABLE IF NOT EXISTS sync_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
   ];
   for (const sql of tableSqls) { db.exec(sql); }
 
   const tables = [
     'approvals', 'local_tree', 'qa_registries', 'qa_pairs', 'media_items', 'media_item_tags',
-    'sync_logs', 'iot_sensor_states', 'iot_actuator_states',
+    'sync_logs', 'iot_sensor_states', 'iot_actuator_states', 'sync_metadata',
   ];
   for (const table of tables) {
     try {

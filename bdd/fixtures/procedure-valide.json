@@ -1,0 +1,38 @@
+{
+  "title": "Procédure importée test",
+  "description": "Procédure importée pour les tests BDD",
+  "version": "1.0.0",
+  "category": "Sécurité",
+  "estimatedDuration": 15,
+  "steps": [
+    {
+      "order": 1,
+      "title": "Vérifier l'équipement",
+      "description": "S'assurer que tout l'équipement est en bon état",
+      "type": "check",
+      "required": true,
+      "estimatedTime": 5
+    },
+    {
+      "order": 2,
+      "title": "Contrôler les accès",
+      "description": "Vérifier que toutes les portes sont fermées",
+      "type": "action",
+      "required": true,
+      "estimatedTime": 5
+    },
+    {
+      "order": 3,
+      "title": "Signer le registre",
+      "description": "Signer le registre de passage",
+      "type": "validation",
+      "required": true,
+      "estimatedTime": 2
+    }
+  ],
+  "prerequisites": [
+    "Être équipé d'un talkie-walkie",
+    "Avoir la lampe torche"
+  ],
+  "briefing": "Cette procédure couvre les vérifications de sécurité standard."
+}

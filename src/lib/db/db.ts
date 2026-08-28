@@ -38,9 +38,10 @@ export interface LocalTreeNode {
   updatedAt: Date;
 }
 
-interface LocalTreeRow {
+export interface LocalTreeRow {
   id: number;
-  remote_id: string;
+  uuid: string | null;
+  remote_id: string | null;
   name: string;
   type: string;
   parent_id: number | null;
@@ -48,6 +49,8 @@ interface LocalTreeRow {
   path: string | null;
   size: number | null;
   content: string | null;
+  metadata: string | null;
+  sync_status: string;
   created_at: string;
   updated_at: string;
 }

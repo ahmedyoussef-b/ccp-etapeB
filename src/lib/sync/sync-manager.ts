@@ -827,9 +827,82 @@ export class SyncManager {
 
       await run(
         `INSERT INTO "${tableName}" (${columns.join(', ')}) VALUES (${placeholders.join(', ')})`,
-        values
-      )
+         values
+       )
+     }
+   }
+
+  async syncTreeStructure(): Promise<{ pulled: number; errors: string[] }> {
+    const result: { pulled: number; errors: string[] } = { pulled: 0, errors: [] }
+    const db = getDb()
+
+    if (!db) {
+      return { ...result, errors: ['Database not available'] }
     }
+
+    try {
+      const sqliteTable = this.getTableName('tree_nodes')
+      await run(`DELETE FROM "${sqliteTable}"`)
+      logger.sync('syncTreeStructure_cleared', { table: sqliteTable })
+
+      const response = await fetch('/api/sync/pull?models=tree_nodes&limit=5000', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      const records = data.models?.tree_nodes?.records || []
+
+      for (const record of records) {
+        try {
+          const type = String(record.type || '').toLowerCase()
+          if (type !== 'directory' && type !== 'root') {
+            continue
+          }
+
+          const uuid = record.uuid || String(record.id)
+          const now = new Date().toISOString()
+
+          await run(`
+            INSERT OR REPLACE INTO "${sqliteTable}"
+              (uuid, remote_id, name, type, parent_id, node_order, path, size, content, metadata, sync_status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `, [
+            uuid,
+            record.id,
+            record.name,
+            type,
+            record.parentId ?? record.parent_id ?? null,
+            record.order ?? record.node_order ?? 0,
+            record.path || '',
+            0,
+            '',
+            JSON.stringify(record.metadata || {}),
+            'synced',
+            now,
+            now,
+          ])
+
+          result.pulled++
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : 'unknown'
+          result.errors.push(`Record ${record.id}: ${msg}`)
+        }
+      }
+
+      logger.sync('syncTreeStructure_completed', { pulled: result.pulled, errors: result.errors.length })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'unknown'
+      logger.syncError('syncTreeStructure_failed', msg)
+      result.errors.push(`syncTreeStructure: ${msg}`)
+    }
+
+    return result
   }
 
   private camelToSnake(camel: string): string {

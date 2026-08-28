@@ -104,9 +104,12 @@ export function CategoryTreePicker({ value, onChange, placeholder = "Sélectionn
   const [tree, setTree] = useState<WebTreeNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [manualCategory, setManualCategory] = useState("");
 
   const loadTree = useCallback(async () => {
     setLoading(true);
+    setLoadFailed(false);
     try {
       const res = await fetch("/api/tree");
       if (!res.ok) throw new Error("Failed to fetch tree");
@@ -118,6 +121,7 @@ export function CategoryTreePicker({ value, onChange, placeholder = "Sélectionn
       console.error("[CategoryTreePicker] load error", msg);
       toast.error("Impossible de charger l'arborescence");
       setTree([]);
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -131,6 +135,14 @@ export function CategoryTreePicker({ value, onChange, placeholder = "Sélectionn
 
   const handleSelect = (_node: WebTreeNode, path: string) => {
     onChange(path);
+    setOpen(false);
+  };
+
+  const handleManualSubmit = () => {
+    const trimmed = manualCategory.trim();
+    if (!trimmed) return;
+    onChange(trimmed);
+    setManualCategory("");
     setOpen(false);
   };
 
@@ -180,7 +192,7 @@ export function CategoryTreePicker({ value, onChange, placeholder = "Sélectionn
           <DialogHeader>
             <DialogTitle>Choisir une catégorie</DialogTitle>
             <DialogDescription>
-              Sélectionnez un nœud dans l&apos;arborescence Structure BDD
+              Sélectionnez un nœud dans l&apos;arborescence Structure BDD, ou saisissez une catégorie manuellement si l&apos;arborescence est indisponible.
             </DialogDescription>
           </DialogHeader>
 
@@ -190,30 +202,52 @@ export function CategoryTreePicker({ value, onChange, placeholder = "Sélectionn
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="bg-background/60"
+              disabled={loadFailed}
             />
 
-            <div className="border rounded-lg max-h-[400px] overflow-y-auto">
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : visibleTree.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  Aucun nœud trouvé
-                </p>
-              ) : (
-                visibleTree.map((node) => (
-                  <TreeNodeItem
-                    key={node.id}
-                    node={node}
-                    depth={0}
-                    pathPrefix=""
-                    onSelect={handleSelect}
-                    selectedPath={value}
+            {loadFailed ? (
+              <div className="space-y-2">
+                <p className="text-xs text-red-500">L&apos;arborescence n&apos;a pas pu être chargée. Vous pouvez saisir une catégorie manuellement.</p>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Nouvelle catégorie"
+                    value={manualCategory}
+                    onChange={(e) => setManualCategory(e.target.value)}
+                    className="bg-background/60"
                   />
-                ))
-              )}
-            </div>
+                  <Button
+                    type="button"
+                    onClick={handleManualSubmit}
+                    disabled={!manualCategory.trim()}
+                  >
+                    OK
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="border rounded-lg max-h-[400px] overflow-y-auto">
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : visibleTree.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Aucun nœud trouvé
+                  </p>
+                ) : (
+                  visibleTree.map((node) => (
+                    <TreeNodeItem
+                      key={node.id}
+                      node={node}
+                      depth={0}
+                      pathPrefix=""
+                      onSelect={handleSelect}
+                      selectedPath={value}
+                    />
+                  ))
+                )}
+              </div>
+            )}
           </div>
 
           <DialogFooter>

@@ -12,7 +12,7 @@ export interface MediaItem {
   kind: MediaKind;
   mimeType: string;
   size: number;
-  dataUrl: string;
+  dataUrl: string | null;
   thumbnailDataUrl?: string;
   geolocation?: { lat: number; lng: number };
   createdAt: string;

@@ -14,7 +14,7 @@ export interface MediaItem {
   kind: "image" | "video";
   mimeType: string;
   size: number;
-  dataUrl: string;
+  dataUrl: string | null;
   thumbnailDataUrl?: string;
   geolocation?: { lat: number; lng: number };
   createdAt: string;
@@ -73,24 +73,25 @@ export async function getItemById(id: string): Promise<MediaItem | undefined> {
 }
 
 export async function createItem(item: Omit<MediaItem, "id" | "createdAt" | "updatedAt">): Promise<MediaItem> {
+  const { dataUrl, ...createData } = item;
+
   const created = await prisma.mediaItem.create({
     data: {
       uuid: crypto.randomUUID(),
-      title: item.title,
-      category: item.category,
-      description: item.description,
+      title: createData.title,
+      category: createData.category,
+      description: createData.description,
       tags: {
-        create: (item.tags || []).map((tag) => ({
+        create: (createData.tags || []).map((tag) => ({
           uuid: crypto.randomUUID(),
           tag,
         })),
       },
-      kind: item.kind,
-      mimeType: item.mimeType,
-      size: item.size,
-      dataUrl: item.dataUrl,
-      thumbnailDataUrl: item.thumbnailDataUrl,
-      geolocation: item.geolocation ? JSON.stringify(item.geolocation) : null,
+      kind: createData.kind,
+      mimeType: createData.mimeType,
+      size: createData.size,
+      thumbnailDataUrl: createData.thumbnailDataUrl,
+      geolocation: createData.geolocation ? JSON.stringify(createData.geolocation) : null,
     },
     include: { tags: true },
   });
@@ -112,14 +113,16 @@ export async function createItem(item: Omit<MediaItem, "id" | "createdAt" | "upd
     syncStatus: "synced" as const,
   };
 
-  // Also write to filesystem in .data/registry/<category>/<slug>/
-  try {
-    await createDiskItem({
-      ...item,
-      id: created.id,
-    } as Parameters<typeof createDiskItem>[0]);
-  } catch (err) {
-    console.warn("[ServerStorePrisma] Disk mirror warning:", err);
+  if (dataUrl) {
+    try {
+      await createDiskItem({
+        ...createData,
+        id: created.id,
+        dataUrl,
+      } as Parameters<typeof createDiskItem>[0]);
+    } catch (err) {
+      console.warn("[ServerStorePrisma] Disk mirror warning:", err);
+    }
   }
 
   return mediaItem;
@@ -129,6 +132,7 @@ export async function updateItem(id: string, updates: Partial<Omit<MediaItem, "i
   const prismaUpdates: Record<string, unknown> = { ...updates };
   delete prismaUpdates.syncStatus;
   delete prismaUpdates.tags;
+  delete prismaUpdates.dataUrl;
 
   const data: Record<string, unknown> = { ...prismaUpdates };
 

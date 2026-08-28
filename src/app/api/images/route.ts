@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { getAllItems, createItem, getCategories, getItemById, updateItem, deleteItem } from "@/lib/images/server-store-prisma";
 import type { MediaItem } from "@/lib/images/server-store-prisma";
 
+type MediaItemWithoutDataUrl = Omit<MediaItem, 'dataUrl'>;
+
+function withoutDataUrl(item: MediaItem): MediaItemWithoutDataUrl {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { dataUrl, ...rest } = item;
+  return rest as MediaItemWithoutDataUrl;
+}
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
@@ -36,11 +44,21 @@ export async function GET(request: Request) {
     const paginated = items.slice(offset, offset + limit);
 
     const cats = await getCategories();
-    return NextResponse.json({ items: paginated, categories: cats, total, limit, offset });
+    const sanitized = paginated.map(withoutDataUrl);
+    return NextResponse.json({ items: sanitized, categories: cats, total, limit, offset });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to fetch images";
     console.log(`[API][GET /api/images] - ERROR: ${message}`);
-    return NextResponse.json({ error: message }, { status: 500 });
+    const normalized = message.toLowerCase();
+    const isDbUnavailable =
+      normalized.includes("can't reach database server") ||
+      normalized.includes("connection") ||
+      normalized.includes("timeout") ||
+      normalized.includes("prisma client initializationerror");
+    return NextResponse.json(
+      { error: isDbUnavailable ? "database_unavailable" : "Failed to load images", details: message },
+      { status: isDbUnavailable ? 503 : 500 }
+    );
   }
 }
 

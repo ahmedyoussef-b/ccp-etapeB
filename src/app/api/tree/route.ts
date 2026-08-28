@@ -95,12 +95,15 @@ export async function GET() {
   } catch (error) {
     console.error("Failed to fetch tree:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
+    const normalized = message.toLowerCase();
     const isDbUnavailable =
-      message.toLowerCase().includes("can't reach database server") ||
-      message.toLowerCase().includes("connection") ||
-      message.toLowerCase().includes("timeout");
+      normalized.includes("can't reach database server") ||
+      normalized.includes("connection") ||
+      normalized.includes("timeout") ||
+      normalized.includes("prisma client initializationerror");
 
     if (isDbUnavailable) {
+      console.error("[Tree] database unavailable:", message);
       return NextResponse.json(
         {
           error: "database_unavailable",
@@ -111,6 +114,7 @@ export async function GET() {
       );
     }
 
+    console.error("[Tree] unexpected error:", message);
     return NextResponse.json(
       { error: "Failed to load tree", details: message },
       { status: 500 }

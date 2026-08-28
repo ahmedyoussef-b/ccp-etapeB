@@ -270,3 +270,81 @@ export const clearVectorTree = async (): Promise<void> => {
   await db.vectorTree.clear();
   logger.indexeddb('clearVectorTree');
 };
+
+export const syncMirrorStructure = async (nodes: Array<{
+  id: string | number;
+  name: string;
+  type: string;
+  parentId?: string | number | null;
+  path?: string;
+  children?: Array<{
+    id: string | number;
+    name: string;
+    type: string;
+    parentId?: string | number | null;
+    path?: string;
+    children?: Array<{
+      id: string | number;
+      name: string;
+      type: string;
+      parentId?: string | number | null;
+      path?: string;
+    }>;
+  }>;
+}>): Promise<{ added: number }> => {
+  const db = getVectorDB();
+  if (!db) throw new Error('VectorStore not initialized');
+
+  const flat: Array<{
+    id: string;
+    name: string;
+    type: 'folder';
+    parentId: string | null;
+    relativePath: string;
+  }> = []
+
+  const walk = (items: typeof nodes, parentId: string | null, basePath: string) => {
+    for (const node of items) {
+      const type = String(node.type || '').toLowerCase()
+      if (type !== 'directory' && type !== 'root') {
+        if (node.children) {
+          walk(node.children, parentId, basePath)
+        }
+        continue
+      }
+
+      const relativePath = basePath ? `${basePath}/${node.name}` : node.name
+      flat.push({
+        id: `vdir-${node.id}`,
+        name: node.name,
+        type: 'folder',
+        parentId,
+        relativePath,
+      })
+
+      if (node.children && node.children.length > 0) {
+        walk(node.children, `vdir-${node.id}`, relativePath)
+      }
+    }
+  }
+
+  walk(nodes, null, '')
+
+  for (const node of flat) {
+    await db.vectorTree.put({
+      id: node.id,
+      name: node.name,
+      type: node.type,
+      parentId: node.parentId,
+      order: 0,
+      relativePath: node.relativePath,
+      content: null,
+      docId: null,
+      syncStatus: 'synced',
+      createdAt: Date.now(),
+    })
+  }
+
+  logger.indexeddb('syncMirrorStructure', { added: flat.length })
+  return { added: flat.length }
+};

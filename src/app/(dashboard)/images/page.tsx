@@ -59,6 +59,7 @@ import { MediaItem, MediaKind, imageService } from "@/lib/images/mock-service";
 import { getGeolocation } from "@/lib/media/capture";
 import { CategoryTreePicker } from "@/components/images/category-tree-picker";
 import { clientEngine } from "@/lib/client-engine";
+import { LazyMediaLoader } from "@/lib/media/lazy-media-loader.service";
 import type { ChangeEvent } from "react";
 
 const THUMBNAIL_MAX_SIZE = 200;
@@ -166,6 +167,7 @@ export default function ImagesPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [lightboxItem, setLightboxItem] = useState<MediaItem | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxDataUrl, setLightboxDataUrl] = useState<string | null>(null);
   const [offset, setOffset] = useState(0);
   const [limit] = useState(24);
   const [hasMore, setHasMore] = useState(true);
@@ -178,6 +180,10 @@ export default function ImagesPage() {
   const [vectorizedImageIds, setVectorizedImageIds] = useState<Set<string>>(new Set());
   const [saveError, setSaveError] = useState<string | null>(null);
   const saveCounterRef = useRef(0);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
+  const imageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -215,6 +221,86 @@ export default function ImagesPage() {
       setLoading(false);
     }
   }, [limit, sortBy, sortOrder, search, filterCategory]);
+
+  const loadImageData = useCallback(async (itemId: string) => {
+    if (loadedImages.has(itemId) || loadingImages.has(itemId)) return;
+
+    setLoadingImages((prev) => {
+      const next = new Set(prev);
+      next.add(itemId);
+      return next;
+    });
+
+    try {
+      const result = await LazyMediaLoader.loadMedia(itemId);
+      setItems((prev) =>
+        prev.map((item) => (item.id === itemId ? { ...item, dataUrl: result.dataUrl } : item))
+      );
+      setLoadedImages((prev) => {
+        const next = new Set(prev);
+        next.add(itemId);
+        return next;
+      });
+    } catch (error) {
+      console.error(`[ImagesPage] loadImageData() - ERROR id=${itemId}:`, error);
+      toast.error("Erreur lors du chargement du média");
+    } finally {
+      setLoadingImages((prev) => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
+    }
+  }, [loadedImages, loadingImages]);
+
+  const scheduleLoad = useCallback((itemId: string) => {
+    if (loadedImages.has(itemId) || loadingImages.has(itemId)) return;
+    if (loadingImages.size >= 5) return;
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      const idleCallback = (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout?: number }) => number }).requestIdleCallback;
+      idleCallback(() => loadImageData(itemId), { timeout: 2000 });
+    } else {
+      setTimeout(() => loadImageData(itemId), 0);
+    }
+  }, [loadedImages, loadingImages, loadImageData]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
+
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const itemId = entry.target.getAttribute('data-item-id');
+          if (itemId && entry.isIntersecting) {
+            scheduleLoad(itemId);
+          }
+        });
+      },
+      {
+        rootMargin: '200px',
+        threshold: 0.01,
+      }
+    );
+
+    imageRefs.current.forEach((ref) => {
+      if (ref) observerRef.current?.observe(ref);
+    });
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, [items, loadedImages, loadingImages, scheduleLoad]);
+
+  const registerImageRef = useCallback((itemId: string, ref: HTMLDivElement | null) => {
+    if (!ref) return;
+    imageRefs.current.set(itemId, ref);
+    observerRef.current?.observe(ref);
+  }, []);
 
   const loadVectorizedImageIds = useCallback(async () => {
     try {
@@ -332,7 +418,20 @@ export default function ImagesPage() {
     console.log(`[ImagesPage] closeLightbox()`);
     setLightboxOpen(false);
     setLightboxItem(null);
+    setLightboxDataUrl(null);
   };
+
+  useEffect(() => {
+    if (lightboxItem && !loadedImages.has(lightboxItem.id)) {
+      loadImageData(lightboxItem.id).then(() => {
+        setLightboxDataUrl((prev) => prev || lightboxItem.dataUrl || lightboxItem.thumbnailDataUrl || null);
+      });
+    } else if (lightboxItem) {
+      setLightboxDataUrl(lightboxItem.dataUrl || lightboxItem.thumbnailDataUrl || null);
+    } else {
+      setLightboxDataUrl(null);
+    }
+  }, [lightboxItem, loadedImages, loadImageData]);
 
   const handleGeoCapture = async () => {
     console.log(`[ImagesPage] handleGeoCapture() - requesting geolocation`);
@@ -723,15 +822,30 @@ export default function ImagesPage() {
     }
   };
 
-  const handleDownload = (item: MediaItem) => {
-    if (!item.dataUrl) {
+  const handleDownload = async (item: MediaItem) => {
+    if (!item.dataUrl && !item.thumbnailDataUrl) {
       toast.error("Aucune donnée disponible pour le téléchargement");
       return;
     }
-    console.log(`[ImagesPage] handleDownload() - id=${item.id} title="${item.title}" size=${formatSize(item.size)}`);
+
+    const targetItem = !loadedImages.has(item.id) && !item.dataUrl
+      ? items.find((i) => i.id === item.id) || item
+      : item;
+
+    if (!loadedImages.has(targetItem.id)) {
+      await loadImageData(targetItem.id);
+    }
+
+    const source = targetItem.dataUrl || targetItem.thumbnailDataUrl;
+    if (!source) {
+      toast.error("Aucune donnée disponible pour le téléchargement");
+      return;
+    }
+
+    console.log(`[ImagesPage] handleDownload() - id=${targetItem.id} title="${targetItem.title}" size=${formatSize(targetItem.size)}`);
     const link = document.createElement("a");
-    link.href = item.dataUrl;
-    link.download = item.title;
+    link.href = source;
+    link.download = targetItem.title;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -941,6 +1055,8 @@ export default function ImagesPage() {
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {items.map((item) => {
               const isSelected = selectedIds.has(item.id);
+              const isLoaded = loadedImages.has(item.id);
+              const isLoading = loadingImages.has(item.id);
               const displaySrc = item.thumbnailDataUrl || item.dataUrl;
               return (
                 <Card
@@ -957,6 +1073,7 @@ export default function ImagesPage() {
                           ? "bg-primary border-primary text-primary-foreground"
                           : "bg-white/80 border-white/50 text-transparent hover:border-primary"
                       }`}
+                      aria-label={isSelected ? "Désélectionner" : "Sélectionner"}
                     >
                       {isSelected && <CheckSquare className="h-3 w-3" />}
                     </button>
@@ -982,8 +1099,17 @@ export default function ImagesPage() {
                     </div>
                   )}
                   <div
+                    ref={(ref) => registerImageRef(item.id, ref)}
+                    data-item-id={item.id}
                     className="aspect-square bg-gradient-to-br from-muted/30 to-muted/10 flex items-center justify-center cursor-pointer overflow-hidden"
-                    onClick={() => router.push(`/images/${item.id}`)}
+                    onClick={() => {
+                      if (!isLoaded && !isLoading) {
+                        loadImageData(item.id);
+                      }
+                      openLightbox(item);
+                    }}
+                    role="button"
+                    aria-label={`Ouvrir ${item.title}`}
                   >
                     {displaySrc ? (
                       item.kind === "image" ? (
@@ -1024,6 +1150,11 @@ export default function ImagesPage() {
                         </span>
                       </div>
                     )}
+                    {isLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                        <Loader2 className="h-8 w-8 animate-spin text-white" aria-label="Chargement" />
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-3">
@@ -1050,8 +1181,9 @@ export default function ImagesPage() {
                       variant="ghost"
                       size="icon"
                       className="h-9 w-9 rounded-full bg-white/20 text-white hover:bg-white/30 backdrop-blur"
-                      onClick={() => openLightbox(item)}
+                      onClick={(e) => { e.stopPropagation(); openLightbox(item); }}
                       title="Agrandir"
+                      aria-label="Agrandir"
                     >
                       <Maximize2 className="h-4 w-4" />
                     </Button>
@@ -1059,8 +1191,9 @@ export default function ImagesPage() {
                       variant="ghost"
                       size="icon"
                       className="h-9 w-9 rounded-full bg-white/20 text-white hover:bg-white/30 backdrop-blur"
-                      onClick={() => handleDownload(item)}
+                      onClick={(e) => { e.stopPropagation(); handleDownload(item); }}
                       title="Télécharger"
+                      aria-label="Télécharger"
                     >
                       <Download className="h-4 w-4" />
                     </Button>
@@ -1068,8 +1201,9 @@ export default function ImagesPage() {
                       variant="ghost"
                       size="icon"
                       className="h-9 w-9 rounded-full bg-white/20 text-white hover:bg-white/30 backdrop-blur"
-                      onClick={() => router.push(`/images/${item.id}`)}
+                      onClick={(e) => { e.stopPropagation(); router.push(`/images/${item.id}`); }}
                       title="Modifier"
+                      aria-label="Modifier"
                     >
                       <Edit3 className="h-4 w-4" />
                     </Button>
@@ -1077,9 +1211,10 @@ export default function ImagesPage() {
                       variant="ghost"
                       size="icon"
                       className="h-9 w-9 rounded-full bg-red-500/20 text-white hover:bg-red-500/30 backdrop-blur"
-                      onClick={() => handleDelete(item.id)}
+                      onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
                       disabled={deletingId === item.id}
                       title="Supprimer"
+                      aria-label="Supprimer"
                     >
                       {deletingId === item.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -1522,16 +1657,21 @@ export default function ImagesPage() {
                 </div>
               </div>
               <div className="flex items-center justify-center p-4 min-h-[50vh]">
-                {lightboxItem.kind === "image" ? (
+                {!lightboxDataUrl ? (
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Loader2 className="h-8 w-8 animate-spin text-white" />
+                    <p className="text-xs text-white/70">Chargement...</p>
+                  </div>
+                ) : lightboxItem.kind === "image" ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={lightboxItem.dataUrl}
+                    src={lightboxDataUrl}
                     alt={lightboxItem.title}
                     className="max-w-full max-h-[70vh] object-contain"
                   />
                 ) : (
                   <video
-                    src={lightboxItem.dataUrl}
+                    src={lightboxDataUrl}
                     controls
                     autoPlay
                     className="max-w-full max-h-[70vh]"

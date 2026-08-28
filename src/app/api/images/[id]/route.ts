@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
 import { getItemById, updateItem, deleteItem } from "@/lib/images/server-store-prisma";
+import type { MediaItem } from "@/lib/images/server-store-prisma";
+
+type MediaItemWithoutDataUrl = Omit<MediaItem, 'dataUrl'>;
+
+function withoutDataUrl(item: MediaItem): MediaItemWithoutDataUrl {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { dataUrl, ...rest } = item;
+  return rest as MediaItemWithoutDataUrl;
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +23,7 @@ export async function GET(
     return NextResponse.json({ message: "Image not found" }, { status: 404 });
   }
   console.log(`[API][GET /api/images/${params.id}] - found: ${item.title}`);
-  return NextResponse.json(item);
+  return NextResponse.json(withoutDataUrl(item));
 }
 
 export async function PUT(
@@ -31,7 +40,7 @@ export async function PUT(
       return NextResponse.json({ message: "Image not found" }, { status: 404 });
     }
     console.log(`[API][PUT /api/images/${params.id}] - updated: ${item.title}`);
-    return NextResponse.json(item);
+    return NextResponse.json(withoutDataUrl(item));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Invalid data";
     console.error(`[API][PUT /api/images/${params.id}] - ERROR:`, message, error);

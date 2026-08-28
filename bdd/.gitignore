@@ -1,0 +1,8 @@
+# BDD Reports
+bdd/reports/
+bdd/screenshots/
+bdd/videos/
+
+# Playwright
+playwright-report/
+test-results/

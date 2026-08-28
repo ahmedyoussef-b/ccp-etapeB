@@ -7,6 +7,507 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model TreeNode {
+  id         Int        @id @default(autoincrement())
+  name       String
+  type       NodeType
+  metadata   String?
+  parentId   Int?
+  order      Int        @default(0)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  uuid       String     @unique
+  syncStatus SyncStatus @default(pending)
+  deletedAt  DateTime?
+  parent     TreeNode?  @relation("TreeChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children   TreeNode[] @relation("TreeChildren")
+
+  @@unique([name, type, parentId])
+  @@index([parentId])
+  @@index([type])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("TreeNode")
+}
+
+model QARegistry {
+  id          Int        @id @default(autoincrement())
+  uuid        String     @unique
+  title       String
+  description String?
+  syncStatus  SyncStatus @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  pairs       QAPair[]
+
+  @@index([title])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("qa_registries")
+}
+
+model QAPair {
+  id         Int        @id @default(autoincrement())
+  uuid       String     @unique
+  question   String
+  answer     String
+  order      Int        @default(0)
+  registryId Int
+  syncStatus SyncStatus @default(pending)
+  deletedAt  DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  registry   QARegistry @relation(fields: [registryId], references: [id], onDelete: Cascade)
+
+  @@index([registryId])
+  @@index([question])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("qa_pairs")
+}
+
+model Procedure {
+  id                       Int                          @id @default(autoincrement())
+  uuid                     String                       @unique
+  code                     String                       @unique
+  title                    String
+  description              String?
+  category                 String
+  priority                 String                       @default("moyenne")
+  estimatedTimeMinutes     Int                          @default(1)
+  status                   String                       @default("draft")
+  authorId                 String?
+  authorName               String?
+  approverId               String?
+  approverName             String?
+  reviewDate               DateTime?
+  version                  String                       @default("1.0")
+  language                 String                       @default("fr-FR")
+  body                     Json
+  syncStatus               SyncStatus                   @default(pending)
+  deletedAt                DateTime?
+  createdAt                DateTime                     @default(now())
+  updatedAt                DateTime                     @updatedAt
+  approvals                Approval[]
+  executions               ProcedureExecution[]
+  requiredRoles            ProcedureRequiredRole[]
+  globalSafetyInstructions ProcedureSafetyInstruction[]
+  tags                     ProcedureTag[]
+
+  @@index([code])
+  @@index([status])
+  @@index([category])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("procedures")
+}
+
+model ProcedureRequiredRole {
+  id          Int        @id @default(autoincrement())
+  uuid        String?    @unique
+  procedureId Int
+  role        String
+  syncStatus  SyncStatus @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  procedure   Procedure  @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+
+  @@index([procedureId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("procedure_required_roles")
+}
+
+model ProcedureSafetyInstruction {
+  id          Int        @id @default(autoincrement())
+  uuid        String?    @unique
+  procedureId Int
+  instruction String
+  syncStatus  SyncStatus @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  procedure   Procedure  @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+
+  @@index([procedureId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("procedure_safety_instructions")
+}
+
+model ProcedureTag {
+  id          Int        @id @default(autoincrement())
+  uuid        String?    @unique
+  procedureId Int
+  tag         String
+  syncStatus  SyncStatus @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  procedure   Procedure  @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+
+  @@index([procedureId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("procedure_tags")
+}
+
+model ProcedureExecution {
+  id               Int                      @id @default(autoincrement())
+  uuid             String                   @unique
+  procedureId      Int
+  userId           String?
+  userName         String?
+  userRole         String?
+  phase            String                   @default("briefing")
+  currentStepIndex Int                      @default(0)
+  startedAt        DateTime                 @default(now())
+  finishedAt       DateTime?
+  globalElapsed    Int                      @default(0)
+  syncStatus       SyncStatus               @default(pending)
+  deletedAt        DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  anomalies        ExecutionAnomaly[]
+  completedSteps   ExecutionCompletedStep[]
+  media            ExecutionMedia[]
+  steps            ExecutionStep[]
+  procedure        Procedure                @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+
+  @@index([procedureId])
+  @@index([userId])
+  @@index([startedAt])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("procedure_executions")
+}
+
+model ExecutionCompletedStep {
+  id          Int                @id @default(autoincrement())
+  uuid        String?            @unique
+  executionId Int
+  stepId      String
+  syncStatus  SyncStatus         @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  execution   ProcedureExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("execution_completed_steps")
+}
+
+model ExecutionAnomaly {
+  id          Int                @id @default(autoincrement())
+  uuid        String?            @unique
+  executionId Int
+  anomaly     String
+  syncStatus  SyncStatus         @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  execution   ProcedureExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("execution_anomalies")
+}
+
+model ExecutionStep {
+  id           Int                @id @default(autoincrement())
+  uuid         String             @unique
+  executionId  Int
+  stepId       String
+  stepOrder    Int
+  title        String
+  type         String
+  isMandatory  Boolean            @default(false)
+  isCompleted  Boolean            @default(false)
+  timerEnabled Boolean            @default(false)
+  timerSeconds Int                @default(0)
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  anomaly      String?
+  syncStatus   SyncStatus         @default(pending)
+  deletedAt    DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  execution    ProcedureExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("execution_steps")
+}
+
+model ExecutionMedia {
+  id          Int                @id @default(autoincrement())
+  uuid        String             @unique
+  executionId Int
+  stepId      String
+  type        String
+  url         String?
+  filename    String?
+  mimeType    String?
+  size        Int?
+  geolocation Json?
+  timestamp   DateTime           @default(now())
+  capturedAt  DateTime           @default(now())
+  syncStatus  SyncStatus         @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  execution   ProcedureExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+  @@index([stepId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("execution_media")
+}
+
+model Approval {
+  id           Int        @id @default(autoincrement())
+  uuid         String     @unique
+  procedureId  Int
+  approverId   String
+  approverName String
+  approverRole String
+  status       String     @default("pending")
+  comment      String?
+  syncStatus   SyncStatus @default(pending)
+  deletedAt    DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  procedure    Procedure  @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+
+  @@index([procedureId])
+  @@index([status])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("approvals")
+}
+
+model ProcedureVersion {
+  id            Int        @id @default(autoincrement())
+  uuid          String     @unique
+  procedureCode String
+  version       String
+  body          Json
+  syncStatus    SyncStatus @default(pending)
+  deletedAt     DateTime?
+  createdAt     DateTime   @default(now())
+  createdBy     String?
+  createdByName String?
+  comment       String?
+
+  @@index([procedureCode])
+  @@index([procedureCode, version])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("procedure_versions")
+}
+
+model IotSensorState {
+  id         String     @id
+  uuid       String     @unique
+  name       String
+  type       String
+  value      Float
+  unit       String
+  threshold  Float
+  syncStatus SyncStatus @default(pending)
+  deletedAt  DateTime?
+  updatedAt  DateTime   @updatedAt
+  createdAt  DateTime   @default(now())
+
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("iot_sensor_states")
+}
+
+model IotActuatorState {
+  id         String     @id
+  uuid       String     @unique
+  name       String
+  type       String
+  isOn       Boolean    @default(false)
+  position   Int?
+  syncStatus SyncStatus @default(pending)
+  deletedAt  DateTime?
+  updatedAt  DateTime   @updatedAt
+  createdAt  DateTime   @default(now())
+
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("iot_actuator_states")
+}
+
+model MediaItem {
+  id               String         @id @default(cuid())
+  uuid             String         @unique
+  title            String
+  category         String
+  description      String?
+  kind             String
+  mimeType         String
+  size             Int
+  dataUrl          String?
+  thumbnailDataUrl String?
+  geolocation      String?
+  syncStatus       SyncStatus     @default(pending)
+  deletedAt        DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  tags             MediaItemTag[]
+
+  @@index([category])
+  @@index([kind])
+  @@index([createdAt])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("media_items")
+}
+
+model MediaItemTag {
+  id          Int        @id @default(autoincrement())
+  uuid        String?    @unique
+  mediaItemId String
+  tag         String
+  syncStatus  SyncStatus @default(pending)
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now())
+  mediaItem   MediaItem  @relation(fields: [mediaItemId], references: [id], onDelete: Cascade)
+
+  @@index([mediaItemId])
+  @@index([syncStatus])
+  @@index([deletedAt])
+  @@map("media_item_tags")
+}
+
+model SyncLog {
+  id         Int       @id @default(autoincrement())
+  uuid       String    @unique
+  modelName  String
+  recordId   String?
+  recordUuid String?
+  operation  String
+  status     String    @default("pending")
+  source     String?
+  target     String?
+  error      String?
+  metadata   Json?
+  syncedAt   DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([modelName])
+  @@index([recordUuid])
+  @@index([status])
+  @@index([syncedAt])
+  @@map("sync_logs")
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  name              String
+  passwordHash      String
+  role              Role               @default(rondier)
+  teamId            String?            @map("team_id")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  bootstrapRequests BootstrapRequest[]
+  notifications     Notification[]
+  team              Team?              @relation(fields: [teamId], references: [id])
+
+  @@map("users")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  members   User[]
+
+  @@map("teams")
+}
+
+model RegistrationRequest {
+  id            String    @id @default(cuid())
+  email         String
+  name          String
+  passwordHash  String
+  desiredRole   Role
+  message       String?
+  status        String    @default("pending")
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  reviewComment String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+  @@index([email])
+}
+
+model BootstrapRequest {
+  id             String          @id @default(cuid())
+  userId         String
+  status         BootstrapStatus @default(pending)
+  requestedAt    DateTime        @default(now())
+  approvedAt     DateTime?
+  downloadedAt   DateTime?
+  token          String?
+  reviewedById   String?
+  reviewedByName String?
+  reviewComment  String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  relatedId String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+}
+
+model MediaCategory {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  description String?
+  parentId    String?
+  order       Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  parent      MediaCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    MediaCategory[] @relation("CategoryHierarchy")
+
+  @@index([parentId])
+  @@index([name])
+}
+
 enum NodeType {
   root
   directory
@@ -33,505 +534,4 @@ enum BootstrapStatus {
   approved
   rejected
   downloaded
-}
-
-model TreeNode {
-  id          Int        @id @default(autoincrement())
-  uuid        String     @unique
-  name        String
-  type        NodeType
-  metadata    String?
-  parentId    Int?
-  parent      TreeNode?  @relation("TreeChildren", fields: [parentId], references: [id], onDelete: Cascade)
-  children    TreeNode[] @relation("TreeChildren")
-  order       Int        @default(0)
-  syncStatus  SyncStatus @default(pending)
-  deletedAt   DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  @@index([parentId])
-  @@index([type])
-  @@index([syncStatus])
-  @@index([deletedAt])
-  @@unique([name, type, parentId])
-  @@map("TreeNode")
-}
-
-model QARegistry {
-   id          Int        @id @default(autoincrement())
-   uuid        String     @unique
-   title       String
-   description String?
-   pairs       QAPair[]
-   syncStatus  SyncStatus @default(pending)
-   deletedAt   DateTime?
-   createdAt   DateTime   @default(now())
-   updatedAt   DateTime   @updatedAt
-
-   @@index([title])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("qa_registries")
- }
-
-model QAPair {
-   id         Int        @id @default(autoincrement())
-   uuid       String     @unique
-   question   String
-   answer     String
-   order      Int        @default(0)
-   registryId Int
-   registry   QARegistry @relation(fields: [registryId], references: [id], onDelete: Cascade)
-   syncStatus SyncStatus @default(pending)
-   deletedAt  DateTime?
-   createdAt  DateTime   @default(now())
-   updatedAt  DateTime   @updatedAt
-
-   @@index([registryId])
-   @@index([question])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("qa_pairs")
- }
-
-model Procedure {
-   id                       Int                       @id @default(autoincrement())
-   uuid                     String                    @unique
-   code                     String                    @unique
-   title                  String
-   description            String?
-   category               String
-   priority               String                    @default("moyenne")
-   estimatedTimeMinutes   Int                       @default(1)
-   requiredRoles          ProcedureRequiredRole[]
-   globalSafetyInstructions ProcedureSafetyInstruction[]
-   status                 String                    @default("draft")
-   authorId               String?
-   authorName             String?
-   approverId             String?
-   approverName           String?
-   reviewDate             DateTime?
-   version                String                    @default("1.0")
-   tags                   ProcedureTag[]
-   language               String                    @default("fr-FR")
-   body                   Json
-   syncStatus             SyncStatus                @default(pending)
-   deletedAt              DateTime?
-   createdAt              DateTime                  @default(now())
-   updatedAt              DateTime                  @updatedAt
-   executions             ProcedureExecution[]
-   approvals              Approval[]
-
-   @@index([code])
-   @@index([status])
-   @@index([category])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("procedures")
- }
-
-model ProcedureRequiredRole {
-   id         Int       @id @default(autoincrement())
-   uuid       String?   @unique
-   procedureId Int
-   procedure  Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
-   role       String
-   syncStatus SyncStatus @default(pending)
-   deletedAt  DateTime?
-   createdAt  DateTime   @default(now())
-   updatedAt  DateTime   @updatedAt
-
-   @@index([procedureId])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("procedure_required_roles")
- }
-
-model ProcedureSafetyInstruction {
-   id          Int       @id @default(autoincrement())
-   uuid        String?   @unique
-   procedureId Int
-   procedure   Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
-   instruction String
-   syncStatus  SyncStatus @default(pending)
-   deletedAt   DateTime?
-   createdAt   DateTime   @default(now())
-   updatedAt   DateTime   @updatedAt
-
-   @@index([procedureId])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("procedure_safety_instructions")
- }
-
-model ProcedureTag {
-   id         Int       @id @default(autoincrement())
-   uuid       String?   @unique
-   procedureId Int
-   procedure   Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
-   tag        String
-   syncStatus SyncStatus @default(pending)
-   deletedAt  DateTime?
-   createdAt  DateTime   @default(now())
-   updatedAt  DateTime   @updatedAt
-
-   @@index([procedureId])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("procedure_tags")
- }
-
-model ProcedureExecution {
-   id            Int                  @id @default(autoincrement())
-   uuid            String             @unique
-   procedureId     Int
-   procedure       Procedure           @relation(fields: [procedureId], references: [id], onDelete: Cascade)
-   userId          String?
-   userName        String?
-   userRole        String?
-   phase           String              @default("briefing")
-   currentStepIndex Int               @default(0)
-   completedSteps  ExecutionCompletedStep[]
-   startedAt       DateTime            @default(now())
-   finishedAt      DateTime?
-   anomalies       ExecutionAnomaly[]
-   globalElapsed   Int                 @default(0)
-   syncStatus      SyncStatus          @default(pending)
-   deletedAt       DateTime?
-   createdAt       DateTime            @default(now())
-   updatedAt       DateTime            @updatedAt
-   steps           ExecutionStep[]
-   media           ExecutionMedia[]
-
-   @@index([procedureId])
-   @@index([userId])
-   @@index([startedAt])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("procedure_executions")
- }
-
-model ExecutionCompletedStep {
-   id            Int                 @id @default(autoincrement())
-   uuid          String?             @unique
-   executionId   Int
-   execution     ProcedureExecution  @relation(fields: [executionId], references: [id], onDelete: Cascade)
-   stepId        String
-   syncStatus    SyncStatus          @default(pending)
-   deletedAt     DateTime?
-   createdAt     DateTime            @default(now())
-   updatedAt     DateTime            @updatedAt
-
-   @@index([executionId])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("execution_completed_steps")
- }
-
-model ExecutionAnomaly {
-   id            Int                 @id @default(autoincrement())
-   uuid          String?             @unique
-   executionId   Int
-   execution     ProcedureExecution  @relation(fields: [executionId], references: [id], onDelete: Cascade)
-   anomaly       String
-   syncStatus    SyncStatus          @default(pending)
-   deletedAt     DateTime?
-   createdAt     DateTime            @default(now())
-   updatedAt     DateTime            @updatedAt
-
-   @@index([executionId])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("execution_anomalies")
- }
-
-model ExecutionStep {
-   id          Int      @id @default(autoincrement())
-   uuid        String   @unique
-   executionId Int
-   execution   ProcedureExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
-   stepId      String
-   stepOrder   Int
-   title       String
-   type        String
-   isMandatory Boolean  @default(false)
-   isCompleted Boolean  @default(false)
-   timerEnabled Boolean @default(false)
-   timerSeconds Int     @default(0)
-   startedAt   DateTime?
-   finishedAt  DateTime?
-   anomaly     String?
-   syncStatus  SyncStatus @default(pending)
-   deletedAt   DateTime?
-   createdAt   DateTime @default(now())
-   updatedAt   DateTime @updatedAt
-
-   @@index([executionId])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("execution_steps")
- }
-
-model ExecutionMedia {
-   id          Int      @id @default(autoincrement())
-   uuid        String   @unique
-   executionId Int
-   execution   ProcedureExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
-   stepId      String
-   type        String
-   url         String?
-   filename    String?
-   mimeType    String?
-   size        Int?
-   geolocation Json?
-   timestamp   DateTime @default(now())
-   capturedAt  DateTime @default(now())
-   syncStatus  SyncStatus @default(pending)
-   deletedAt   DateTime?
-   createdAt   DateTime @default(now())
-   updatedAt   DateTime @updatedAt
-
-   @@index([executionId])
-   @@index([stepId])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("execution_media")
- }
-
-model Approval {
-   id           Int       @id @default(autoincrement())
-   uuid         String     @unique
-   procedureId  Int
-   procedure    Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
-   approverId   String
-   approverName String
-   approverRole String
-   status       String    @default("pending")
-   comment     String?
-   syncStatus  SyncStatus @default(pending)
-   deletedAt   DateTime?
-   createdAt   DateTime   @default(now())
-   updatedAt   DateTime   @updatedAt
-
-   @@index([procedureId])
-   @@index([status])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("approvals")
- }
-
-model ProcedureVersion {
-   id            Int       @id @default(autoincrement())
-   uuid          String    @unique
-   procedureCode String
-   version       String
-   body          Json
-   syncStatus    SyncStatus @default(pending)
-   deletedAt     DateTime?
-   createdAt     DateTime   @default(now())
-   createdBy     String?
-   createdByName String?
-   comment       String?
-
-   @@index([procedureCode])
-   @@index([procedureCode, version])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("procedure_versions")
- }
-
-model IotSensorState {
-   id         String   @id
-   uuid       String   @unique
-   name       String
-   type       String
-   value      Float
-   unit       String
-   threshold  Float
-   syncStatus SyncStatus @default(pending)
-   deletedAt  DateTime?
-   updatedAt  DateTime @updatedAt
-   createdAt  DateTime @default(now())
-
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("iot_sensor_states")
- }
-
-model IotActuatorState {
-   id         String   @id
-   uuid       String   @unique
-   name       String
-   type       String
-   isOn       Boolean  @default(false)
-   position   Int?
-   syncStatus SyncStatus @default(pending)
-   deletedAt  DateTime?
-   updatedAt  DateTime @updatedAt
-   createdAt  DateTime @default(now())
-
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("iot_actuator_states")
- }
-
-model MediaItem {
-   id              String   @id @default(cuid())
-   uuid            String   @unique
-   title           String
-   category        String
-   description     String?
-   tags            MediaItemTag[]
-   kind            String
-   mimeType        String
-   size            Int
-   dataUrl         String
-   thumbnailDataUrl String?
-   geolocation     String?
-   syncStatus      SyncStatus @default(pending)
-   deletedAt       DateTime?
-   createdAt       DateTime @default(now())
-   updatedAt       DateTime @updatedAt
-
-   @@index([category])
-   @@index([kind])
-   @@index([createdAt])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("media_items")
- }
-
-model MediaItemTag {
-   id         Int       @id @default(autoincrement())
-   uuid       String?   @unique
-   mediaItemId String
-   mediaItem  MediaItem @relation(fields: [mediaItemId], references: [id], onDelete: Cascade)
-   tag        String
-   syncStatus SyncStatus @default(pending)
-   deletedAt  DateTime?
-   createdAt  DateTime   @default(now())
-   updatedAt  DateTime   @default(now())
-
-   @@index([mediaItemId])
-   @@index([syncStatus])
-   @@index([deletedAt])
-   @@map("media_item_tags")
- }
-
-model SyncLog {
-   id            Int        @id @default(autoincrement())
-   uuid          String     @unique
-   modelName     String
-   recordId      String?
-   recordUuid    String?
-   operation     String
-   status        String     @default("pending")
-   source        String?
-   target        String?
-   error         String?
-   metadata      Json?
-   syncedAt      DateTime?
-   createdAt     DateTime   @default(now())
-   updatedAt     DateTime   @updatedAt
-
-   @@index([modelName])
-   @@index([recordUuid])
-   @@index([status])
-   @@index([syncedAt])
-   @@map("sync_logs")
- }
-
-model User {
-  id                String             @id @default(cuid())
-  email             String             @unique
-  name              String
-  passwordHash      String
-  role              Role               @default(rondier)
-  teamId            String?            @map("team_id")
-  team              Team?              @relation(fields: [teamId], references: [id])
-  bootstrapRequests BootstrapRequest[]
-  notifications     Notification[]
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
-
-  @@map("users")
-}
-
-model Team {
-  id        String   @id @default(cuid())
-  name      String
-  members   User[]
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("teams")
-}
-
-model RegistrationRequest {
-  id            String    @id @default(cuid())
-  email         String
-  name          String
-  passwordHash  String
-  desiredRole   Role
-  message       String?
-  status        String    @default("pending")
-  reviewedBy    String?
-  reviewedAt    DateTime?
-  reviewComment String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  @@index([status])
-  @@index([email])
-}
-
-model BootstrapRequest {
-  id             String          @id @default(cuid())
-  userId         String
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status         BootstrapStatus @default(pending)
-  requestedAt    DateTime        @default(now())
-  approvedAt     DateTime?
-  downloadedAt   DateTime?
-  token          String?
-  reviewedById   String?
-  reviewedByName String?
-  reviewComment  String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-
-  @@index([userId])
-  @@index([status])
-}
-
-model Notification {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      String
-  title     String
-  message   String
-  relatedId String?
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([read])
-}
-
-model MediaCategory {
-  id          String          @id @default(cuid())
-  name        String          @unique
-  description String?
-  parentId    String?
-  parent      MediaCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children    MediaCategory[] @relation("CategoryHierarchy")
-  order       Int             @default(0)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([parentId])
-  @@index([name])
 }
