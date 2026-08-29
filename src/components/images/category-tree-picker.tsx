@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ChevronRight, ChevronDown, FolderTree, Loader2, Image as ImageIcon } from "lucide-react";
+import { ChevronRight, ChevronDown, FolderTree, Loader2, Image as ImageIcon, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 type WebTreeNode = {
@@ -107,6 +107,19 @@ export function CategoryTreePicker({ value, onChange, placeholder = "Sélectionn
   const [loadFailed, setLoadFailed] = useState(false);
   const [manualCategory, setManualCategory] = useState("");
 
+  const categoryExists = useMemo(() => {
+    if (!value || !tree.length) return false;
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    const existsInTree = (nodes: WebTreeNode[]): boolean =>
+      nodes.some(
+        (node) =>
+          node.name === trimmed ||
+          node.children.some((child) => child.name === trimmed)
+      );
+    return existsInTree(tree);
+  }, [value, tree]);
+
   const loadTree = useCallback(async () => {
     setLoading(true);
     setLoadFailed(false);
@@ -178,13 +191,16 @@ export function CategoryTreePicker({ value, onChange, placeholder = "Sélectionn
       <Button
         type="button"
         variant="outline"
-        className="w-full justify-between bg-background/60"
+        className={`w-full justify-between bg-background/60 ${value && !categoryExists ? "border-amber-500 text-amber-600" : ""}`}
         onClick={() => setOpen(true)}
       >
         <span className={`truncate ${!value ? "text-muted-foreground" : ""}`}>
           {value || placeholder}
         </span>
-        <FolderTree className="h-4 w-4 ml-2 flex-shrink-0" />
+        <div className="ml-2 flex items-center gap-1 flex-shrink-0">
+          {value && !categoryExists && <AlertTriangle className="h-4 w-4 text-amber-500" />}
+          <FolderTree className="h-4 w-4" />
+        </div>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -195,6 +211,15 @@ export function CategoryTreePicker({ value, onChange, placeholder = "Sélectionn
               Sélectionnez un nœud dans l&apos;arborescence Structure BDD, ou saisissez une catégorie manuellement si l&apos;arborescence est indisponible.
             </DialogDescription>
           </DialogHeader>
+
+          {value && !categoryExists && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-700">
+              <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span>
+                La catégorie &laquo; {value} &raquo; n&apos;existe pas encore dans la BDD. Elle sera enregistr&eacute;e, mais n&apos;apparaîtra dans l&apos;arborescence que si un nœud correspondant est ajout&eacute;.
+              </span>
+            </div>
+          )}
 
           <div className="space-y-3">
             <Input
@@ -247,6 +272,12 @@ export function CategoryTreePicker({ value, onChange, placeholder = "Sélectionn
                   ))
                 )}
               </div>
+            )}
+
+            {!loadFailed && !categoryExists && manualCategory.trim() && (
+              <p className="text-xs text-amber-600">
+                Cette catégorie n&apos;existe pas dans l&apos;arborescence. Elle sera enregistr&eacute;e, mais n&apos;apparaîtra pas dans la BDD tant qu&apos;un nœud correspondant n&apos;aura pas &eacute;t&eacute; ajout&eacute;.
+              </p>
             )}
           </div>
 
