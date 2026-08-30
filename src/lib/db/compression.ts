@@ -1,4 +1,4 @@
-import { gzipSync, gunzipSync } from 'node:zlib';
+import { gzipSync, gunzipSync } from 'zlib';
 import type { Database, BindingSpec } from '@sqlite.org/sqlite-wasm';
 
 const COMPRESSION_THRESHOLD = 1024;

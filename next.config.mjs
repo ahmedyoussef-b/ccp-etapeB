@@ -19,6 +19,7 @@ const nextConfig = {
         path: false,
         crypto: false,
         zlib: false,
+        'node:zlib': false,
       };
       config.module = config.module || {};
       config.module.rules = config.module.rules || [];

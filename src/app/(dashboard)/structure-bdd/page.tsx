@@ -1,37 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, memo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RenameNodeDialog } from "@/components/database/modals/RenameNodeDialog";
+import { EditMetadataDialog } from "@/components/database/modals/EditMetadataDialog";
+import { JsonEditorPanel } from "@/components/database/JsonEditorPanel";
+import { PageTreeNodeItem } from "@/components/database/PageTreeNodeItem";
+import { useWebTreeQuery, useImageTreeQuery, useResetWebMutation, useCompressSqliteMutation, useReindexVectorMutation, useDeleteImageMutation, useRenameImageMutation, useEditImageMetadataMutation } from "@/lib/database/queries";
 import {
   Database,
-  ChevronRight,
-  ChevronDown,
   FolderTree,
   FileText,
-  FileJson,
   Eye,
   RefreshCw,
   RotateCcw,
   ArrowRightLeft,
   Trash2,
-  Plus,
   Pencil,
   Download,
-  Image,
   FolderOpen,
   Bug,
-  type LucideIcon,
+  HardDrive,
+  Cpu,
+  Activity,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
@@ -45,7 +39,9 @@ import { csrfFetch } from "@/lib/procedures/csrf-fetch";
 import { syncManager, type SyncManagerStatus } from "@/lib/sync/sync-manager";
 import type { DatabaseLocations } from "@/lib/client-engine/locations";
 import { UnifiedTreeView } from "@/components/database/UnifiedTreeView";
+import { ConfirmDialog } from "@/components/database/modals/ConfirmDialog";
 import { StorageStatusView } from "@/components/database/StorageStatusView";
+import { AddNodeDialog } from "@/components/database/modals/AddNodeDialog";
 
 type LocalNode = {
   id: string;
@@ -90,275 +86,11 @@ function isImageNode(node: WebTreeNode | LocalNode | ImageNode): node is ImageNo
   return "path" in node && (node as { type: string }).type === "image";
 }
 
-const iconMap: Record<string, LucideIcon> = {
-  root: FolderTree,
-  category: FolderTree,
-  group: FolderTree,
-  item: FileText,
-  directory: FolderTree,
-  folder: FolderTree,
-  file: FileJson,
-  image: Image,
-};
-
-const TreeNodeItem = memo(function TreeNodeItem({
-  node,
-  depth = 0,
-  path = "",
-  onDelete,
-  onAdd,
-  onRename,
-  onEdit,
-  onEditMetadata,
-  onPreview,
-  onVectorize,
-  onDownload,
-  vectorizedPaths,
-  vectorizing = false,
-  expandAll = false,
-}: {
-  node: WebTreeNode | LocalNode | ImageNode;
-  depth?: number;
-  path?: string;
-  onDelete?: (node: WebTreeNode | LocalNode) => void;
-  onAdd?: (node: WebTreeNode | LocalNode) => void;
-  onRename?: (node: WebTreeNode | LocalNode) => void;
-  onEdit?: (node: LocalNode) => void;
-  onEditMetadata?: (node: ImageNode) => void;
-  onPreview?: (node: WebTreeNode | LocalNode) => void;
-  onVectorize?: (node: LocalNode, path: string) => void;
-  onDownload?: (node: WebTreeNode | LocalNode) => void;
-  vectorizedPaths?: Set<string>;
-  vectorizing?: boolean;
-  expandAll?: boolean;
-}) {
-  const [expanded, setExpanded] = useState(expandAll);
-  const [showActions, setShowActions] = useState(false);
-  const isLocal = "path" in node;
-  const isImage = isImageNode(node);
-  const nodeType = isImage ? "image" : isLocal ? node.type : node.type;
-  const Icon = iconMap[nodeType] ?? FileText;
-  const nodePath = path ? `${path}/${node.name}` : node.name;
-
-  const isFileNode = nodeType === "file" || nodeType === "item" || isImage;
-  const hasLocalContent = isLocal && !isImage && nodeType === "file" && node.content !== undefined && node.content !== null;
-
-  const isNodeVectorized = (n: LocalNode, basePath: string): boolean => {
-    if (!vectorizedPaths) return false;
-    const nodePath = basePath ? `${basePath}/${n.name}` : n.name;
-    if (n.type === "file") {
-      return vectorizedPaths.has(nodePath);
-    }
-    return n.children.some((child) => isNodeVectorized(child as LocalNode, nodePath));
-  };
-
-  const isVectorized = (() => {
-    if (!vectorizedPaths) return false;
-    if (isImage) {
-      const imageId = String(node.id).replace(/^image-/, "");
-      return (
-        vectorizedPaths.has(`media-${imageId}`) ||
-        vectorizedPaths.has(`media-${node.id}`) ||
-        vectorizedPaths.has(nodePath) ||
-        vectorizedPaths.has(node.name)
-      );
-    }
-    if (!isLocal) return false;
-    return isNodeVectorized(node as LocalNode, path);
-  })();
-
-  const getBadgeVariant = () => {
-    if (isImage) return "default";
-    if (isLocal) {
-      if (nodeType === "folder") return "default";
-      return "secondary";
-    }
-    return "secondary";
-  };
-
-  const getBadgeText = () => {
-    if (isImage) return "image";
-    if (isLocal) {
-      if (nodeType === "folder") return "dossier";
-      return "fichier";
-    }
-    return node.type;
-  };
-
-  return (
-    <div
-      className="group relative"
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
-    >
-      <div
-        className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50 cursor-pointer"
-        style={{ paddingLeft: `${depth * 16 + 8}px` }}
-        onClick={() => setExpanded((prev) => !prev)}
-      >
-        {node.children.length > 0 ? (
-          expanded ? (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          )
-        ) : (
-          <span className="w-4" />
-        )}
-        <Icon className="h-4 w-4 text-primary" />
-        <span className="text-sm font-medium text-foreground flex-1">{node.name}</span>
-        <Badge variant={getBadgeVariant()} className="text-xs">
-          {getBadgeText()}
-        </Badge>
-
-        {showActions && (
-          <div className="flex items-center gap-1 ml-2">
-            {(nodeType === "directory" || nodeType === "folder" || nodeType === "root") && onAdd && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAdd?.((node as unknown) as LocalNode);
-                }}
-                title="Ajouter"
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            )}
-            {!isLocal && (nodeType === "directory" || nodeType === "folder" || nodeType === "root") && onDownload && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-green-500"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDownload?.((node as unknown) as LocalNode);
-                }}
-                title="Télécharger vers local"
-              >
-                <Download className="h-3 w-3" />
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={(e) => {
-                e.stopPropagation();
-                  onRename?.((node as unknown) as LocalNode);
-              }}
-              title="Renommer"
-            >
-              <Pencil className="h-3 w-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-red-500"
-              onClick={(e) => {
-                e.stopPropagation();
-                  onDelete?.((node as unknown) as LocalNode);
-              }}
-              title="Supprimer"
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
-            {hasLocalContent && onEdit && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit?.((node as unknown) as LocalNode);
-                }}
-                title="Éditer"
-              >
-                <FileJson className="h-3 w-3" />
-              </Button>
-            )}
-            {isImage && onEditMetadata && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-amber-500"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditMetadata(node as ImageNode);
-                }}
-                title="Éditer métadonnées JSON"
-              >
-                <FileJson className="h-3 w-3" />
-              </Button>
-            )}
-              {isFileNode && onVectorize && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`h-6 w-6 ${isVectorized ? 'text-green-500' : 'text-blue-500'}`}
-                  disabled={vectorizing}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onVectorize?.((node as unknown) as LocalNode, nodePath);
-                  }}
-                  title={isVectorized ? 'Déjà vectorisé' : 'Vectoriser'}
-                >
-                  <Database className="h-3 w-3" />
-                  {isVectorized && <span className="absolute h-1.5 w-1.5 rounded-full bg-green-500 -top-0.5 -right-0.5" />}
-                </Button>
-              )}
-             {isFileNode && onPreview && (
-               <Button
-                 variant="ghost"
-                 size="icon"
-                 className="h-6 w-6"
-                 onClick={(e) => {
-                   e.stopPropagation();
-                    onPreview?.((node as unknown) as LocalNode);
-                 }}
-                 title="Aperçu"
-               >
-                 <Eye className="h-3 w-3" />
-               </Button>
-             )}
-           </div>
-         )}
-       </div>
-
-       {expanded && node.children.length > 0 && (
-         <div>
-            {node.children.map((child) => (
-               <TreeNodeItem
-                 key={child.id}
-                 node={child}
-                 depth={depth + 1}
-                  path={nodePath}
-                  onDelete={onDelete}
-                  onAdd={onAdd}
-                  onRename={onRename}
-                  onEdit={onEdit}
-                  onEditMetadata={onEditMetadata}
-                  onPreview={onPreview}
-                  onVectorize={onVectorize}
-                  onDownload={onDownload}
-                  vectorizedPaths={vectorizedPaths}
-                  expandAll={expandAll}
-                />
-           ))}
-        </div>
-      )}
-      </div>
-    );
-  }
-);
-
 export default function StructureBDDPage() {
   const [webTree, setWebTree] = useState<WebTreeNode[]>([]);
   const [localTree, setLocalTree] = useState<LocalNode[]>([]);
   const [vectorDocs, setVectorDocs] = useState<{ id: string; name: string; chunks: { content: string }[] }[]>([]);
-  const [vectorTree, setVectorTree] = useState<LocalNode[]>([]); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const [vectorTree, setVectorTree] = useState<LocalNode[]>([]);
   const [vectorizing, setVectorizing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [webError, setWebError] = useState<string | null>(null);
@@ -375,31 +107,38 @@ export default function StructureBDDPage() {
   const [newNodeType, setNewNodeType] = useState<"file" | "directory">("directory");
   const [renamingNode, setRenamingNode] = useState<{ tree: "web" | "local" | "images"; id: number | string; currentName: string } | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    description: string;
+    resolve: (value: boolean) => void;
+  } | null>(null);
+
+  const showConfirm = useCallback(
+    (description: string, title = "Confirmer ?") =>
+      new Promise<boolean>((resolve) => {
+        setConfirmDialog({ title, description, resolve });
+      }),
+    []
+  );
   const [editingFile, setEditingFile] = useState<{ tree: "web" | "local"; path: string; content: string } | null>(null);
-  const [editContent, setEditContent] = useState("");
   const [previewingFile, setPreviewingFile] = useState<{ path?: string; name: string; tree: "web" | "local" } | null>(null);
   const [previewingImageId, setPreviewingImageId] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<{ content?: string; dataUrl?: string; mimeType: string; name: string; size: number; isText: boolean } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncingVectorMirror, setSyncingVectorMirror] = useState(false);
+  const [compressing, setCompressing] = useState(false);
+  const [reindexing, setReindexing] = useState(false);
   const [activeView, setActiveView] = useState<"web" | "local" | "vector" | "images" | "comparison">("web");
   const [showOnlyVectorized, setShowOnlyVectorized] = useState(false);
   const [vectorizedPaths, setVectorizedPaths] = useState<Set<string>>(new Set());
   const [vectorizedCount, setVectorizedCount] = useState(0);
   // ── Image metadata editor state ──────────────────────────────────────────────
-  const [editingImageMetadata, setEditingImageMetadata] = useState<{ id: string; name: string } | null>(null);
-  const [imageMetadataContent, setImageMetadataContent] = useState("");
-  const [savingImageMetadata, setSavingImageMetadata] = useState(false);
+  const [editingImageMetadata, setEditingImageMetadata] = useState<{ id: string; name: string; content: string } | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncManagerStatus | null>(null);
   const [dbLocations, setDbLocations] = useState<DatabaseLocations | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [localSyncStatus, setLocalSyncStatus] = useState<{ webCount: number; localCount: number; isSynced: boolean }>({ webCount: 0, localCount: 0, isSynced: false });
-  const [mirrorStatus, setMirrorStatus] = useState<{
-    sqlite: { exists: boolean; count: number };
-    indexeddb: { exists: boolean; count: number };
-    media: { exists: boolean; count: number };
-  } | null>(null);
 
   const updateLocalSyncStatus = useCallback(async () => {
     try {
@@ -425,24 +164,6 @@ export default function StructureBDDPage() {
     setVectorError(null);
 
     const enginePromise = clientEngine.init();
-
-    const webPromise = fetch("/api/tree")
-      .then((res) => {
-        console.log("[StructureBDD] /api/tree status", res.status);
-        if (!res.ok) throw new Error("Failed to fetch web tree");
-        return res.json();
-      })
-      .then((data) => {
-        const roots = (data as { roots: WebTreeNode[] }).roots || [];
-        console.log("[StructureBDD] web tree loaded from PostgreSQL", { count: roots.length });
-        setWebTree(roots);
-      })
-      .catch((err) => {
-        const msg = err instanceof Error ? err.message : "Unknown error";
-        console.error("[StructureBDD] web tree error", msg);
-        setWebError(msg);
-        setWebTree([]);
-      });
 
     const localPromise = enginePromise
       .then(() => loadLocalTreeFromSQLite())
@@ -484,25 +205,7 @@ export default function StructureBDDPage() {
         setVectorTree([]);
       });
 
-    const imagePromise = fetch("/api/images/tree")
-      .then((res) => {
-        console.log("[StructureBDD] /api/images/tree status", res.status);
-        if (!res.ok) throw new Error("Failed to fetch image tree");
-        return res.json();
-      })
-      .then((data) => {
-        const roots = (data as { roots: ImageNode[] }).roots;
-        console.log("[StructureBDD] image tree loaded", { count: roots.length });
-        setImageTree(roots);
-      })
-      .catch((err) => {
-        const msg = err instanceof Error ? err.message : "Unknown error";
-        console.error("[StructureBDD] image tree error", msg);
-        setImageError(msg);
-        setImageTree([]);
-      });
-
-    await Promise.all([webPromise, localPromise, vectorPromise, imagePromise]);
+    await Promise.all([localPromise, vectorPromise]);
     setLoading(false);
   }, []);
 
@@ -533,22 +236,10 @@ export default function StructureBDDPage() {
     }
   }, [loadTrees]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const checkMirrorStatus = useCallback(async () => {
-    try {
-      const res = await fetch('/api/tree/mirror/status');
-      if (!res.ok) return;
-      const data = await res.json();
-      setMirrorStatus(data);
-    } catch {
-      // ignore
-    }
-  }, []);
-
-   useEffect(() => {
-     console.log("[StructureBDD] mount");
-     loadTrees();
-     checkMirrorStatus();
-    }, [loadTrees, checkMirrorStatus]);
+    useEffect(() => {
+      console.log("[StructureBDD] mount");
+      loadTrees();
+     }, [loadTrees]);
 
     useEffect(() => {
       if (activeView === 'local') {
@@ -661,6 +352,39 @@ export default function StructureBDDPage() {
       updateDbStatus();
     }, [updateDbStatus]);
 
+    const { data: webTreeData, error: webTreeError } = useWebTreeQuery();
+    const { data: imageTreeData, error: imageTreeError } = useImageTreeQuery();
+    const resetWebMutation = useResetWebMutation();
+    const compressSqliteMutation = useCompressSqliteMutation();
+    const reindexVectorMutation = useReindexVectorMutation();
+    const deleteImageMutation = useDeleteImageMutation();
+    const renameImageMutation = useRenameImageMutation();
+    const editImageMetadataMutation = useEditImageMetadataMutation();
+
+    useEffect(() => {
+      if (webTreeData) {
+        setWebTree(webTreeData);
+      }
+    }, [webTreeData]);
+
+    useEffect(() => {
+      if (imageTreeData) {
+        setImageTree(imageTreeData);
+      }
+    }, [imageTreeData]);
+
+    useEffect(() => {
+      if (webTreeError) {
+        setWebError(webTreeError instanceof Error ? webTreeError.message : 'Unknown error');
+      }
+    }, [webTreeError]);
+
+    useEffect(() => {
+      if (imageTreeError) {
+        setImageError(imageTreeError instanceof Error ? imageTreeError.message : 'Unknown error');
+      }
+    }, [imageTreeError]);
+
     useEffect(() => {
       const loadLocations = async () => {
         try {
@@ -674,7 +398,7 @@ export default function StructureBDDPage() {
     }, []);
 
     const handleResetWeb = async () => {
-      const confirmed = window.confirm(
+      const confirmed = await showConfirm(
         "Remise à zéro de la BDD Web : toutes les données web seront réinitialisées à l'état initial. Continuer ?"
       );
       if (!confirmed) return;
@@ -694,11 +418,8 @@ export default function StructureBDDPage() {
         URL.revokeObjectURL(url)
         toast.info('📥 Script de création de la structure .data téléchargé. Exécutez-le avant de continuer.')
 
-        const res = await csrfFetch("/api/tree/reset", { method: "POST" });
-        console.log("[StructureBDD] reset web status", res.status);
-        if (!res.ok) throw new Error("Failed to reset web tree");
+        await resetWebMutation.mutateAsync();
         await loadTrees();
-        toast.success("BDD Web remise à zéro avec succès");
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Reset failed";
         console.error("[StructureBDD] reset web error", msg);
@@ -707,12 +428,12 @@ export default function StructureBDDPage() {
       } finally {
         setResettingWeb(false);
       }
-     };
+    };
 
 
 
     const handleResetLocal = async () => {
-      const confirmed = window.confirm(
+      const confirmed = await showConfirm(
         "Réinitialiser la BDD locale : vider l'arborescence locale ?"
       );
       if (!confirmed) return;
@@ -735,7 +456,7 @@ export default function StructureBDDPage() {
     };
 
     const handleSyncToLocal = async () => {
-      const confirmed = window.confirm(
+      const confirmed = await showConfirm(
         "Synchroniser la BDD Web vers la BDD Locale ? Cette opération recréera l'arborescence locale en miroir du Web."
       );
       if (!confirmed) return;
@@ -763,10 +484,10 @@ export default function StructureBDDPage() {
 
 
   const handleResetVector = async () => {
-     const confirmed = window.confirm(
-       "Vider la BDD vectorielle (IndexedDB) ? Tous les documents, chunks et nœuds de l'arborescence vectorielle seront supprimés."
-     );
-     if (!confirmed) return;
+      const confirmed = await showConfirm(
+        "Vider la BDD vectorielle (IndexedDB) ? Tous les documents, chunks et nœuds de l'arborescence vectorielle seront supprimés."
+      );
+      if (!confirmed) return;
      console.log("[StructureBDD] clear vector store start");
 
      setResettingVector(true);
@@ -817,8 +538,7 @@ export default function StructureBDDPage() {
            );
            downloadScript(script, `open-mirror-${type}`);
 
-            toast.success(`✅ Miroir ${type} généré : ${data.stats.directories} dossiers`);
-            checkMirrorStatus();
+             toast.success(`✅ Miroir ${type} généré : ${data.stats.directories} dossiers`);
           } catch (e) {
            toast.dismiss();
            toast.error(`❌ Erreur : ${e instanceof Error ? e.message : 'unknown'}`);
@@ -839,9 +559,9 @@ export default function StructureBDDPage() {
    }, []);
 
   const handleDeleteLocal = useCallback(async (node: WebTreeNode | LocalNode) => {
-    if (!("id" in node)) return;
-    const confirmed = window.confirm(`Supprimer "${node.name}" ?`);
-    if (!confirmed) return;
+     if (!("id" in node)) return;
+     const confirmed = await showConfirm(`Supprimer "${node.name}" ?`);
+     if (!confirmed) return;
     console.log("[StructureBDD] delete local", { id: node.id, name: node.name });
 
     setLocalTree((prev) => removeNodeById(prev, node.id) as LocalNode[]);
@@ -871,7 +591,7 @@ export default function StructureBDDPage() {
       toast.error("Sélectionnez un média à supprimer");
       return;
     }
-    const confirmed = window.confirm(`Supprimer "${node.name}" ?`);
+    const confirmed = await showConfirm(`Supprimer "${node.name}" ?`);
     if (!confirmed) return;
     console.log("[StructureBDD] delete image", { id: node.id, name: node.name });
 
@@ -879,11 +599,7 @@ export default function StructureBDDPage() {
     try {
       const imageId = String(node.id).replace(/^image-/, "");
       console.log("[StructureBDD] delete image api", { imageId });
-      const res = await csrfFetch(`/api/images/${encodeURIComponent(imageId)}`, { method: "DELETE" });
-      console.log("[StructureBDD] delete image status", res.status);
-      const responseText = await res.text();
-      console.log("[StructureBDD] delete image response", responseText);
-      if (!res.ok) throw new Error(responseText || "Failed to delete image");
+      await deleteImageMutation.mutateAsync(imageId);
       await loadTrees();
       toast.success("Image supprimée");
     } catch (err) {
@@ -893,7 +609,7 @@ export default function StructureBDDPage() {
       await loadTrees();
       toast.error("Erreur lors de la suppression");
     }
-  }, [loadTrees, removeNodeById]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loadTrees, removeNodeById, deleteImageMutation]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Metadata editor for image nodes ─────────────────────────────────────────
   const handleEditImageMetadata = useCallback(async (node: ImageNode) => {
@@ -903,8 +619,7 @@ export default function StructureBDDPage() {
       const res = await fetch(`/api/images/${encodeURIComponent(imageId)}/metadata`);
       if (!res.ok) throw new Error("Failed to fetch metadata");
       const data = await res.json() as { metadata: Record<string, unknown> };
-      setImageMetadataContent(JSON.stringify(data.metadata, null, 2));
-      setEditingImageMetadata({ id: imageId, name: node.name });
+      setEditingImageMetadata({ id: imageId, name: node.name, content: JSON.stringify(data.metadata, null, 2) });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erreur lors du chargement";
       console.error("[StructureBDD] edit image metadata error", msg);
@@ -912,19 +627,15 @@ export default function StructureBDDPage() {
     }
   }, []);
 
-  const confirmEditImageMetadata = async () => {
+  const handleSaveImageMetadata = async (content: string) => {
     if (!editingImageMetadata) return;
-    setSavingImageMetadata(true);
     try {
-      const parsed = JSON.parse(imageMetadataContent);
-      const res = await csrfFetch(`/api/images/${encodeURIComponent(editingImageMetadata.id)}/metadata`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed),
+      const parsed = JSON.parse(content);
+      await editImageMetadataMutation.mutateAsync({
+        imageId: editingImageMetadata.id,
+        metadata: parsed,
       });
-      if (!res.ok) throw new Error("Failed to save metadata");
 
-      // Auto-vectorize for RAG search
       try {
         await clientEngine.vectorizeMediaItem({
           id: editingImageMetadata.id,
@@ -942,14 +653,12 @@ export default function StructureBDDPage() {
 
       toast.success("Métadonnées mises à jour et synchronisées avec le RAG");
       setEditingImageMetadata(null);
-      setImageMetadataContent("");
       await loadTrees();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erreur lors de la sauvegarde";
       console.error("[StructureBDD] confirm edit image metadata error", msg);
       toast.error(msg);
-    } finally {
-      setSavingImageMetadata(false);
+      throw err;
     }
   };
 
@@ -1035,25 +744,25 @@ export default function StructureBDDPage() {
     setNewNodeType("directory");
   }, [setAddingNode, setNewNodeName, setNewNodeType]);
 
-  const confirmAdd = async () => {
-    if (!addingNode || !newNodeName.trim()) return;
+  const confirmAdd = async (name: string, type: "file" | "directory") => {
+    if (!addingNode || !name.trim()) return;
 
     try {
       if (addingNode.tree === "web") {
         const res = await csrfFetch(`/api/tree/nodes/${addingNode.parentId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: newNodeName, type: newNodeType }),
+          body: JSON.stringify({ name, type }),
         });
         if (!res.ok) throw new Error("Failed to add node");
       } else {
         const parentIdStr = addingNode.parentId as string;
         const numericParentId = parseInt(parentIdStr.replace(/^(folder|file)-/, ""), 10);
         const parentId = isNaN(numericParentId) ? null : numericParentId;
-        if (newNodeType === "directory") {
-          await localTreeService.createFolder(parentId, newNodeName);
+        if (type === "directory") {
+          await localTreeService.createFolder(parentId, name);
         } else {
-          await localTreeService.createFile(parentId, newNodeName, '');
+          await localTreeService.createFile(parentId, name, '');
         }
       }
 
@@ -1086,30 +795,25 @@ export default function StructureBDDPage() {
     setRenameValue(node.name);
   }, [setRenamingNode, setRenameValue]);
 
-  const confirmRename = async () => {
-    if (!renamingNode || !renameValue.trim()) return;
+  const confirmRename = async (newName: string) => {
+    if (!renamingNode || !newName.trim()) return;
 
     try {
       if (renamingNode.tree === "web") {
         const res = await csrfFetch(`/api/tree/nodes/${renamingNode.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: renameValue }),
+          body: JSON.stringify({ name: newName }),
         });
         if (!res.ok) throw new Error("Failed to rename node");
       } else if (renamingNode.tree === "images") {
         const imageId = String(renamingNode.id).replace(/^image-/, "");
-        const res = await csrfFetch(`/api/images/${imageId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: renameValue }),
-        });
-        if (!res.ok) throw new Error("Failed to rename image");
+        await renameImageMutation.mutateAsync({ imageId, name: newName });
       } else {
         const idStr = renamingNode.id as string;
         const numericId = parseInt(idStr.replace(/^(folder|file)-/, ""), 10);
         if (!isNaN(numericId)) {
-          await localTreeService.renameNode(numericId, renameValue);
+          await localTreeService.renameNode(numericId, newName);
         }
       }
 
@@ -1135,10 +839,9 @@ export default function StructureBDDPage() {
   const handleEditJson = useCallback((node: LocalNode) => {
     if (!node.id) return;
     setEditingFile({ tree: "local", path: node.id as string, content: node.content ?? "" });
-    setEditContent(node.content ?? "");
-  }, [setEditingFile, setEditContent]);
+  }, [setEditingFile]);
 
-  const confirmEditJson = async () => {
+  const handleSaveJson = async (content: string) => {
     if (!editingFile) return;
 
     try {
@@ -1146,7 +849,7 @@ export default function StructureBDDPage() {
         const idStr = editingFile.path;
         const numericId = parseInt(idStr.replace(/^(folder|file)-/, ""), 10);
         if (!isNaN(numericId)) {
-          await localTreeService.editFileContent(numericId, editContent);
+          await localTreeService.editFileContent(numericId, content);
           console.log("[StructureBDD] edit local done", { numericId });
           await loadTrees();
           toast.success("Fichier JSON modifié localement");
@@ -1156,12 +859,11 @@ export default function StructureBDDPage() {
         const res = await csrfFetch(`/api/tree/nodes/${editingFile.path}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ metadata: editContent }),
+          body: JSON.stringify({ metadata: content }),
         });
         if (!res.ok) throw new Error("Failed to edit file");
 
         setEditingFile(null);
-        setEditContent("");
         await loadTrees();
         toast.success("Fichier JSON modifié");
       }
@@ -1409,7 +1111,7 @@ export default function StructureBDDPage() {
   }, [loadTrees, vectorizeLocalFileInternal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSyncVectorMirror = async () => {
-    const confirmed = window.confirm(
+    const confirmed = await showConfirm(
       "Synchroniser le miroir vectoriel ? Cette opération va reproduire exactement l'arborescence locale (361 nœuds) dans la BDD vectorielle IndexedDB et vectoriser les fichiers pour le RAG."
     );
     if (!confirmed) return;
@@ -1494,9 +1196,43 @@ export default function StructureBDDPage() {
     }
   };
 
+  const handleCompressSqlite = async () => {
+    const confirmed = await showConfirm("Compresser la base SQLite ? Cette action réduit la taille des données.");
+    if (!confirmed) return;
+    setCompressing(true);
+    try {
+      const result = await compressSqliteMutation.mutateAsync();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      toast.success(`Compression OK : ${(result as any).compressed} éléments compressés`);
+      await loadTrees();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Compression failed";
+      toast.error(`Erreur : ${msg}`);
+    } finally {
+      setCompressing(false);
+    }
+  };
+
+  const handleReindexVector = async () => {
+    const confirmed = await showConfirm("Réindexer la base vectorielle ? Cette action va réindexer tous les documents.");
+    if (!confirmed) return;
+    setReindexing(true);
+    try {
+      const result = await reindexVectorMutation.mutateAsync();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      toast.success(`Réindexation OK : ${(result as any).documentCount} docs, ${(result as any).chunkCount} chunks`);
+      await loadTrees();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Reindex failed";
+      toast.error(`Erreur : ${msg}`);
+    } finally {
+      setReindexing(false);
+    }
+  };
+
   const handleDeleteVectorNode = useCallback(async (node: WebTreeNode | LocalNode) => {
     const localNode = node as LocalNode;
-    const confirmed = window.confirm(`Supprimer "${localNode.name}" du vecteur ?`);
+    const confirmed = await showConfirm(`Supprimer "${localNode.name}" du vecteur ?`);
     if (!confirmed) return;
     console.log("[StructureBDD] delete vector node", { id: localNode.id, name: localNode.name });
 
@@ -1530,7 +1266,12 @@ export default function StructureBDDPage() {
     return count;
   }, []);
 
-  const activeTree = useMemo(() => visibleWebTree, [visibleWebTree]);
+  const activeTree = useMemo(() => {
+    if (activeView === "local") return visibleLocalTree;
+    if (activeView === "vector") return vectorTree;
+    if (activeView === "images") return imageTree;
+    return visibleWebTree;
+  }, [activeView, visibleWebTree, visibleLocalTree, vectorTree, imageTree]);
   const activeError = useMemo(
     () =>
       activeView === "web"
@@ -1543,6 +1284,36 @@ export default function StructureBDDPage() {
     [activeView, webError, localError, vectorError, imageError]
   );
   const totalActiveNodes = useMemo(() => totalNodes(activeTree), [activeTree, totalNodes]);
+
+  const pgMetrics = useMemo(() => {
+    const countNodes = (nodes: WebTreeNode[]): number =>
+      nodes.reduce((acc, n) => acc + 1 + countNodes(n.children), 0);
+    const countFolders = (nodes: WebTreeNode[]): number =>
+      nodes.reduce((acc, n) => acc + (n.type === "directory" || n.type === "root" ? 1 : 0) + countFolders(n.children), 0);
+    const countFiles = (nodes: WebTreeNode[]): number =>
+      nodes.reduce((acc, n) => acc + (n.type === "file" ? 1 : 0) + countFiles(n.children), 0);
+    return {
+      total: countNodes(webTree),
+      folders: countFolders(webTree),
+      files: countFiles(webTree),
+    };
+  }, [webTree]);
+
+  const sqliteMetrics = useMemo(() => {
+    const countNodes = (nodes: LocalNode[]): number =>
+      nodes.reduce((acc, n) => acc + 1 + countNodes(n.children), 0);
+    return {
+      total: countNodes(localTree),
+    };
+  }, [localTree]);
+
+  const vectorMetrics = useMemo(() => {
+    const totalChunks = vectorDocs.reduce((acc, doc) => acc + doc.chunks.length, 0);
+    return {
+      documents: vectorDocs.length,
+      chunks: totalChunks,
+    };
+  }, [vectorDocs]);
 
    const renderActions = () => {
      switch (activeView) {
@@ -1571,63 +1342,83 @@ export default function StructureBDDPage() {
               </Button>
             </>
            );
-       case "local":
-        return (
-          <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleQuickSync}
-                disabled={syncing}
-                className="flex-1"
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-                Synchroniser depuis Web
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleResetLocal}
-                disabled={resettingLocal}
-                className="flex-1"
-              >
-                <Trash2 className={`h-4 w-4 mr-2 ${resettingLocal ? "animate-spin" : ""}`} />
-                Vider SQLite
-              </Button>
-              <Button
-                size="sm"
-                variant="default"
-                onClick={handleOpenSqliteMirror}
-                className="flex-1"
-              >
-                <FolderOpen className="h-4 w-4 mr-2" />
-                📂 Ouvrir miroir SQLite
-              </Button>
-            </>
-         );
-        case "vector":
-          return (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleQuickVectorize}
-                disabled={vectorizing}
-                className="flex-1"
-              >
-                <Database className={`h-4 w-4 mr-2 ${vectorizing ? "animate-spin" : ""}`} />
-                Vectoriser
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleSyncVectorMirror}
-                disabled={syncingVectorMirror}
-                className="flex-1"
-              >
-                <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncingVectorMirror ? "animate-spin" : ""}`} />
-                Sync miroir
-              </Button>
+        case "local":
+         return (
+           <>
+               <Button
+                 size="sm"
+                 variant="outline"
+                 onClick={handleQuickSync}
+                 disabled={syncing}
+                 className="flex-1"
+               >
+                 <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+                 Synchroniser depuis Web
+               </Button>
+               <Button
+                 size="sm"
+                 variant="outline"
+                 onClick={handleResetLocal}
+                 disabled={resettingLocal}
+                 className="flex-1"
+               >
+                 <Trash2 className={`h-4 w-4 mr-2 ${resettingLocal ? "animate-spin" : ""}`} />
+                 Vider SQLite
+               </Button>
+               <Button
+                 size="sm"
+                 variant="secondary"
+                 onClick={handleCompressSqlite}
+                 disabled={compressing}
+                 className="flex-1"
+               >
+                 <Activity className={`h-4 w-4 mr-2 ${compressing ? "animate-spin" : ""}`} />
+                 Compresser
+               </Button>
+               <Button
+                 size="sm"
+                 variant="default"
+                 onClick={handleOpenSqliteMirror}
+                 className="flex-1"
+               >
+                 <FolderOpen className="h-4 w-4 mr-2" />
+                 📂 Ouvrir miroir SQLite
+               </Button>
+             </>
+          );
+         case "vector":
+           return (
+             <>
+               <Button
+                 size="sm"
+                 variant="outline"
+                 onClick={handleQuickVectorize}
+                 disabled={vectorizing}
+                 className="flex-1"
+               >
+                 <Database className={`h-4 w-4 mr-2 ${vectorizing ? "animate-spin" : ""}`} />
+                 Vectoriser
+               </Button>
+               <Button
+                 size="sm"
+                 variant="outline"
+                 onClick={handleReindexVector}
+                 disabled={reindexing}
+                 className="flex-1"
+               >
+                 <Cpu className={`h-4 w-4 mr-2 ${reindexing ? "animate-spin" : ""}`} />
+                 Réindexer
+               </Button>
+               <Button
+                 size="sm"
+                 variant="outline"
+                 onClick={handleSyncVectorMirror}
+                 disabled={syncingVectorMirror}
+                 className="flex-1"
+               >
+                 <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncingVectorMirror ? "animate-spin" : ""}`} />
+                 Sync miroir
+               </Button>
                <Button
                  size="sm"
                  variant="destructive"
@@ -1776,6 +1567,61 @@ export default function StructureBDDPage() {
         </div>
       </div>
 
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Database className="h-5 w-5 text-blue-500" />
+            <h3 className="font-semibold text-sm">PostgreSQL</h3>
+          </div>
+          <div className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Nœuds</span>
+              <span className="font-medium">{pgMetrics.total}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Dossiers</span>
+              <span className="font-medium">{pgMetrics.folders}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Fichiers</span>
+              <span className="font-medium">{pgMetrics.files}</span>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <HardDrive className="h-5 w-5 text-green-500" />
+            <h3 className="font-semibold text-sm">SQLite (WASM)</h3>
+          </div>
+          <div className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Nœuds</span>
+              <span className="font-medium">{sqliteMetrics.total}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Statut</span>
+              <span className="font-medium">{localSyncStatus.isSynced ? "✅ Synchronisé" : "⚠️ Différent"}</span>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Cpu className="h-5 w-5 text-purple-500" />
+            <h3 className="font-semibold text-sm">IndexedDB (Vectorielle)</h3>
+          </div>
+          <div className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Documents</span>
+              <span className="font-medium">{vectorMetrics.documents}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Chunks</span>
+              <span className="font-medium">{vectorMetrics.chunks}</span>
+            </div>
+          </div>
+        </Card>
+      </div>
+
       <div className="mt-4">
         <StorageStatusView />
       </div>
@@ -1797,31 +1643,6 @@ export default function StructureBDDPage() {
           {renderActions()}
         </div>
       </Card>
-
-      {activeView === 'local' && (
-        <Card className="p-3 mt-4 bg-muted/50">
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-4">
-              <span className="font-medium">💾 BDD Locale</span>
-              <span className="text-muted-foreground">{localSyncStatus.localCount} nœuds</span>
-              {localSyncStatus.webCount > 0 && (
-                <>
-                  <span className="text-muted-foreground">|</span>
-                  <span className="text-muted-foreground">Référence web: {localSyncStatus.webCount} nœuds</span>
-                  <span className={localSyncStatus.isSynced ? 'text-green-500' : 'text-yellow-500'}>
-                    {localSyncStatus.isSynced ? '✅ Synchronisé' : '⚠️ Différent'}
-                  </span>
-                </>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={updateLocalSyncStatus}>
-                🔄 Recharger
-              </Button>
-            </div>
-          </div>
-        </Card>
-      )}
 
       {activeView === "comparison" && (
         <div className="mt-6">
@@ -1880,18 +1701,26 @@ export default function StructureBDDPage() {
               </p>
             ) : (
               activeTree.map((node) => (
-                <TreeNodeItem
+                <PageTreeNodeItem
                   key={node.id}
-                   node={node as WebTreeNode}
+                   node={node}
                   depth={0}
-                  onDelete={activeView === "local" ? handleDeleteLocal : activeView === "vector" ? handleDeleteVectorNode : activeView === "images" ? handleDeleteImage : undefined}
-                  onAdd={activeView === "local" ? handleAddLocal : undefined}
-                  onRename={activeView === "local" ? handleRenameLocal : activeView === "images" ? handleRenameImage : undefined}
-                  onEdit={activeView === "local" ? handleEditJson : undefined}
-                  onEditMetadata={handleEditImageMetadata}
-                  onPreview={handlePreviewFile}
-                  onVectorize={activeView === "local" ? handleVectorizeLocalFile : activeView === "images" ? handleVectorizeMedia : undefined}
-                  onDownload={activeView === "web" ? handleDownloadDirectory : undefined}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  onDelete={activeView === "local" ? handleDeleteLocal as any : activeView === "vector" ? handleDeleteVectorNode as any : activeView === "images" ? handleDeleteImage as any : undefined}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  onAdd={activeView === "local" ? handleAddLocal as any : undefined}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  onRename={activeView === "local" ? handleRenameLocal as any : activeView === "images" ? handleRenameImage as any : undefined}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  onEdit={activeView === "local" ? handleEditJson as any : undefined}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  onEditMetadata={handleEditImageMetadata as any}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  onPreview={handlePreviewFile as any}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  onVectorize={activeView === "local" ? handleVectorizeLocalFile as any : activeView === "images" ? handleVectorizeMedia as any : undefined}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  onDownload={activeView === "web" ? handleDownloadDirectory as any : undefined}
                   vectorizedPaths={vectorizedPaths}
                   vectorizing={vectorizing}
                   expandAll={activeView === "vector" || activeView === "images"}
@@ -1900,29 +1729,6 @@ export default function StructureBDDPage() {
             )}
           </div>
         </Card>
-
-        {mirrorStatus && (
-          <Card className="p-4 mt-4 bg-muted/50">
-            <h4 className="text-sm font-medium mb-2">📁 État des miroirs physiques</h4>
-            <div className="grid grid-cols-3 gap-4 text-xs">
-              <div>
-                SQLite : {mirrorStatus?.sqlite?.exists ?
-                  <span className="text-green-500">✅ {mirrorStatus.sqlite.count} dossiers</span> :
-                  <span className="text-yellow-500">⏳ À générer</span>}
-              </div>
-              <div>
-                IndexedDB : {mirrorStatus?.indexeddb?.exists ?
-                  <span className="text-green-500">✅ {mirrorStatus.indexeddb.count} dossiers</span> :
-                  <span className="text-yellow-500">⏳ À générer</span>}
-              </div>
-              <div>
-                Médias : {mirrorStatus?.media?.exists ?
-                  <span className="text-green-500">✅ {mirrorStatus.media.count} dossiers</span> :
-                  <span className="text-yellow-500">⏳ À générer</span>}
-              </div>
-            </div>
-          </Card>
-        )}
 
         <Card>
           <div className="border-b border-border px-4 py-3 flex items-center justify-between">
@@ -1952,23 +1758,12 @@ export default function StructureBDDPage() {
           </div>
           <div className="p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
             {editingFile ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Contenu</label>
-                  <textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    placeholder='{ "key": "value" }'
-                    className="w-full h-96 p-2 font-mono text-sm border rounded-md resize-none"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setEditingFile(null)}>
-                    Annuler
-                  </Button>
-                  <Button size="sm" onClick={confirmEditJson}>Enregistrer</Button>
-                </div>
-              </div>
+              <JsonEditorPanel
+                node={editingFile}
+                defaultContent={editingFile.content}
+                onSave={handleSaveJson}
+                onCancel={() => setEditingFile(null)}
+              />
             ) : !previewingFile ? (
               <p className="text-sm text-muted-foreground text-center py-8">
                 Sélectionnez un nœud dans l&apos;arborescence pour afficher son contenu.
@@ -2127,99 +1922,44 @@ export default function StructureBDDPage() {
       )}
 
       {/* Add Node Modal */}
-      <Dialog open={!!addingNode} onOpenChange={(open) => !open && setAddingNode(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Ajouter un nœud</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Nom</label>
-              <Input
-                value={newNodeName}
-                onChange={(e) => setNewNodeName(e.target.value)}
-                placeholder="Nom du nœud"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Type</label>
-              <Select value={newNodeType} onValueChange={(value) => setNewNodeType(value as "file" | "directory")}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="directory">Dossier</SelectItem>
-                  <SelectItem value="file">Fichier</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAddingNode(null)}>
-              Annuler
-            </Button>
-            <Button onClick={confirmAdd}>Ajouter</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddNodeDialog
+        isOpen={!!addingNode}
+        onOpenChange={(open) => !open && setAddingNode(null)}
+        defaultName={newNodeName}
+        defaultType={newNodeType}
+        onConfirm={(name, type) => confirmAdd(name, type)}
+      />
 
-      {/* Rename Modal */}
-      <Dialog open={!!renamingNode} onOpenChange={(open) => !open && setRenamingNode(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Renommer</DialogTitle>
-          </DialogHeader>
-          <div>
-            <label className="text-sm font-medium">Nouveau nom</label>
-            <Input
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
-              placeholder="Nouveau nom"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRenamingNode(null)}>
-              Annuler
-            </Button>
-            <Button onClick={confirmRename}>Renommer</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RenameNodeDialog
+        isOpen={!!renamingNode}
+        onOpenChange={(open) => !open && setRenamingNode(null)}
+        defaultName={renameValue}
+        onConfirm={(newName) => confirmRename(newName)}
+      />
 
-      {/* Edit Image Metadata Modal */}
-      <Dialog open={!!editingImageMetadata} onOpenChange={(open) => !open && setEditingImageMetadata(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Éditer les métadonnées JSON : {editingImageMetadata?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Contenu JSON (métadonnées du média)</label>
-              <textarea
-                value={imageMetadataContent}
-                onChange={(e) => setImageMetadataContent(e.target.value)}
-                placeholder='{ "title": "...", "description": "...", "tags": [...] }'
-                className="w-full h-80 p-2 font-mono text-sm border rounded-md resize-none mt-1 bg-muted/20"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingImageMetadata(null)}>
-              Annuler
-            </Button>
-            <Button onClick={confirmEditImageMetadata} disabled={savingImageMetadata}>
-              {savingImageMetadata ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                "Enregistrer"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        isOpen={!!confirmDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            confirmDialog?.resolve(false);
+            setConfirmDialog(null);
+          }
+        }}
+        title={confirmDialog?.title ?? ""}
+        description={confirmDialog?.description ?? ""}
+        onConfirm={() => {
+          confirmDialog?.resolve(true);
+          setConfirmDialog(null);
+        }}
+      />
+
+      <EditMetadataDialog
+        isOpen={!!editingImageMetadata}
+        onOpenChange={(open) => !open && setEditingImageMetadata(null)}
+        defaultContent={editingImageMetadata?.content || ""}
+        name={editingImageMetadata?.name || ""}
+        onSave={handleSaveImageMetadata}
+      />
     </section>
   );
 }

@@ -187,7 +187,7 @@ export class DatabaseInitService {
 
         if (result.vector && result.sqlite) {
             try {
-                const { vectorReindexService } = await import(/* webpackIgnore: true */ '@/lib/sync/vector-reindex.service');
+                const { vectorReindexService } = await import('../sync/vector-reindex.service');
                 const needsReindex = await vectorReindexService.needsReindex();
                 if (needsReindex) {
                     console.log('[DB Init] 🔄 Vector reindex needed (v7 data changed)...');

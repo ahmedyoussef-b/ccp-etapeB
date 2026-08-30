@@ -28,4 +28,3 @@
 ### Notes
 - Tests are located in `src/**/*.test.{ts,tsx}`
 - Vitest config: `vitest.config.ts`
-- Use `npx prisma generate --no-engine` on Windows to avoid binary permission issues

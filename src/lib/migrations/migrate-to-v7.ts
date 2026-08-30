@@ -293,10 +293,23 @@ export async function migrateToV7(db: Database): Promise<MigrationResult> {
       ORDER BY id
     `);
 
+    const usedPaths = new Set<string>();
+
     for (const row of oldTreeRows) {
       const nodeType = row.type === 'folder' ? 'directory' : row.type === 'root' ? 'root' : 'file';
       const mimeType = normalizeMimeType(row.name as string);
-      const path = (row.path as string) || (row.name as string);
+      let path = (row.path as string) || (row.name as string);
+
+      if (usedPaths.has(path)) {
+        let counter = 1;
+        let uniquePath = `${path}_${counter}`;
+        while (usedPaths.has(uniquePath)) {
+          counter++;
+          uniquePath = `${path}_${counter}`;
+        }
+        path = uniquePath;
+      }
+      usedPaths.add(path);
 
       dbRun(db,
         `INSERT INTO local_tree (id, name, node_type, parent_id, sort_order, path, size, mime_type, content, created_at, updated_at)

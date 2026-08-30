@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/client-engine/sqlite";
 import { compressAllData } from "@/lib/db/compression";
 
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function POST() {
   try {
