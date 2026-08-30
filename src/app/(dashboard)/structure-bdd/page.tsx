@@ -9,7 +9,7 @@ import { RenameNodeDialog } from "@/components/database/modals/RenameNodeDialog"
 import { EditMetadataDialog } from "@/components/database/modals/EditMetadataDialog";
 import { JsonEditorPanel } from "@/components/database/JsonEditorPanel";
 import { PageTreeNodeItem } from "@/components/database/PageTreeNodeItem";
-import { useWebTreeQuery, useImageTreeQuery, useResetWebMutation, useCompressSqliteMutation, useReindexVectorMutation, useDeleteImageMutation, useRenameImageMutation, useEditImageMetadataMutation } from "@/lib/database/queries";
+import { useWebTreeQuery, useImageTreeQuery, useResetWebMutation, useCompressSqliteMutation, useReindexVectorMutation, useDeleteImageMutation, useRenameImageMutation, useEditImageMetadataMutation, useHardResetLocalTreeMutation, useSyncTreeWebToLocalMutation } from "@/lib/database/queries";
 import {
   Database,
   FolderTree,
@@ -360,6 +360,8 @@ export default function StructureBDDPage() {
     const deleteImageMutation = useDeleteImageMutation();
     const renameImageMutation = useRenameImageMutation();
     const editImageMetadataMutation = useEditImageMetadataMutation();
+    const hardResetLocalTreeMutation = useHardResetLocalTreeMutation();
+    const syncTreeWebToLocalMutation = useSyncTreeWebToLocalMutation();
 
     useEffect(() => {
       if (webTreeData) {
@@ -452,6 +454,47 @@ export default function StructureBDDPage() {
         toast.error("Erreur lors du vidage de l'arborescence locale");
       } finally {
         setResettingLocal(false);
+      }
+    };
+
+    const handleHardResetLocalTree = async () => {
+      const confirmed = await showConfirm(
+        "Hard Reset : supprimer tous les nœuds locaux et les recréer depuis le Web ? Cette opération garantit un miroir exact."
+      );
+      if (!confirmed) return;
+      console.log("[StructureBDD] hard reset local tree start");
+      setResettingLocal(true);
+      try {
+        await hardResetLocalTreeMutation.mutateAsync();
+        await loadTrees();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Hard reset failed";
+        console.error("[StructureBDD] hard reset local tree error", msg);
+        setLocalError(msg);
+        toast.error("Erreur lors du hard reset");
+      } finally {
+        setResettingLocal(false);
+      }
+    };
+
+    const handleSyncTreeWebToLocal = async () => {
+      const confirmed = await showConfirm(
+        "Synchronisation miroir : supprimer les nœuds locaux obsolètes et ajouter les nouveaux nœuds du Web ?"
+      );
+      if (!confirmed) return;
+      console.log("[StructureBDD] sync tree web to local start");
+      setSyncing(true);
+      try {
+        const result = await syncTreeWebToLocalMutation.mutateAsync();
+        await loadTrees();
+        toast.success(`Sync terminée: ${result.inserted} ajouts, ${result.deleted} suppressions, ${result.conflicts} conflits`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Sync failed";
+        console.error("[StructureBDD] sync tree web to local error", msg);
+        setLocalError(msg);
+        toast.error("Erreur lors de la synchronisation");
+      } finally {
+        setSyncing(false);
       }
     };
 
@@ -1345,26 +1388,46 @@ export default function StructureBDDPage() {
         case "local":
          return (
            <>
-               <Button
-                 size="sm"
-                 variant="outline"
-                 onClick={handleQuickSync}
-                 disabled={syncing}
-                 className="flex-1"
-               >
-                 <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-                 Synchroniser depuis Web
-               </Button>
-               <Button
-                 size="sm"
-                 variant="outline"
-                 onClick={handleResetLocal}
-                 disabled={resettingLocal}
-                 className="flex-1"
-               >
-                 <Trash2 className={`h-4 w-4 mr-2 ${resettingLocal ? "animate-spin" : ""}`} />
-                 Vider SQLite
-               </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleQuickSync}
+                  disabled={syncing}
+                  className="flex-1"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+                  Synchroniser depuis Web
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSyncTreeWebToLocal}
+                  disabled={syncing}
+                  className="flex-1"
+                >
+                  <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+                  Sync Miroir
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleResetLocal}
+                  disabled={resettingLocal}
+                  className="flex-1"
+                >
+                  <Trash2 className={`h-4 w-4 mr-2 ${resettingLocal ? "animate-spin" : ""}`} />
+                  Vider SQLite
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleHardResetLocalTree}
+                  disabled={resettingLocal}
+                  className="flex-1"
+                >
+                  <RotateCcw className={`h-4 w-4 mr-2 ${resettingLocal ? "animate-spin" : ""}`} />
+                  Hard Reset
+                </Button>
                <Button
                  size="sm"
                  variant="secondary"

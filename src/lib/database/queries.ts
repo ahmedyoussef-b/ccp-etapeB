@@ -161,3 +161,41 @@ export function useEditImageMetadataMutation() {
     },
   });
 }
+
+export function useHardResetLocalTreeMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/tree/hard-reset', { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to hard reset local tree');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['webTree'] });
+      toast.success('Hard Reset terminé: arborescence locale réinitialisée depuis le Web');
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : 'Hard reset failed';
+      toast.error(`Erreur lors du hard reset: ${msg}`);
+    },
+  });
+}
+
+export function useSyncTreeWebToLocalMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/tree/sync', { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to sync web to local');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['webTree'] });
+      toast.success('Synchronisation miroir terminée');
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : 'Sync failed';
+      toast.error(`Erreur lors de la synchronisation: ${msg}`);
+    },
+  });
+}
