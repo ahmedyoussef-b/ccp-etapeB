@@ -185,6 +185,27 @@ export class DatabaseInitService {
             }
         }
 
+        if (result.vector && result.sqlite) {
+            try {
+                const { vectorReindexService } = await import(/* webpackIgnore: true */ '@/lib/sync/vector-reindex.service');
+                const needsReindex = await vectorReindexService.needsReindex();
+                if (needsReindex) {
+                    console.log('[DB Init] 🔄 Vector reindex needed (v7 data changed)...');
+                    const reindexMetrics = await vectorReindexService.fullReindex();
+                    console.log(`[DB Init] ✅ Vector reindex complete: ${reindexMetrics.documentCount} docs, ${reindexMetrics.chunkCount} chunks (${reindexMetrics.duration}ms)`);
+                    if (reindexMetrics.errors.length > 0) {
+                        result.errors.push(`VectorReindex: ${reindexMetrics.errors.join(', ')}`);
+                    }
+                } else {
+                    console.log('[DB Init] ✅ Vector index up to date');
+                }
+            } catch (e) {
+                const msg = e instanceof Error ? e.message : 'unknown';
+                result.errors.push(`VectorReindex: ${msg}`);
+                console.error('[DB Init] ❌ Vector reindex failed:', msg);
+            }
+        }
+
         this.initialized = result.sqlite && result.vector && result.json;
         return result;
     }

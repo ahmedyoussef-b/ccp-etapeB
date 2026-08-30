@@ -5,7 +5,9 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
-    outputFileTracingExcludes: ['**/node_modules/@sqlite.org/sqlite-wasm/**/*'],
+    outputFileTracingExcludes: {
+      '/api/**': ['**/node_modules/@sqlite.org/sqlite-wasm/**/*'],
+    },
   },
   webpack: (config, { isServer }) => {
     if (isServer) {
@@ -16,6 +18,7 @@ const nextConfig = {
         fs: false,
         path: false,
         crypto: false,
+        zlib: false,
       };
       config.module = config.module || {};
       config.module.rules = config.module.rules || [];

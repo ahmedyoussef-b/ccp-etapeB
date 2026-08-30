@@ -392,7 +392,6 @@ export default function StructureBDDPage() {
   const [imageMetadataContent, setImageMetadataContent] = useState("");
   const [savingImageMetadata, setSavingImageMetadata] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncManagerStatus | null>(null);
-  const [resettingAll, setResettingAll] = useState(false);
   const [dbLocations, setDbLocations] = useState<DatabaseLocations | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [localSyncStatus, setLocalSyncStatus] = useState<{ webCount: number; localCount: number; isSynced: boolean }>({ webCount: 0, localCount: 0, isSynced: false });
@@ -736,29 +735,29 @@ export default function StructureBDDPage() {
     };
 
     const handleSyncToLocal = async () => {
-     const confirmed = window.confirm(
-       "Synchroniser la BDD Web vers la BDD Locale ? Cette opération recréera l'arborescence locale en miroir du Web."
-     );
-     if (!confirmed) return;
-     console.log("[StructureBDD] sync to local start");
-     setSyncing(true);
-     try {
-       const result = await syncManager.syncTable('tree_nodes');
-       console.log("[StructureBDD] sync to local result", result);
-       if (result.errors.length === 0) {
-         toast.success(`Synchronisation terminée (${result.pulled} enregistrements)`);
-       } else {
-         toast.error(`Erreurs: ${result.errors.join(", ")}`);
+      const confirmed = window.confirm(
+        "Synchroniser la BDD Web vers la BDD Locale ? Cette opération recréera l'arborescence locale en miroir du Web."
+      );
+      if (!confirmed) return;
+      console.log("[StructureBDD] sync to local start");
+      setSyncing(true);
+      try {
+        const result = await syncManager.resetAndPullTable('local_tree');
+        console.log("[StructureBDD] sync to local result", result);
+        if (result.errors.length === 0) {
+          toast.success(`Synchronisation terminée (${result.pulled} enregistrements)`);
+        } else {
+          toast.error(`Erreurs: ${result.errors.join(", ")}`);
+        }
+        await loadTrees();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Sync to local failed";
+        console.error("[StructureBDD] sync to local error", msg);
+        setLocalError(msg);
+        toast.error("Erreur lors de la synchronisation");
+      } finally {
+        setSyncing(false);
        }
-       await loadTrees();
-     } catch (err) {
-       const msg = err instanceof Error ? err.message : "Sync to local failed";
-       console.error("[StructureBDD] sync to local error", msg);
-       setLocalError(msg);
-       toast.error("Erreur lors de la synchronisation");
-     } finally {
-       setSyncing(false);
-      }
     };
 
 
@@ -826,55 +825,9 @@ export default function StructureBDDPage() {
          }
        };
 
-       const handleOpenSqliteMirror = () => handleOpenMirror('sqlite');
-       const handleOpenIndexedDBMirror = () => handleOpenMirror('indexeddb');
-       const handleOpenMediaMirror = () => handleOpenMirror('media');
-
-  const handleResetAllDatabases = async () => {
-     const confirmed = window.confirm(
-       "⚠️ REMETTRE À ZÉRO TOUTES LES BASES DE DONNÉES ?\n\n" +
-         "• PostgreSQL (Web) : toutes les tables seront réinitialisées\n" +
-         "• SQLite (Local) : toute l'arborescence locale sera supprimée\n" +
-         "• IndexedDB (Vectorielle) : tous les documents vectorisés seront supprimés\n\n" +
-         "Cette action est irréversible. Continuer ?"
-     );
-     if (!confirmed) return;
-     console.log("[StructureBDD] reset all databases start");
-     setResettingAll(true);
-     try {
-       const { script, filename } = await dataReference.ensurePhysicalDataStructure()
-       const blob = new Blob([script], { type: 'text/plain' })
-       const url = URL.createObjectURL(blob)
-       const link = document.createElement('a')
-       link.href = url
-       link.download = filename
-       document.body.appendChild(link)
-       link.click()
-       document.body.removeChild(link)
-       URL.revokeObjectURL(url)
-       toast.info('📥 Script de création de la structure .data téléchargé. Exécutez-le avant de continuer.')
-
-       const webRes = await csrfFetch("/api/tree/reset", { method: "POST" });
-       console.log("[StructureBDD] reset web status", webRes.status);
-       if (!webRes.ok) throw new Error("Failed to reset web tree");
-
-       await clientEngine.clearAllVectorDocuments();
-       console.log("[StructureBDD] clear vector store done");
-
-       await clientEngine.resetLocalTreeOnly();
-       console.log("[StructureBDD] clear local tree done");
-
-       await loadTrees();
-       toast.success("Toutes les bases de données ont été remises à zéro");
-     } catch (err) {
-       const msg = err instanceof Error ? err.message : "Reset all failed";
-       console.error("[StructureBDD] reset all error", msg);
-       setWebError(msg);
-       toast.error("Erreur lors de la remise à zéro globale");
-     } finally {
-       setResettingAll(false);
-     }
-   };
+        const handleOpenSqliteMirror = () => handleOpenMirror('sqlite');
+        const handleOpenIndexedDBMirror = () => handleOpenMirror('indexeddb');
+        const handleOpenMediaMirror = () => handleOpenMirror('media');
 
   const removeNodeById = useCallback((nodes: LocalNode[] | WebTreeNode[] | ImageNode[], id: string | number): (LocalNode[] | WebTreeNode[] | ImageNode[]) => {
     return nodes
@@ -1613,8 +1566,8 @@ export default function StructureBDDPage() {
                disabled={syncing}
                className="flex-1"
              >
-               <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-                Pull Web → Local
+                <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+                Synchroniser depuis Web
               </Button>
             </>
            );
@@ -1629,7 +1582,7 @@ export default function StructureBDDPage() {
                 className="flex-1"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-                Pull depuis Web
+                Synchroniser depuis Web
               </Button>
               <Button
                 size="sm"
@@ -1649,16 +1602,6 @@ export default function StructureBDDPage() {
               >
                 <FolderOpen className="h-4 w-4 mr-2" />
                 📂 Ouvrir miroir SQLite
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleResetLocal}
-                disabled={resettingLocal}
-                className="flex-1"
-              >
-                <RotateCcw className={`h-4 w-4 mr-2 ${resettingLocal ? "animate-spin" : ""}`} />
-                Réinitialiser Local
               </Button>
             </>
          );
@@ -1829,15 +1772,6 @@ export default function StructureBDDPage() {
             onClick={() => setActiveView("comparison")}
           >
             Comparaison
-          </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={handleResetAllDatabases}
-            disabled={resettingAll}
-          >
-            <RotateCcw className={`h-4 w-4 mr-2 ${resettingAll ? "animate-spin" : ""}`} />
-            ⚠️ Reset All (3 BDD)
           </Button>
         </div>
       </div>

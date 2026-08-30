@@ -27,6 +27,7 @@ const navItems = [
   { href: "/approvals", label: "Approbations", icon: CheckCircle2, roles: ["admin", "chef-de-quart"] },
   { href: "/executions", label: "Historique exécutions", icon: History, roles: ["admin", "chef-de-quart"] },
   { href: "/structure-bdd", label: "Structure BDD", icon: Database, roles: ["admin"] },
+  { href: "/bdd", label: "BDD", icon: Database, roles: ["admin"] },
   { href: "/images", label: "Banque d'images", icon: Image, roles: ["admin"] },
   { href: "/video-conference", label: "Visioconférence", icon: Video, roles: ["admin", "chef-de-quart", "chef-de-bloc", "rondier"] },
   { href: "/rapports", label: "Rapports", icon: BarChart3, roles: ["admin", "chef-de-quart"] },

@@ -18,7 +18,11 @@
     "db:seed": "npx tsx prisma/seed.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "cleanup:media": "tsx scripts/cleanup-media-registry.ts"
+    "cleanup:media": "tsx scripts/cleanup-media-registry.ts",
+    "compress-data": "tsx scripts/compress-data.ts",
+    "compress-data:dry": "tsx scripts/compress-data.ts --dry-run",
+    "compress-data:verbose": "tsx scripts/compress-data.ts --verbose",
+    "test:perf": "vitest run src/lib/db/compression.perf.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

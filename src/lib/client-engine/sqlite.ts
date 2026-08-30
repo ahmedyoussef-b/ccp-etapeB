@@ -7,7 +7,7 @@ const logger = {
   sqliteError: (action: string, error: unknown) => console.error('[DB:SQLITE]', '[ERROR]', action, error instanceof Error ? error.message : String(error)),
 };
 
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 7;
 
 let db: Database | null = null;
 let initPromise: Promise<Database> | null = null;
@@ -89,7 +89,9 @@ export async function createProcedureTables(db: Database): Promise<void> {
     `CREATE INDEX IF NOT EXISTS idx_pv_deleted ON procedure_versions(deleted_at);`,
     `CREATE INDEX IF NOT EXISTS idx_pv_code ON procedure_versions(procedure_code);`,
   ];
-  for (const sql of indexSqls) { db.exec(sql); }
+  for (const sql of indexSqls) {
+    try { db.exec(sql); } catch { /* ignore */ }
+  }
   logger.sqlite('create tables', { tables: ['procedures', 'procedure_required_roles', 'procedure_safety_instructions', 'procedure_tags', 'procedure_versions'] });
 }
 
@@ -172,7 +174,9 @@ export async function createOtherTables(db: Database): Promise<void> {
     `CREATE INDEX IF NOT EXISTS idx_ih_alert ON iot_history(alert);`,
     `CREATE INDEX IF NOT EXISTS idx_vd_relative_path ON vector_documents(relative_path);`,
   ];
-  for (const sql of indexSqls) { db.exec(sql); }
+  for (const sql of indexSqls) {
+    try { db.exec(sql); } catch { /* ignore */ }
+  }
   logger.sqlite('create other tables', { completed: true });
 }
 
@@ -285,7 +289,9 @@ export async function createExecutionTables(db: Database): Promise<void> {
     `CREATE INDEX IF NOT EXISTS idx_ea_execution_id ON execution_anomalies(execution_id);`,
     `CREATE INDEX IF NOT EXISTS idx_ea_sync_deleted ON execution_anomalies(sync_status, deleted_at);`,
   ];
-  for (const sql of indexSqls) { db.exec(sql); }
+  for (const sql of indexSqls) {
+    try { db.exec(sql); } catch { /* ignore */ }
+  }
   logger.sqlite('create execution tables', { completed: true });
 }
 
@@ -393,6 +399,35 @@ async function _migrate(db: Database): Promise<void> {
 
   if (version < 5) {
     await db.exec(`INSERT OR REPLACE INTO _schema_version (version) VALUES (5)`);
+  }
+
+  if (version < 6) {
+    const tablesWithUuid = [
+      'procedures', 'procedure_required_roles', 'procedure_safety_instructions',
+      'procedure_tags', 'procedure_versions', 'approvals', 'local_tree',
+      'qa_registries', 'qa_pairs', 'media_items', 'media_item_tags',
+      'iot_sensor_states', 'iot_actuator_states', 'sync_logs',
+      'procedure_executions', 'execution_steps', 'execution_media',
+      'execution_completed_steps', 'execution_anomalies',
+    ];
+    for (const table of tablesWithUuid) {
+      await addColumnIfExists(table, 'uuid', `uuid TEXT`);
+    }
+    await db.exec(`INSERT OR REPLACE INTO _schema_version (version) VALUES (6)`);
+  }
+
+  if (version < 7) {
+    try {
+      const { migrateToV7 } = await import('../migrations/migrate-to-v7');
+      const v7Result = await migrateToV7(db);
+      if (!v7Result.success) {
+        logger.sqliteError('migration v7', v7Result.errors.join(', '));
+      }
+    } catch (e) {
+      logger.sqliteError('migration v7', e);
+    }
+    await db.exec(`CREATE TABLE IF NOT EXISTS _schema_version (version INTEGER PRIMARY KEY)`);
+    await db.exec(`INSERT OR REPLACE INTO _schema_version (version) VALUES (7)`);
   }
 
   logger.sqlite('migration', { fromVersion: version, toVersion: SCHEMA_VERSION });

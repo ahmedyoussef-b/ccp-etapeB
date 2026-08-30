@@ -508,6 +508,86 @@ model MediaCategory {
   @@index([name])
 }
 
+model QaEntry {
+  id          Int      @id @default(autoincrement())
+  treeNodeId  Int      @map("tree_node_id")
+  question    String
+  answer      String
+  tags        String?
+  score       Float    @default(0)
+  orderIndex  Int      @default(0) @map("order_index")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([treeNodeId])
+  @@map("qa_entries")
+}
+
+model ImageMetadata {
+  id          Int      @id @default(autoincrement())
+  treeNodeId  Int      @map("tree_node_id")
+  title       String?
+  description String?
+  category    String?
+  width       Int?
+  height      Int?
+  size        Int?
+  capturedAt  Int?     @map("captured_at")
+  geolocation String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([treeNodeId])
+  @@index([category])
+  @@map("image_metadata")
+}
+
+model TechnicalData {
+  id          Int      @id @default(autoincrement())
+  treeNodeId  Int      @map("tree_node_id")
+  dataType    String   @map("data_type")
+  code        String?
+  title       String?
+  body        Bytes?
+  version     Int      @default(1)
+  status      String?
+  tags        String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([treeNodeId])
+  @@index([dataType])
+  @@index([code])
+  @@map("technical_data")
+}
+
+model Execution {
+  id                    Int      @id @default(autoincrement())
+  treeNodeId            Int?     @map("tree_node_id")
+  userName              String?  @map("user_name")
+  phase                 String?
+  startedAt             Int      @default(0) @map("started_at")
+  finishedAt            Int?     @map("finished_at")
+  completedStepsCount   Int      @default(0) @map("completed_steps_count")
+  totalStepsCount       Int      @default(0) @map("total_steps_count")
+  anomalies             String?
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@index([treeNodeId])
+  @@index([startedAt])
+  @@index([phase])
+  @@map("executions")
+}
+
+model SyncMetadata {
+  key       String   @id
+  value     String
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  @@map("sync_metadata")
+}
+
 enum NodeType {
   root
   directory

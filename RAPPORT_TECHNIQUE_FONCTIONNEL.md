@@ -73,7 +73,7 @@ src/
 | Framework | Next.js 14.2.35 (App Router) | Rendu, routing, API routes |
 | Frontend | React 18 + TypeScript 5 | Interface utilisateur |
 | Styling | Tailwind CSS 3.4.1 + shadcn/ui (base-nova) | Design system |
-| ORM | Prisma 5 + @prisma/adapter-pg | Accès PostgreSQL |
+| ORM | Prisma 5 + @prisma/adapter-pg | Accès PostgreSQL (engine library en dev) |
 | Base locale | SQLite (@sqlite.org/sqlite-wasm) + IndexedDB (brut) | Stockage client hors-ligne structuré |
 | State serveur | TanStack React Query 5 | Cache, mutations, synchronisation |
 | Forms | React Hook Form + Zod | Validation de formulaires |
@@ -241,21 +241,41 @@ Formulaire de contact public.
 
 ### 5.2 SQLite (Client local) — @sqlite.org/sqlite-wasm
 
-Base de données fichier `nexaflow-client.sqlite` stockée en OPFS / IndexedDB / mémoire.
+Base de données fichier `nexaflow-client.sqlite` stockée en OPFS / IndexedDB / mémoire. Version de schéma actuelle : **v6**.
 
 | Table | Description | Champs clés |
 |-------|-------------|-------------|
-| `qa_registries` | Registres Q/R locaux | id, title, description, created_at, updated_at |
-| `qa_pairs` | Paires Q/R locales | id, question, answer, registry_id, created_at, updated_at |
+| `procedures` | Procédures opérationnelles locales | id, uuid (UNIQUE), code, title, status, sync_status, deleted_at |
+| `procedure_required_roles` | Rôles requis par procédure | id, uuid, procedure_id, role, sync_status, deleted_at |
+| `procedure_safety_instructions` | Consignes de sécurité | id, uuid, procedure_id, instruction, sync_status, deleted_at |
+| `procedure_tags` | Tags de procédure | id, uuid, procedure_id, tag, sync_status, deleted_at |
+| `procedure_versions` | Historique de versions | id, uuid, procedure_code, version, body, sync_status, deleted_at |
+| `approvals` | Approbations | id, uuid, procedure_id, approver_id, status, sync_status, deleted_at |
+| `local_tree` | Arborescence locale | id, uuid (UNIQUE), remote_id, name, type, parent_id, node_order, path, size, content, sync_status, deleted_at |
+| `qa_registries` | Registres Q/R locaux | id, uuid, title, description, sync_status, deleted_at |
+| `qa_pairs` | Paires Q/R locales | id, uuid, question, answer, registry_id, sync_status, deleted_at |
+| `media_items` | Médias locaux | id, uuid, title, category, kind, mime_type, size, data_url, sync_status, deleted_at |
+| `media_item_tags` | Tags de médias | id, uuid, media_item_id, tag, sync_status, deleted_at |
+| `sync_logs` | Journaux de synchronisation | id, uuid, model_name, record_id, record_uuid, operation, status, sync_status, deleted_at |
+| `iot_sensor_states` | États capteurs IoT | id, uuid, name, type, value, unit, threshold, sync_status, deleted_at |
+| `iot_actuator_states` | États actionneurs IoT | id, uuid, name, type, is_on, position, sync_status, deleted_at |
+| `procedure_executions` | Exécutions de procédures | id, uuid, procedure_id, user_id, phase, started_at, finished_at, sync_status, deleted_at |
+| `execution_steps` | Étapes d'exécution | id, uuid, execution_id, step_id, step_order, title, is_completed, sync_status, deleted_at |
+| `execution_media` | Médias d'exécution | id, uuid, execution_id, step_id, type, url, filename, mime_type, sync_status, deleted_at |
+| `execution_completed_steps` | Étapes complétées | id, uuid, execution_id, step_id, sync_status, deleted_at |
+| `execution_anomalies` | Anomalies d'exécution | id, uuid, execution_id, anomaly, sync_status, deleted_at |
 | `chat_sessions` | Sessions de chat IA | id, title, messages (JSON), created_at, updated_at |
-| `local_tree` | Arborescence locale | id, remote_id, name, type, parent_id, node_order, path, size, content, created_at, updated_at |
 | `vector_documents` | Documents vectorisés | id, name, original_path, relative_path, content, embedding, metadata, created_at |
 | `sensor_configs` | Configurations capteurs | id, name, type, value, unit, threshold, updated_at |
 | `actuator_states` | États actionneurs | id, name, type, is_on, position, updated_at |
 | `devices` | Appareils IoT | id, name, type, subtype, ip_address, port, is_active, metadata, created_at, updated_at |
 | `iot_history` | Historique IoT | id, entity_type, entity_id, field, old_value, new_value, alert, resolved, created_at |
+| `json_store` | Stockage JSON clé/valeur | key, value, syncStatus, updatedAt |
+| `sync_metadata` | Métadonnées de synchronisation | key, value, updated_at |
 
-**Fichiers** : `src/lib/client-engine/sqlite.ts`, `src/lib/db/db.ts`, `src/lib/db/tree.ts`
+**Migrations** : v1 ajoute `sync_status`/`deleted_at` aux tables principales. v2-v3 ajoute des colonnes à `sync_logs`. v4 recrée `local_tree` avec contrainte `uuid UNIQUE`. v5 no-op. v6 ajoute la colonne `uuid` à toutes les tables syncables manquantes.
+
+**Fichiers** : `src/lib/client-engine/sqlite.ts`, `src/lib/client-engine/index.ts`, `src/lib/db/db.ts`, `src/lib/db/tree.ts`
 
 ### 5.3 IndexedDB (Navigateur)
 
@@ -346,6 +366,10 @@ L'application est **unilingue français**. Les chaînes de caractères sont prin
 - **React Query** : Utilisé pour la synchronisation et la gestion de l'état serveur avec un stale time de 5 minutes.
 - **Design system** : shadcn/ui avec variante `base-nova`, thème sombre via variables CSS OKLCH.
 - **Désactivation pipeline en prod** : Le middleware redirige `/pipeline*` vers `/` en production.
+- **SQLite client-side (WASM)** : La base locale utilise `@sqlite.org/sqlite-wasm` avec fallback automatique OPFS → IndexedDB → mémoire. En environnement sans OPFS (Playwright/CI), le stockage utilise IndexedDB.
+- **Prisma client (dev)** : Le client Prisma est régénéré avec `engineType: "library"` et `copyEngine: true` pour fonctionner en développement sans binaire PostgreSQL natif.
+- **Next.js config** : `outputFileTracingExcludes` est défini comme objet pour éviter les erreurs de build liées aux fichiers SQLite WASM.
+- **Migrations SQLite** : Un système de versioning de schéma (`_schema_version`) permet des migrations incrémentales (v1→v6) pour adapter la structure locale aux évolutions du code.
 
 ---
 
