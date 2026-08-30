@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { describe, it, expect, beforeAll, afterEach, beforeEach } from 'vitest';
 
 let dbCounter = 0;
@@ -288,7 +289,8 @@ async function seedV6Data(database: any): Promise<void> {
 
 beforeAll(async () => {
   const mod = await import('@sqlite.org/sqlite-wasm');
-  sqlite3Static = await mod.default({
+  const init = mod.default as unknown as (opts?: { print?: () => void; printErr?: () => void }) => Promise<any>;
+  sqlite3Static = await init({
     print: () => {},
     printErr: () => {},
   });

@@ -197,11 +197,6 @@ function epochFromSqliteDate(dateStr: string | null | undefined): number {
   return isNaN(parsed) ? Date.now() : parsed;
 }
 
-function epochFromTimestamp(ts: number | string | null | undefined): number {
-  if (!ts) return Date.now();
-  const num = typeof ts === 'number' ? ts : parseInt(ts, 10);
-  return isNaN(num) || num < 0 ? Date.now() : num;
-}
 
 function normalizeMimeType(name: string): string | null {
   const ext = name.split('.').pop()?.toLowerCase();

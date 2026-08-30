@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import type { BindingSpec, Database } from '@sqlite.org/sqlite-wasm';
 import { getDb } from '@/lib/client-engine/sqlite';
 import { prisma } from '@/lib/prisma';
 
@@ -129,9 +130,8 @@ export class PgToSqliteSyncService {
 
     try {
       const records = await this.fetchPgRecords(table, since);
-      const cursor = this.buildCursor(since);
 
-      (db as any).exec('BEGIN TRANSACTION');
+      (db as unknown as Database).exec('BEGIN TRANSACTION');
 
       try {
         for (const record of records) {
@@ -155,10 +155,10 @@ export class PgToSqliteSyncService {
           await this.setChecksum(table, record.id as number, checksum);
         }
 
-        (db as any).exec('COMMIT');
+        (db as unknown as Database).exec('COMMIT');
         report.success = true;
       } catch (error) {
-        try { (db as any).exec('ROLLBACK'); } catch { /* ignore */ }
+        try { (db as unknown as Database).exec('ROLLBACK'); } catch { /* ignore */ }
         throw error;
       }
     } catch (error) {
@@ -366,9 +366,9 @@ export class PgToSqliteSyncService {
 // ==================== HELPERS ====================
 
 async function queryLocal<T = Record<string, unknown>>(db: Awaited<ReturnType<typeof getDb>>, sql: string, params: unknown[] = []): Promise<T[]> {
-  const stmt = (db as any).prepare(sql);
+  const stmt = (db as unknown as Database).prepare(sql);
   try {
-    if (params.length > 0) stmt.bind(params as any);
+    if (params.length > 0) stmt.bind(params as BindingSpec);
     const results: T[] = [];
     while (stmt.step()) results.push(stmt.get({}) as T);
     return results;
@@ -378,15 +378,15 @@ async function queryLocal<T = Record<string, unknown>>(db: Awaited<ReturnType<ty
 }
 
 async function runLocal(db: Awaited<ReturnType<typeof getDb>>, sql: string, params: unknown[] = []): Promise<{ changes: number; lastInsertRowid: number }> {
-  const stmt = (db as any).prepare(sql);
+  const stmt = (db as unknown as Database).prepare(sql);
   try {
-    if (params.length > 0) stmt.bind(params as any);
+    if (params.length > 0) stmt.bind(params as BindingSpec);
     stmt.step();
-    const idStmt = (db as any).prepare('SELECT last_insert_rowid() as rid');
+    const idStmt = (db as unknown as Database).prepare('SELECT last_insert_rowid() as rid');
     idStmt.step();
     const lastInsertRowid = Number((idStmt.get({}) as { rid: number }).rid ?? 0);
     idStmt.finalize();
-    return { changes: (db as any).changes(), lastInsertRowid };
+    return { changes: (db as unknown as Database).changes(), lastInsertRowid };
   } finally {
     stmt.finalize();
   }

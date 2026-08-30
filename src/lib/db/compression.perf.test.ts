@@ -1,21 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { describe, it, expect, beforeAll, afterEach, beforeEach } from 'vitest';
 
 let dbCounter = 0;
 let sqlite3Static: any;
 let db: any;
-
-function stmtGet(stmt: any): any {
-  stmt.step();
-  return stmt.get({});
-}
-
-function stmtAll(stmt: any): any[] {
-  const results: any[] = [];
-  while (stmt.step()) {
-    results.push(stmt.get({}));
-  }
-  return results;
-}
 
 async function createPerfSchema(database: any): Promise<void> {
   database.exec(`
@@ -61,7 +49,8 @@ async function createPerfSchema(database: any): Promise<void> {
 
 beforeAll(async () => {
   const mod = await import('@sqlite.org/sqlite-wasm');
-  sqlite3Static = await mod.default({
+  const init = mod.default as unknown as (opts?: { print?: () => void; printErr?: () => void }) => Promise<any>;
+  sqlite3Static = await init({
     print: () => {},
     printErr: () => {},
   });
