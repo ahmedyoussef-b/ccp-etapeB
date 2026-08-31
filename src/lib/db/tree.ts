@@ -65,6 +65,11 @@ export async function loadLocalTreeFromSQLite(): Promise<LocalTreeNode[]> {
       map.set(row.id, node);
     }
 
+    const dataRoot = rows.find(r => r.name.toLowerCase() === '.data' && String(r.type).toLowerCase() === 'root');
+    if (dataRoot) {
+      map.delete(dataRoot.id);
+    }
+
     for (const row of rows) {
       const node = map.get(row.id);
       if (!node) continue;

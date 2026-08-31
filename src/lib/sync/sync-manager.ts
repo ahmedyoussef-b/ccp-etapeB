@@ -323,6 +323,165 @@ export class SyncManager {
     return result
   }
 
+  /**
+   * Injecte l'arborescence de référence depuis mirror_repertoire.json dans la BDD locale.
+   * Crée uniquement les dossiers manquants sans écraser les données locales.
+   */
+  async injectWebFilesToLocal(): Promise<{ injected: number; created: number }> {
+    logger.sync('injectWebFilesToLocal_started')
+
+    if (!this.initialized) {
+      const initialized = await this.initialize()
+      if (!initialized) {
+        return { injected: 0, created: 0 }
+      }
+    }
+
+    const result = { injected: 0, created: 0 }
+
+    try {
+      const response = await fetch('/api/mirror/repertoire', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const mirror = await response.json() as Array<{
+        id: number;
+        name: string;
+        type: string;
+        metadata: string | null;
+        parentId: number | null;
+        order: number;
+        createdAt: string;
+        updatedAt: string;
+        children: unknown[];
+      }>
+
+      const flatNodes = this.flattenMirrorNodes(mirror)
+
+      for (const node of flatNodes) {
+        try {
+          const path = this.buildMirrorPath(node, flatNodes)
+          const existing = await this.findLocalNodeByPath(path)
+          if (existing) {
+            result.injected++
+            continue
+          }
+
+          const parentPath = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : ''
+          const parentId = parentPath ? await this.findLocalNodeIdByPath(parentPath) : null
+
+          const metadataJson = node.metadata ? JSON.stringify(node.metadata) : '{}'
+          const createdAt = new Date(node.createdAt || Date.now()).toISOString()
+          const updatedAt = new Date(node.updatedAt || Date.now()).toISOString()
+
+          await run(
+            `INSERT OR REPLACE INTO "local_tree" (uuid, name, type, parent_id, node_order, path, metadata, is_synced, sync_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              `mirror-${node.id}`,
+              node.name,
+              node.type === 'root' ? 'root' : 'directory',
+              parentId,
+              node.order,
+              path,
+              metadataJson,
+              1,
+              'synced',
+              createdAt,
+              updatedAt,
+            ]
+          )
+          result.injected++
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : 'unknown'
+          logger.syncError('injectWebFilesToLocal_node_failed', { node: node.name, error: msg })
+        }
+      }
+
+      logger.sync('injectWebFilesToLocal_completed', result)
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      logger.syncError('injectWebFilesToLocal_failed', errorMsg)
+    }
+
+    return result
+  }
+
+  private flattenMirrorNodes(nodes: Array<{
+    id: number;
+    name: string;
+    type: string;
+    metadata: string | null;
+    parentId: number | null;
+    order: number;
+    createdAt: string;
+    updatedAt: string;
+    children: unknown[];
+  }>): Array<{
+    id: number;
+    name: string;
+    type: string;
+    metadata: string | null;
+    parentId: number | null;
+    order: number;
+    createdAt: string;
+    updatedAt: string;
+  }> {
+    const result: Array<{
+      id: number;
+      name: string;
+      type: string;
+      metadata: string | null;
+      parentId: number | null;
+      order: number;
+      createdAt: string;
+      updatedAt: string;
+    }> = []
+
+    const walk = (items: typeof nodes) => {
+      for (const node of items) {
+        result.push({
+          id: node.id,
+          name: node.name,
+          type: node.type,
+          metadata: node.metadata,
+          parentId: node.parentId,
+          order: node.order,
+          createdAt: node.createdAt,
+          updatedAt: node.updatedAt,
+        })
+        if (node.children && node.children.length > 0) {
+          walk(node.children as typeof nodes)
+        }
+      }
+    }
+
+    walk(nodes)
+    return result
+  }
+
+  private buildMirrorPath(node: {
+    id: number;
+    name: string;
+    parentId: number | null;
+  }, flatNodes: Array<{ id: number; name: string; parentId: number | null }>): string {
+    const parts: string[] = []
+    let current: { id: number; name: string; parentId: number | null } | undefined = node
+
+    while (current) {
+      parts.unshift(current.name)
+      const parent = flatNodes.find(n => n.id === current!.parentId)
+      current = parent
+    }
+
+    return parts.join('/')
+  }
+
   async getSyncStatus(): Promise<SyncManagerStatus> {
     if (!this.ensureInitialized()) {
       return {
@@ -347,12 +506,20 @@ export class SyncManager {
     let indexeddbPending = 0
 
     if (db) {
-      for (const table of SYNCABLE_TABLES) {
-        try {
-          const count = await this.getPendingCount(table)
-          sqlitePending += count
-        } catch {
-          // ignore
+      try {
+        const unionQuery = SYNCABLE_TABLES
+          .map(table => `SELECT COUNT(*) as count FROM "${table}" WHERE sync_status = 'pending' OR sync_status = 'conflict' OR sync_status IS NULL`)
+          .join(' UNION ALL ');
+        const result = await queryOne<{ total: number }>(`SELECT SUM(count) as total FROM (${unionQuery})`);
+        sqlitePending = result?.total ?? 0;
+      } catch {
+        for (const table of SYNCABLE_TABLES) {
+          try {
+            const count = await this.getPendingCount(table)
+            sqlitePending += count
+          } catch {
+            // ignore
+          }
         }
       }
     }
@@ -720,6 +887,60 @@ export class SyncManager {
       [uuid]
     )
     return rows.length > 0 ? rows[0] : null
+  }
+
+  private async findLocalNodeByWebUuid(webUuid: string): Promise<Record<string, unknown> | null> {
+    const rows = await query<Record<string, unknown>>(
+      `SELECT * FROM "local_tree" WHERE web_uuid = ? AND is_synced = 1 LIMIT 1`,
+      [webUuid]
+    )
+    return rows.length > 0 ? rows[0] : null
+  }
+
+  private async findLocalNodeByPath(path: string): Promise<Record<string, unknown> | null> {
+    const rows = await query<Record<string, unknown>>(
+      `SELECT * FROM "local_tree" WHERE path = ? AND deleted_at IS NULL LIMIT 1`,
+      [path]
+    )
+    return rows.length > 0 ? rows[0] : null
+  }
+
+  private async findLocalNodeIdByPath(path: string): Promise<number | null> {
+    const row = await queryOne<{ id: number }>(
+      `SELECT id FROM "local_tree" WHERE path = ? AND deleted_at IS NULL LIMIT 1`,
+      [path]
+    )
+    return row?.id ?? null
+  }
+
+  private async ensurePathExists(fullPath: string): Promise<void> {
+    if (!fullPath || !fullPath.includes('/')) return
+
+    const parts = fullPath.split('/').filter(Boolean)
+    let currentPath = ''
+
+    for (let i = 0; i < parts.length - 1; i++) {
+      currentPath = currentPath ? `${currentPath}/${parts[i]}` : parts[i]
+      const existing = await this.findLocalNodeByPath(currentPath)
+      if (!existing) {
+        const name = parts[i]
+        const parentPath = currentPath.includes('/') ? currentPath.substring(0, currentPath.lastIndexOf('/')) : ''
+        const parentId = parentPath ? await this.findLocalNodeIdByPath(parentPath) : null
+
+        await run(
+          `INSERT INTO "local_tree" (uuid, name, type, parent_id, path, is_synced, sync_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+          [
+            `dir-${currentPath}`,
+            name,
+            'directory',
+            parentId,
+            currentPath,
+            0,
+            'synced',
+          ]
+        )
+      }
+    }
   }
 
   /**

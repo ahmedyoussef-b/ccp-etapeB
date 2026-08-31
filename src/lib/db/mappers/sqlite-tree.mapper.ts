@@ -55,8 +55,14 @@ export function buildSQLiteTree(rows: LocalTreeRow[]): UnifiedTreeNode[] {
     map.set(row.id, unified);
   }
 
+  const dataRootId = rows.find(r => r.name.toLowerCase() === '.data' && String(r.type).toLowerCase() === 'root')?.id ?? null;
+  if (dataRootId != null) {
+    map.delete(dataRootId);
+  }
+
   for (const row of rows) {
-    const unified = map.get(row.id)!;
+    const unified = map.get(row.id);
+    if (!unified) continue;
     if (row.parent_id !== null && map.has(row.parent_id)) {
       map.get(row.parent_id)!.children.push(unified);
     } else {

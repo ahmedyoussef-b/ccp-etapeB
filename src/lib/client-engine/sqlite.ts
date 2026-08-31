@@ -99,7 +99,7 @@ export async function createOtherTables(db: Database): Promise<void> {
   logger.sqlite('create other tables', { started: true });
   const tableSqls = [
     `CREATE TABLE IF NOT EXISTS approvals (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, procedure_id INTEGER REFERENCES procedures(id) ON DELETE CASCADE, approver_id TEXT NOT NULL, approver_name TEXT, approver_role TEXT, status TEXT DEFAULT 'pending', comment TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
-    `CREATE TABLE IF NOT EXISTS local_tree (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE, remote_id TEXT, name TEXT NOT NULL, type TEXT NOT NULL, parent_id INTEGER, node_order INTEGER DEFAULT 0, path TEXT, size INTEGER DEFAULT 0, content TEXT, metadata TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
+    `CREATE TABLE IF NOT EXISTS local_tree (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE, remote_id TEXT, name TEXT NOT NULL, type TEXT NOT NULL, parent_id INTEGER, node_order INTEGER DEFAULT 0, path TEXT, size INTEGER DEFAULT 0, content TEXT, metadata TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, is_synced BOOLEAN DEFAULT FALSE, web_uuid TEXT);`,
     `CREATE TABLE IF NOT EXISTS qa_registries (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, title TEXT NOT NULL, description TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS qa_pairs (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, question TEXT NOT NULL, answer TEXT NOT NULL, order_idx INTEGER DEFAULT 0, registry_id INTEGER REFERENCES qa_registries(id) ON DELETE CASCADE, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
     `CREATE TABLE IF NOT EXISTS media_items (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid TEXT UNIQUE NOT NULL, title TEXT NOT NULL, category TEXT NOT NULL, description TEXT, kind TEXT NOT NULL, mime_type TEXT NOT NULL, size INTEGER NOT NULL, data_url TEXT NOT NULL, thumbnail_data_url TEXT, geolocation TEXT, sync_status TEXT DEFAULT 'pending', deleted_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP);`,
@@ -134,6 +134,14 @@ export async function createOtherTables(db: Database): Promise<void> {
         if (!metaCheck) {
           await db.exec(`ALTER TABLE local_tree ADD COLUMN metadata TEXT`);
         }
+        const syncedCheck = await queryOne<{ cid: number }>(`SELECT cid FROM pragma_table_info('local_tree') WHERE name = 'is_synced'`);
+        if (!syncedCheck) {
+          await db.exec(`ALTER TABLE local_tree ADD COLUMN is_synced BOOLEAN DEFAULT FALSE`);
+        }
+        const webUuidCheck = await queryOne<{ cid: number }>(`SELECT cid FROM pragma_table_info('local_tree') WHERE name = 'web_uuid'`);
+        if (!webUuidCheck) {
+          await db.exec(`ALTER TABLE local_tree ADD COLUMN web_uuid TEXT`);
+        }
       }
     } catch (e) {
       logger.sqliteError('createOtherTables', { table, error: e });
@@ -142,6 +150,7 @@ export async function createOtherTables(db: Database): Promise<void> {
 
   const indexSqls = [
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_local_tree_uuid ON local_tree(uuid);`,
+    `CREATE INDEX IF NOT EXISTS idx_local_tree_path ON local_tree(path);`,
     `CREATE INDEX IF NOT EXISTS idx_app_procedure_id ON approvals(procedure_id);`,
     `CREATE INDEX IF NOT EXISTS idx_app_status ON approvals(status);`,
     `CREATE INDEX IF NOT EXISTS idx_app_sync_deleted ON approvals(sync_status, deleted_at);`,

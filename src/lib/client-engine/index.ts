@@ -1,6 +1,6 @@
 import { initSqlite, getDb, query, queryOne, run } from './sqlite';
 export { initSqlite, initSQLite, getDb, query, queryOne, run, exec, createProcedureTables, createExecutionTables, createOtherTables, sqliteSyncHelpers, sqliteCrud } from './sqlite';
-import { initVectorStore, searchByEmbedding, addDocument, getAllDocuments, deleteDocument, getDocument, getStats, clearVectorStore, simpleTokenEmbedding, addVectorTreeNode, getAllVectorTreeNodes, deleteVectorTreeNode, clearVectorTree, type VectorDocument, type VectorTreeNode } from './vector-store';
+import { initVectorStore, searchByEmbedding, addDocument, getAllDocuments, getDocumentCount, deleteDocument, getDocument, getStats, clearVectorStore, simpleTokenEmbedding, addVectorTreeNode, getAllVectorTreeNodes, deleteVectorTreeNode, clearVectorTree, type VectorDocument, type VectorTreeNode } from './vector-store'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { initJsonStore, jsonGet, jsonSet, jsonDelete, jsonClear, jsonGetAll } from './json-store';
 
 export {
@@ -15,6 +15,7 @@ export {
   searchByEmbedding,
   addDocument,
   getAllDocuments,
+  getDocumentCount,
   deleteDocument,
   getDocument,
   getStats,
@@ -414,8 +415,8 @@ export class ClientEngine {
     }));
   }
 
-  async getAllVectorDocuments(): Promise<VectorDocument[]> {
-    return getAllDocuments();
+  async getAllVectorDocuments(options?: { limit?: number; offset?: number }): Promise<VectorDocument[]> {
+    return getAllDocuments(options);
   }
 
   async deleteVectorDocument(id: string): Promise<void> {

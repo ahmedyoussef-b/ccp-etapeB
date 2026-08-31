@@ -1,31 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getDb, run, query } from '@/lib/client-engine/sqlite';
+import { flattenTree, auditTree, logTreeStructure, buildTreeFromFlatRows, type TreeNodeLike } from '@/lib/sync/tree-audit';
 
 export const dynamic = 'force-dynamic';
-
-interface TreeNodeLike {
-  id: number | string;
-  name: string;
-  type: string;
-  parentId: number | string | null;
-  order: number;
-  path: string;
-  size?: number;
-  content?: string | null;
-  children: TreeNodeLike[];
-}
-
-function flattenTree(nodes: TreeNodeLike[]): TreeNodeLike[] {
-  const result: TreeNodeLike[] = [];
-  for (const node of nodes) {
-    if (node.type === 'image') continue;
-    result.push(node);
-    if (node.children && node.children.length > 0) {
-      result.push(...flattenTree(node.children));
-    }
-  }
-  return result;
-}
 
 export async function POST() {
   try {
@@ -41,12 +18,27 @@ export async function POST() {
       throw new Error(`Failed to fetch web tree: ${treeRes.status}`);
     }
     const treeData = await treeRes.json();
-    const webNodes = flattenTree((treeData as { roots: TreeNodeLike[] }).roots || []);
-    console.log('[HardReset] web tree raw roots:', (treeData as { roots: TreeNodeLike[] }).roots?.length || 0);
+    const webRoots = (treeData as { roots: TreeNodeLike[] }).roots || [];
+    
+    auditTree(webRoots, 'HardReset:WebTreeBefore');
+    logTreeStructure(webRoots, 'HardReset:WebTreeStructureBefore', 4);
+    
+    const webNodes = flattenTree(webRoots);
+    console.log('[HardReset] web tree raw roots:', webRoots.length);
     console.log('[HardReset] web tree flattened nodes:', webNodes.length);
 
     const beforeCount = await query<{ count: number }>('SELECT COUNT(*) as count FROM local_tree');
     console.log('[HardReset] local_tree count before delete:', beforeCount[0]?.count ?? 0);
+    
+    const beforeRows = await query<{ id: number; uuid: string; name: string; type: string; parent_id: number | null; path: string }>(
+      'SELECT id, uuid, name, type, parent_id, path FROM local_tree WHERE deleted_at IS NULL'
+    );
+    const beforeTree = buildTreeFromFlatRows(beforeRows);
+    auditTree(beforeTree, 'HardReset:LocalTreeBefore');
+    logTreeStructure(beforeTree, 'HardReset:LocalTreeStructureBefore', 4);
+    
+    const beforeSample = await query<{ path: string }>('SELECT path FROM local_tree WHERE deleted_at IS NULL LIMIT 10');
+    console.log('[HardReset] local_tree sample paths before:', beforeSample.map(r => r.path));
 
     await run('DELETE FROM local_tree');
 
@@ -76,6 +68,16 @@ export async function POST() {
 
     const afterCount = await query<{ count: number }>('SELECT COUNT(*) as count FROM local_tree');
     console.log('[HardReset] local_tree count after insert:', afterCount[0]?.count ?? 0);
+    
+    const afterRows = await query<{ id: number; uuid: string; name: string; type: string; parent_id: number | null; path: string }>(
+      'SELECT id, uuid, name, type, parent_id, path FROM local_tree WHERE deleted_at IS NULL'
+    );
+    const afterTree = buildTreeFromFlatRows(afterRows);
+    auditTree(afterTree, 'HardReset:LocalTreeAfter');
+    logTreeStructure(afterTree, 'HardReset:LocalTreeStructureAfter', 4);
+    
+    const afterSample = await query<{ path: string }>('SELECT path FROM local_tree WHERE deleted_at IS NULL LIMIT 10');
+    console.log('[HardReset] local_tree sample paths after:', afterSample.map(r => r.path));
 
     return NextResponse.json({ 
       success: true, 
@@ -91,3 +93,4 @@ export async function POST() {
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
+

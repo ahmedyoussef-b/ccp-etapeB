@@ -177,18 +177,30 @@ export const getChunksByDocumentId = async (documentId: string): Promise<VectorC
   return vectorStore.getChunks(documentId);
 };
 
-export const getAllDocuments = async (): Promise<VectorDocument[]> => {
+export interface GetAllDocumentsOptions { limit?: number; offset?: number; }
+
+export const getAllDocuments = async (options?: GetAllDocumentsOptions): Promise<VectorDocument[]> => {
   const db = getVectorDB();
   if (!db) throw new Error('VectorStore not initialized');
-  const docs = await db.documents.toArray();
+  const limit = options?.limit ?? 50;
+  const offset = options?.offset ?? 0;
+  const docs = await db.documents.offset(offset).limit(limit).toArray();
   const result: VectorDocument[] = [];
   for (const doc of docs) {
     const chunks = (await db.chunks.where('documentId').equals(doc.id).toArray())
       .map(c => ({ ...c, documentName: c.documentName ?? doc.name }));
     result.push({ ...doc, chunks });
   }
-  logger.indexeddb('getAllDocuments', { count: result.length });
+  logger.indexeddb('getAllDocuments', { count: result.length, limit, offset });
   return result;
+};
+
+export const getDocumentCount = async (): Promise<number> => {
+  const db = getVectorDB();
+  if (!db) throw new Error('VectorStore not initialized');
+  const count = await db.documents.count();
+  logger.indexeddb('getDocumentCount', { count });
+  return count;
 };
 
 export const clearVectorStore = async (): Promise<void> => {

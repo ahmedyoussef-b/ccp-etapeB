@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { getById as getDiskById, getItemMetadataPath } from "@/lib/images/server-store";
 import { getItemById as getPrismaById } from "@/lib/images/server-store-prisma";
+import { invalidateReadItemsCache } from "@/lib/cache/media-items-cache";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -69,6 +70,7 @@ export async function PUT(
     };
     fs.writeFileSync(metadataPath, JSON.stringify(updated, null, 2), "utf-8");
     console.log(`[API][PUT /api/images/${params.id}/metadata] - saved to ${metadataPath}`);
+    invalidateReadItemsCache();
 
       // 2. Synchronize to PostgreSQL (BDD Web / Prisma)
       try {

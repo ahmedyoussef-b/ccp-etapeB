@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getItemById, updateItem, deleteItem } from "@/lib/images/server-store-prisma";
 import type { MediaItem } from "@/lib/images/server-store-prisma";
+import { invalidateReadItemsCache } from "@/lib/cache/media-items-cache";
 
 type MediaItemWithoutDataUrl = Omit<MediaItem, 'dataUrl'>;
 
@@ -39,6 +40,7 @@ export async function PUT(
       console.log(`[API][PUT /api/images/${params.id}] - NOT FOUND`);
       return NextResponse.json({ message: "Image not found" }, { status: 404 });
     }
+    invalidateReadItemsCache();
     console.log(`[API][PUT /api/images/${params.id}] - updated: ${item.title}`);
     return NextResponse.json(withoutDataUrl(item));
   } catch (error) {
@@ -55,11 +57,12 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   console.log(`[API][DELETE /api/images/${params.id}] - deleting item`);
-  const success = await deleteItem(params.id);
-  if (!success) {
-    console.log(`[API][DELETE /api/images/${params.id}] - NOT FOUND`);
-    return NextResponse.json({ message: "Image not found" }, { status: 404 });
-  }
-  console.log(`[API][DELETE /api/images/${params.id}] - deleted successfully`);
+    const success = await deleteItem(params.id);
+    if (!success) {
+      console.log(`[API][DELETE /api/images/${params.id}] - NOT FOUND`);
+      return NextResponse.json({ message: "Image not found" }, { status: 404 });
+    }
+    invalidateReadItemsCache();
+    console.log(`[API][DELETE /api/images/${params.id}] - deleted successfully`);
   return NextResponse.json({ success: true });
 }

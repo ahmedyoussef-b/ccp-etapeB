@@ -9,7 +9,7 @@ import { RenameNodeDialog } from "@/components/database/modals/RenameNodeDialog"
 import { EditMetadataDialog } from "@/components/database/modals/EditMetadataDialog";
 import { JsonEditorPanel } from "@/components/database/JsonEditorPanel";
 import { PageTreeNodeItem } from "@/components/database/PageTreeNodeItem";
-import { useWebTreeQuery, useImageTreeQuery, useResetWebMutation, useCompressSqliteMutation, useReindexVectorMutation, useDeleteImageMutation, useRenameImageMutation, useEditImageMetadataMutation, useHardResetLocalTreeMutation, useSyncTreeWebToLocalMutation } from "@/lib/database/queries";
+import { useWebTreeQuery, useImageTreeQuery, useResetWebMutation, useCompressSqliteMutation, useReindexVectorMutation, useDeleteImageMutation, useRenameImageMutation, useEditImageMetadataMutation } from "@/lib/database/queries";
 import {
   Database,
   FolderTree,
@@ -17,20 +17,18 @@ import {
   Eye,
   RefreshCw,
   RotateCcw,
-  ArrowRightLeft,
   Trash2,
   Pencil,
   Download,
   FolderOpen,
   Bug,
-  HardDrive,
   Cpu,
   Activity,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 import { loadLocalTreeFromSQLite, loadVectorTreeFromIndexedDB } from "@/lib/db/tree";
-import { clientEngine, query, simpleTokenEmbedding, dataReference, localTreeService } from "@/lib/client-engine";
+import { clientEngine, simpleTokenEmbedding, dataReference, localTreeService } from "@/lib/client-engine";
 import { generateOpenScript, downloadScript } from "@/lib/client-engine/folder-opener";
 import { dbInitService } from "@/lib/client-engine/init.service";
 import type { UnifiedTreeNode } from "@/lib/db/types/unified-tree-node";
@@ -40,7 +38,6 @@ import { syncManager, type SyncManagerStatus } from "@/lib/sync/sync-manager";
 import type { DatabaseLocations } from "@/lib/client-engine/locations";
 import { UnifiedTreeView } from "@/components/database/UnifiedTreeView";
 import { ConfirmDialog } from "@/components/database/modals/ConfirmDialog";
-import { StorageStatusView } from "@/components/database/StorageStatusView";
 import { AddNodeDialog } from "@/components/database/modals/AddNodeDialog";
 
 type LocalNode = {
@@ -100,7 +97,6 @@ export default function StructureBDDPage() {
   const [imageTree, setImageTree] = useState<ImageNode[]>([]);
   const [search, setSearch] = useState("");
   const [resettingWeb, setResettingWeb] = useState(false);
-  const [resettingLocal, setResettingLocal] = useState(false);
   const [resettingVector, setResettingVector] = useState(false);
   const [addingNode, setAddingNode] = useState<{ tree: "web" | "local"; parentId: number | string } | null>(null);
   const [newNodeName, setNewNodeName] = useState("");
@@ -125,8 +121,6 @@ export default function StructureBDDPage() {
   const [previewingImageId, setPreviewingImageId] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<{ content?: string; dataUrl?: string; mimeType: string; name: string; size: number; isText: boolean } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [syncingVectorMirror, setSyncingVectorMirror] = useState(false);
   const [compressing, setCompressing] = useState(false);
   const [reindexing, setReindexing] = useState(false);
   const [activeView, setActiveView] = useState<"web" | "local" | "vector" | "images" | "comparison">("web");
@@ -138,23 +132,6 @@ export default function StructureBDDPage() {
   const [syncStatus, setSyncStatus] = useState<SyncManagerStatus | null>(null);
   const [dbLocations, setDbLocations] = useState<DatabaseLocations | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  const [localSyncStatus, setLocalSyncStatus] = useState<{ webCount: number; localCount: number; isSynced: boolean }>({ webCount: 0, localCount: 0, isSynced: false });
-
-  const updateLocalSyncStatus = useCallback(async () => {
-    try {
-      const [webCount, localCount] = await Promise.all([
-        localTreeService.getWebTree().then(webTree => webTree.length),
-        localTreeService.getStatus().then(status => status.count),
-      ]);
-      setLocalSyncStatus({
-        webCount,
-        localCount,
-        isSynced: webCount === localCount,
-      });
-    } catch {
-      // ignore
-    }
-  }, []);
 
   const loadTrees = useCallback(async () => {
     console.log("[StructureBDD] loadTrees start");
@@ -242,12 +219,6 @@ export default function StructureBDDPage() {
      }, [loadTrees]);
 
     useEffect(() => {
-      if (activeView === 'local') {
-        updateLocalSyncStatus();
-      }
-    }, [activeView, updateLocalSyncStatus]);
-
-    useEffect(() => {
       syncManager.initialize().then((ok) => {
         console.log("[StructureBDD] syncManager initialized", ok);
       });
@@ -271,28 +242,19 @@ export default function StructureBDDPage() {
     useEffect(() => {
       if (!syncManager.isInitialized()) return;
       let cancelled = false;
-      const autoPullLocal = async () => {
+      const injectWebFiles = async () => {
         try {
-          const localTree = await loadLocalTreeFromSQLite();
+          const result = await syncManager.injectWebFilesToLocal();
           if (cancelled) return;
-          if (localTree.length === 0) {
-            console.log("[StructureBDD] auto pull local from web because local tree is empty");
-            const result = await syncManager.resetAndPullTable('local_tree');
-            if (!cancelled) {
-              // setLastSyncCount(result.pulled || 0);
-              await loadTrees();
-              if (result.errors.length > 0) {
-                toast.error(`Auto pull: ${result.errors.join(', ')}`);
-              } else if (result.pulled > 0) {
-                toast.success(`Auto pull OK: ${result.pulled} pulled`);
-              }
-            }
+          if (result.injected > 0 || result.created > 0) {
+            console.log("[StructureBDD] web files injected to local", result);
+            toast.success(`Injection web → locale : ${result.injected} fichiers, ${result.created} dossiers créés`);
           }
         } catch {
-          // ignore auto pull errors
+          // ignore injection errors
         }
       };
-      autoPullLocal();
+      injectWebFiles();
       return () => { cancelled = true; };
     }, [loadTrees]);
 
@@ -303,21 +265,6 @@ export default function StructureBDDPage() {
     // setVectorizedCountLocal(0);
   }, []);
 
-  const handleQuickSync = useCallback(async () => {
-    try {
-      const result = await syncManager.resetAndPullTable('local_tree');
-        // setLastSyncCount(result.pulled || 0);
-      await loadTrees();
-      if (result.errors.length > 0) {
-        toast.error(`Pull: ${result.errors.join(', ')}`);
-      } else {
-        toast.success(`Pull OK: ${result.pulled || 0} pulled`);
-      }
-    } catch {
-      toast.error('Pull failed');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadTrees]);
 
   const handleQuickVectorize = useCallback(async () => {
     try {
@@ -360,8 +307,6 @@ export default function StructureBDDPage() {
     const deleteImageMutation = useDeleteImageMutation();
     const renameImageMutation = useRenameImageMutation();
     const editImageMetadataMutation = useEditImageMetadataMutation();
-    const hardResetLocalTreeMutation = useHardResetLocalTreeMutation();
-    const syncTreeWebToLocalMutation = useSyncTreeWebToLocalMutation();
 
     useEffect(() => {
       if (webTreeData) {
@@ -434,95 +379,9 @@ export default function StructureBDDPage() {
 
 
 
-    const handleResetLocal = async () => {
-      const confirmed = await showConfirm(
-        "Réinitialiser la BDD locale : vider l'arborescence locale ?"
-      );
-      if (!confirmed) return;
-      console.log("[StructureBDD] clear local tree start");
 
-      setResettingLocal(true);
-      try {
-        await clientEngine.resetLocalTreeOnly();
-        console.log("[StructureBDD] clear local tree done");
-        await loadTrees();
-        toast.success("Arborescence locale vidée avec succès");
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Reset failed";
-        console.error("[StructureBDD] reset local error", msg);
-        setLocalError(msg);
-        toast.error("Erreur lors du vidage de l'arborescence locale");
-      } finally {
-        setResettingLocal(false);
-      }
-    };
 
-    const handleHardResetLocalTree = async () => {
-      const confirmed = await showConfirm(
-        "Hard Reset : supprimer tous les nœuds locaux et les recréer depuis le Web ? Cette opération garantit un miroir exact."
-      );
-      if (!confirmed) return;
-      console.log("[StructureBDD] hard reset local tree start");
-      setResettingLocal(true);
-      try {
-        await hardResetLocalTreeMutation.mutateAsync();
-        await loadTrees();
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Hard reset failed";
-        console.error("[StructureBDD] hard reset local tree error", msg);
-        setLocalError(msg);
-        toast.error("Erreur lors du hard reset");
-      } finally {
-        setResettingLocal(false);
-      }
-    };
 
-    const handleSyncTreeWebToLocal = async () => {
-      const confirmed = await showConfirm(
-        "Synchronisation miroir : supprimer les nœuds locaux obsolètes et ajouter les nouveaux nœuds du Web ?"
-      );
-      if (!confirmed) return;
-      console.log("[StructureBDD] sync tree web to local start");
-      setSyncing(true);
-      try {
-        const result = await syncTreeWebToLocalMutation.mutateAsync();
-        await loadTrees();
-        toast.success(`Sync terminée: ${result.inserted} ajouts, ${result.deleted} suppressions, ${result.conflicts} conflits`);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Sync failed";
-        console.error("[StructureBDD] sync tree web to local error", msg);
-        setLocalError(msg);
-        toast.error("Erreur lors de la synchronisation");
-      } finally {
-        setSyncing(false);
-      }
-    };
-
-    const handleSyncToLocal = async () => {
-      const confirmed = await showConfirm(
-        "Synchroniser la BDD Web vers la BDD Locale ? Cette opération recréera l'arborescence locale en miroir du Web."
-      );
-      if (!confirmed) return;
-      console.log("[StructureBDD] sync to local start");
-      setSyncing(true);
-      try {
-        const result = await syncManager.resetAndPullTable('local_tree');
-        console.log("[StructureBDD] sync to local result", result);
-        if (result.errors.length === 0) {
-          toast.success(`Synchronisation terminée (${result.pulled} enregistrements)`);
-        } else {
-          toast.error(`Erreurs: ${result.errors.join(", ")}`);
-        }
-        await loadTrees();
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Sync to local failed";
-        console.error("[StructureBDD] sync to local error", msg);
-        setLocalError(msg);
-        toast.error("Erreur lors de la synchronisation");
-      } finally {
-        setSyncing(false);
-       }
-    };
 
 
 
@@ -616,7 +475,6 @@ export default function StructureBDDPage() {
       }
       console.log("[StructureBDD] delete local done", { numericId });
       toast.success("Nœud supprimé");
-      updateLocalSyncStatus();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Delete failed";
       console.error("[StructureBDD] delete local error", msg);
@@ -813,7 +671,6 @@ export default function StructureBDDPage() {
       setNewNodeName("");
       await loadTrees();
       if (addingNode.tree !== "web") {
-        updateLocalSyncStatus();
       }
       toast.success("Nœud ajouté");
     } catch (err) {
@@ -864,7 +721,6 @@ export default function StructureBDDPage() {
       setRenameValue("");
       await loadTrees();
       if (renamingNode.tree !== "web" && renamingNode.tree !== "images") {
-        updateLocalSyncStatus();
       }
       toast.success("Nœud renommé");
     } catch (err) {
@@ -896,7 +752,6 @@ export default function StructureBDDPage() {
           console.log("[StructureBDD] edit local done", { numericId });
           await loadTrees();
           toast.success("Fichier JSON modifié localement");
-          updateLocalSyncStatus();
         }
       } else {
         const res = await csrfFetch(`/api/tree/nodes/${editingFile.path}`, {
@@ -1153,91 +1008,6 @@ export default function StructureBDDPage() {
     }
   }, [loadTrees, vectorizeLocalFileInternal]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleSyncVectorMirror = async () => {
-    const confirmed = await showConfirm(
-      "Synchroniser le miroir vectoriel ? Cette opération va reproduire exactement l'arborescence locale (361 nœuds) dans la BDD vectorielle IndexedDB et vectoriser les fichiers pour le RAG."
-    );
-    if (!confirmed) return;
-    console.log("[StructureBDD] sync vector mirror start");
-    setSyncingVectorMirror(true);
-    try {
-      await clientEngine.clearVectorTree();
-      await clientEngine.clearAllVectorDocuments();
-
-      // Lire directement tous les nœuds de la table SQLite local_tree
-      const rows = await query<{
-        id: number;
-        uuid: string | null;
-        name: string;
-        type: string;
-        parent_id: number | null;
-        node_order: number;
-        path: string | null;
-        content: string | null;
-      }>(
-        `SELECT id, uuid, name, type, parent_id, node_order, path, content 
-         FROM local_tree 
-         WHERE deleted_at IS NULL 
-         ORDER BY parent_id, node_order`
-      );
-
-      let fileCount = 0;
-      let totalNodesSynced = 0;
-
-      for (const row of rows) {
-        const isFolder = row.type === "directory" || row.type === "folder" || row.type === "root";
-        const treeNodeId = `vnode-${row.id}`;
-        const parentId = row.parent_id !== null ? `vnode-${row.parent_id}` : null;
-        const relativePath = row.path || row.name;
-
-        let docId: string | null = null;
-        const content = row.content;
-
-        if (!isFolder && content && content.trim().length > 0) {
-          docId = `vdoc-${row.id}`;
-          const chunks = [{
-            documentId: docId,
-            documentName: row.name,
-            chunkIndex: 0,
-            content,
-            embedding: simpleTokenEmbedding(content),
-          }];
-
-          await clientEngine.addVectorDocument({
-            id: docId,
-            name: row.name,
-            originalPath: relativePath,
-            relativePath,
-            chunks,
-            metadata: { source: "sqlite", sqliteId: row.id, uuid: row.uuid },
-          });
-          fileCount++;
-        }
-
-        await clientEngine.addVectorTreeNode({
-          id: treeNodeId,
-          name: row.name,
-          type: isFolder ? "folder" : "file",
-          parentId,
-          order: row.node_order ?? 0,
-          relativePath,
-          content: isFolder ? null : content,
-          docId,
-        });
-        totalNodesSynced++;
-      }
-
-      await loadTrees();
-      toast.success(`Miroir vectoriel synchronisé : ${totalNodesSynced} nœuds créés (${fileCount} fichiers vectorisés)`);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Sync vector mirror failed";
-      console.error("[StructureBDD] sync vector mirror error", msg);
-      setVectorError(msg);
-      toast.error("Erreur lors de la synchronisation du miroir vectoriel");
-    } finally {
-      setSyncingVectorMirror(false);
-    }
-  };
 
   const handleCompressSqlite = async () => {
     const confirmed = await showConfirm("Compresser la base SQLite ? Cette action réduit la taille des données.");
@@ -1328,36 +1098,6 @@ export default function StructureBDDPage() {
   );
   const totalActiveNodes = useMemo(() => totalNodes(activeTree), [activeTree, totalNodes]);
 
-  const pgMetrics = useMemo(() => {
-    const countNodes = (nodes: WebTreeNode[]): number =>
-      nodes.reduce((acc, n) => acc + 1 + countNodes(n.children), 0);
-    const countFolders = (nodes: WebTreeNode[]): number =>
-      nodes.reduce((acc, n) => acc + (n.type === "directory" || n.type === "root" ? 1 : 0) + countFolders(n.children), 0);
-    const countFiles = (nodes: WebTreeNode[]): number =>
-      nodes.reduce((acc, n) => acc + (n.type === "file" ? 1 : 0) + countFiles(n.children), 0);
-    return {
-      total: countNodes(webTree),
-      folders: countFolders(webTree),
-      files: countFiles(webTree),
-    };
-  }, [webTree]);
-
-  const sqliteMetrics = useMemo(() => {
-    const countNodes = (nodes: LocalNode[]): number =>
-      nodes.reduce((acc, n) => acc + 1 + countNodes(n.children), 0);
-    return {
-      total: countNodes(localTree),
-    };
-  }, [localTree]);
-
-  const vectorMetrics = useMemo(() => {
-    const totalChunks = vectorDocs.reduce((acc, doc) => acc + doc.chunks.length, 0);
-    return {
-      documents: vectorDocs.length,
-      chunks: totalChunks,
-    };
-  }, [vectorDocs]);
-
    const renderActions = () => {
      switch (activeView) {
        case "web":
@@ -1373,61 +1113,11 @@ export default function StructureBDDPage() {
                <RotateCcw className={`h-4 w-4 mr-2 ${resettingWeb ? "animate-spin" : ""}`} />
                Réinitialiser PostgreSQL
              </Button>
-             <Button
-               size="sm"
-               variant="outline"
-               onClick={handleSyncToLocal}
-               disabled={syncing}
-               className="flex-1"
-             >
-                <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-                Synchroniser depuis Web
-              </Button>
             </>
            );
         case "local":
          return (
            <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleQuickSync}
-                  disabled={syncing}
-                  className="flex-1"
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-                  Synchroniser depuis Web
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleSyncTreeWebToLocal}
-                  disabled={syncing}
-                  className="flex-1"
-                >
-                  <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-                  Sync Miroir
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleResetLocal}
-                  disabled={resettingLocal}
-                  className="flex-1"
-                >
-                  <Trash2 className={`h-4 w-4 mr-2 ${resettingLocal ? "animate-spin" : ""}`} />
-                  Vider SQLite
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={handleHardResetLocalTree}
-                  disabled={resettingLocal}
-                  className="flex-1"
-                >
-                  <RotateCcw className={`h-4 w-4 mr-2 ${resettingLocal ? "animate-spin" : ""}`} />
-                  Hard Reset
-                </Button>
                <Button
                  size="sm"
                  variant="secondary"
@@ -1471,16 +1161,6 @@ export default function StructureBDDPage() {
                >
                  <Cpu className={`h-4 w-4 mr-2 ${reindexing ? "animate-spin" : ""}`} />
                  Réindexer
-               </Button>
-               <Button
-                 size="sm"
-                 variant="outline"
-                 onClick={handleSyncVectorMirror}
-                 disabled={syncingVectorMirror}
-                 className="flex-1"
-               >
-                 <ArrowRightLeft className={`h-4 w-4 mr-2 ${syncingVectorMirror ? "animate-spin" : ""}`} />
-                 Sync miroir
                </Button>
                <Button
                  size="sm"
@@ -1628,65 +1308,6 @@ export default function StructureBDDPage() {
             Comparaison
           </Button>
         </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Database className="h-5 w-5 text-blue-500" />
-            <h3 className="font-semibold text-sm">PostgreSQL</h3>
-          </div>
-          <div className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Nœuds</span>
-              <span className="font-medium">{pgMetrics.total}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Dossiers</span>
-              <span className="font-medium">{pgMetrics.folders}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Fichiers</span>
-              <span className="font-medium">{pgMetrics.files}</span>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <HardDrive className="h-5 w-5 text-green-500" />
-            <h3 className="font-semibold text-sm">SQLite (WASM)</h3>
-          </div>
-          <div className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Nœuds</span>
-              <span className="font-medium">{sqliteMetrics.total}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Statut</span>
-              <span className="font-medium">{localSyncStatus.isSynced ? "✅ Synchronisé" : "⚠️ Différent"}</span>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Cpu className="h-5 w-5 text-purple-500" />
-            <h3 className="font-semibold text-sm">IndexedDB (Vectorielle)</h3>
-          </div>
-          <div className="space-y-1">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Documents</span>
-              <span className="font-medium">{vectorMetrics.documents}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Chunks</span>
-              <span className="font-medium">{vectorMetrics.chunks}</span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <div className="mt-4">
-        <StorageStatusView />
       </div>
 
       {/* Carte Actions contextuelle */}

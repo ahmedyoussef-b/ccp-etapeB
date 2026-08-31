@@ -45,6 +45,11 @@ export class LocalTreeService {
       map.set(node.id, node);
     }
 
+    const dataRootId = Array.from(map.values()).find(n => n.name.toLowerCase() === '.data' && String(n.type).toLowerCase() === 'root')?.id;
+    if (dataRootId != null) {
+      map.delete(dataRootId);
+    }
+
     for (const node of map.values()) {
       if (node.parent_id !== null && map.has(node.parent_id)) {
         const parent = map.get(node.parent_id)!;

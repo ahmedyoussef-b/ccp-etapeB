@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readItems } from "@/lib/images/server-store";
 import { generateUUID } from "@/lib/prisma";
+import { getCachedReadItems, setCachedReadItems } from "@/lib/cache/media-items-cache";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -45,7 +46,11 @@ export async function GET() {
       }
     }
 
-    const images = readItems();
+    const cached = getCachedReadItems();
+    const images = cached ?? readItems();
+    if (!cached) {
+      setCachedReadItems(images);
+    }
     const imagesByCategory = new Map<string, typeof images>();
     for (const img of images) {
       const cat = img.category || "sans-categorie";
@@ -89,7 +94,9 @@ export async function GET() {
     };
 
     const mergedRoots = attachImages(roots);
-    const apiRoots = mergedRoots.find((node) => node.type === "root")?.children ?? mergedRoots;
+    const apiRoots = mergedRoots.flatMap((node) =>
+      node.type === "root" ? node.children : [node]
+    );
 
     return NextResponse.json({ roots: apiRoots });
   } catch (error) {
